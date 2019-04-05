@@ -29,7 +29,7 @@ type public Messenger<'Model, 'Msg, 'ViewModel>(setting) =
 
     let mutable viewModel = new LockObject<'ViewModel>( setting.view(setting.init) )
 
-    let mutable isRunning = new LockObject<bool>(true)
+    let mutable isRunning = new LockObject<bool>(false)
 
     /// Add Msg to ConcurrentQueue
     member public __.PushMsg(msg : 'Msg) : unit =
@@ -54,44 +54,49 @@ type public Messenger<'Model, 'Msg, 'ViewModel>(setting) =
                 viewModel.Value <- value
             )
 
-    /// Thread safe getter of isRunning flag
-    member val IsRunning : bool =
-        lock isRunning (fun _ -> isRunning.Value)
-        with get
+    /// Thread safe property of isRunning flag
+    member __.IsRunning
+        with public get() : bool =
+            lock isRunning (fun _ -> isRunning.Value)
+        and private set(value) =
+            lock isRunning (fun _ -> isRunning.Value <- value)
 
     /// Exit asynchronous loop of model
-    member public __.Exit() =
-        lock isRunning (fun _ ->
-            isRunning.Value <- false
-        )
+    member public this.Exit() =
+        this.IsRunning <- false
 
     /// StartImmediate model loop asynchronously
     member public this.RunAsync() =
-        let update model =
-            this.PopMsg() |> function
-            | None -> model
+        let running = this.IsRunning
+        if running then ()
+        else
+            this.IsRunning <- true
 
-            | Some(msg) ->
-                let newModel, cmd = setting.update msg model
+            let update model =
+                this.PopMsg() |> function
+                | None -> model
 
-                cmd |> Cmd.execute(fun msg -> this.PushMsg msg)
+                | Some(msg) ->
+                    let newModel, cmd = setting.update msg model
 
-                this.ViewModel <- setting.view newModel
+                    cmd |> Cmd.execute(fun msg -> this.PushMsg msg)
 
-                newModel
+                    this.ViewModel <- setting.view newModel
+
+                    newModel
             
-        /// Main Loop
-        let rec loop model =
-            // exit
-            if not isRunning.Value then ()
-            // next
-            elif msgQueue.IsEmpty then loop model
-            // update
-            else
-                model
-                |> update
-                |> loop
+            /// Main Loop
+            let rec loop model =
+                // exit
+                if not this.IsRunning then ()
+                // next
+                elif msgQueue.IsEmpty then loop model
+                // update
+                else
+                    model
+                    |> update
+                    |> loop
 
-        async {
-            loop setting.init
-        } |> Async.StartImmediate
+            async {
+                loop setting.init
+            } |> Async.StartImmediate
