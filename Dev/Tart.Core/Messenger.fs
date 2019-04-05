@@ -74,7 +74,7 @@ type public Messenger<'Model, 'Msg, 'ViewModel>(setting) =
             | Some(msg) ->
                 let newModel, cmd = setting.update msg model
 
-                cmd |> Cmd.exe(fun msg -> this.PushMsg msg)
+                cmd |> Cmd.execute(fun msg -> this.PushMsg msg)
 
                 this.ViewModel <- setting.view newModel
 

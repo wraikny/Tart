@@ -10,7 +10,7 @@ module Cmd =
     let internal commands (cmd : 'Msg Cmd) = cmd.commands
 
     /// Execute commands asynchronously
-    let internal exe (pushMsg : 'Msg -> unit) (cmd : 'Msg Cmd) =
+    let internal execute (pushMsg : 'Msg -> unit) (cmd : 'Msg Cmd) =
         if cmd.commands |> List.isEmpty then ()
         else
             for c in cmd.commands do
