@@ -44,7 +44,7 @@
   <ItemGroup>
     <Compile Include="AssemblyInfo.fs" />
     <Content Include="packages.config" />
-    <Compile Include="Cmd\Cmd.fs" />
+    <Compile Include="Cmd.fs" />
     <Compile Include="Messenger.fs" />
   </ItemGroup>
   <ItemGroup>

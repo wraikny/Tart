@@ -1,4 +1,4 @@
-﻿namespace wraikny.Tart.Core.Cmd
+﻿namespace wraikny.Tart.Core
 
 type 'Msg Cmd =
     {
