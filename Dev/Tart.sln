@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.28729.10
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Tart.Helper", "Tart.Helper\Tart.Helper.fsproj", "{BF0ABCCE-5659-43B8-A783-6DD55180AACC}"
+EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Tart.Core", "Tart.Core\Tart.Core.fsproj", "{8C6E9ECF-5F33-47A3-AE3F-B9A77BD4F544}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{BF0ABCCE-5659-43B8-A783-6DD55180AACC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BF0ABCCE-5659-43B8-A783-6DD55180AACC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BF0ABCCE-5659-43B8-A783-6DD55180AACC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BF0ABCCE-5659-43B8-A783-6DD55180AACC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8C6E9ECF-5F33-47A3-AE3F-B9A77BD4F544}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8C6E9ECF-5F33-47A3-AE3F-B9A77BD4F544}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8C6E9ECF-5F33-47A3-AE3F-B9A77BD4F544}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8C6E9ECF-5F33-47A3-AE3F-B9A77BD4F544}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {39841DFF-99F7-41DD-AE8D-3998C237F19E}
+	EndGlobalSection
+EndGlobal
