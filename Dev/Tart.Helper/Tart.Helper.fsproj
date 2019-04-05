@@ -44,6 +44,10 @@
   <ItemGroup>
     <Compile Include="AssemblyInfo.fs" />
     <Content Include="packages.config" />
+    <Compile Include="Monad\Maybe.fs" />
+    <Compile Include="Math\Vec2.fs" />
+    <Compile Include="Math\Vec3.fs" />
+    <Compile Include="Collections\Seq.fs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="FSharp.Core">
