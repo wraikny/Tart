@@ -1,5 +1,5 @@
 ﻿namespace wraikny.Tart.Core
-open wraikny.Tart.Core.Cmd
+open wraikny.Tart.Core
 
 
 /// Wrapper class for lock struct
