@@ -78,5 +78,7 @@ module Vec3 =
     let inline length (v : ^a Vec3) : ^b =
         sqrt (squaredLength v)
 
-    let inline normalize(v : ^a Vec3) : ^b Vec3 =
-        v * ((length v) ** -LanguagePrimitives.GenericOne)
+    let inline normalize(v : ^a Vec3) : ^b Vec3=
+        let len : ^c = (length v)
+        let one : ^d = LanguagePrimitives.GenericOne
+        v * (len ** -one)
