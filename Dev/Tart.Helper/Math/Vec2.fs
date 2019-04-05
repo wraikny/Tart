@@ -61,14 +61,17 @@ module Vec2 =
     let inline map (f : ^a -> ^b) (v : ^a Vec2) : ^b Vec2 =
         {x = f v.x; y = f v.y }
 
-    let inline dot (a : ^a Vec2) (b : ^a Vec2) : ^a =
+    let inline dot (a : ^a Vec2) (b : ^a Vec2) : ^b =
         a.x * b.x + a.y * b.y
 
-    let inline squaredLength(v : ^a Vec2) : ^a =
+    let inline squaredLength(v : ^a Vec2) : ^b =
         dot v v
 
-    let inline length (v : ^a Vec2) : ^a =
+    let inline length (v : ^a Vec2) : ^b =
         sqrt (squaredLength v)
 
-    let inline normalize(v : ^a Vec2) : ^a Vec2 =
+    let inline normalize(v : ^a Vec2) : ^b Vec2 =
         v * ((length v) ** -LanguagePrimitives.GenericOne)
+
+    let inline angle(v : ^a Vec2) : ^b =
+        atan2 v.y v.x
