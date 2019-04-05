@@ -2,7 +2,7 @@
 
 type 'Msg Cmd =
     {
-        commands : (unit -> 'Msg) list
+        commands : (('Msg -> unit) -> unit) list
     }
 
 
@@ -10,14 +10,11 @@ module Cmd =
     let internal commands (cmd : 'Msg Cmd) = cmd.commands
 
     /// Execute commands asynchronously
-    let internal exe (pushMsg) (cmd : 'Msg Cmd) =
+    let internal exe (pushMsg : 'Msg -> unit) (cmd : 'Msg Cmd) =
         if cmd.commands |> List.isEmpty then ()
         else
-            cmd.commands
-            |> List.map(fun c -> async{ c() |> pushMsg })
-            |> Async.Parallel
-            |> Async.RunSynchronously
-            |> ignore
+            for c in cmd.commands do
+                c(pushMsg)
 
     /// Empty command
     let none : 'Msg Cmd = { commands = [] }
@@ -36,5 +33,9 @@ module Cmd =
         {
             commands =
                 cmd.commands
-                |> List.map(fun c -> c >> f )
+                |> List.map(fun c ->
+                    (fun pushMsg ->
+                        c(f >> pushMsg)
+                    )
+                )
         }
