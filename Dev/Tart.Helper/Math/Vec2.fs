@@ -70,8 +70,10 @@ module Vec2 =
     let inline length (v : ^a Vec2) : ^b =
         sqrt (squaredLength v)
 
-    let inline normalize(v : ^a Vec2) : ^b Vec2 =
-        v * ((length v) ** -LanguagePrimitives.GenericOne)
+    let inline normalize(v : ^a Vec2) : ^b Vec2=
+        let len : ^c = (length v)
+        let one : ^d = LanguagePrimitives.GenericOne
+        v * (len ** -one)
 
     let inline angle(v : ^a Vec2) : ^b =
         atan2 v.y v.x
