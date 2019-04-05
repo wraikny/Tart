@@ -13,14 +13,11 @@ module Cmd =
     let internal exe (pushMsg) (cmd : 'Msg Cmd) =
         if cmd.commands |> List.isEmpty then ()
         else
-            async {
-                cmd.commands
-                |> List.map(fun c -> async{ c() |> pushMsg })
-                |> Async.Parallel
-                |> Async.RunSynchronously
-                |> ignore
-            }
-            |> Async.StartImmediate
+            cmd.commands
+            |> List.map(fun c -> async{ c() |> pushMsg })
+            |> Async.Parallel
+            |> Async.RunSynchronously
+            |> ignore
 
     /// Empty command
     let none : 'Msg Cmd = { commands = [] }
