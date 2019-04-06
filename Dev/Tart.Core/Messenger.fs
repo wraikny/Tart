@@ -9,7 +9,7 @@ type private LockObject<'a>(value : 'a) =
     member val Value = value with get, set
 
 
-type CoreFunctions<'Model, 'Msg, 'ViewModel> =
+type CoreFunctions<'Model, 'Msg, 'ViewModel when 'Model : struct> =
     {
         init : 'Model
         update : 'Msg -> 'Model -> ('Model * 'Msg Cmd)
@@ -17,12 +17,26 @@ type CoreFunctions<'Model, 'Msg, 'ViewModel> =
     }
 
 
+/// Telling msg and viewModel, between modelLoop(async) and view(mainThread).
+[<Interface>]
+type public IMessenger<'Msg, 'ViewModel> =
+    /// Add Msg to ConcurrentQueue
+    abstract PushMsg : 'Msg -> unit
+    /// Thread safe getter of ViewModel
+    abstract ViewModel : 'ViewModel
+    /// Thread safe getter of isRunning flag
+    abstract IsRunning : bool with get
+    /// Async.Start main loop
+    abstract RunAsync : unit -> bool
+    /// Stop asynchronous main loop
+    abstract Stop : unit -> unit
+
+
 open System.Collections.Concurrent
 
 
-/// Telling msg and viewModel, between modelLoop(async) and view(mainThread).
 [<Class>]
-type public Messenger<'Model, 'Msg, 'ViewModel when 'Model : struct>(coreFuncs) =
+type private Messenger<'Model, 'Msg, 'ViewModel when 'Model : struct>(coreFuncs) =
 
     let coreFuncs : CoreFunctions<'Model, 'Msg, 'ViewModel> = coreFuncs
 
@@ -33,7 +47,7 @@ type public Messenger<'Model, 'Msg, 'ViewModel when 'Model : struct>(coreFuncs) 
     let mutable isRunning = new LockObject<bool>(false)
 
     /// Add Msg to ConcurrentQueue
-    member public __.PushMsg(msg : 'Msg) : unit =
+    member private __.PushMsg(msg : 'Msg) : unit =
         msgQueue.Enqueue(Some msg)
 
     /// Get Msg from ConcurrentQueue
@@ -55,29 +69,28 @@ type public Messenger<'Model, 'Msg, 'ViewModel when 'Model : struct>(coreFuncs) 
             )
     
     /// Thread safe getter of ViewModel
-    member __.ViewModel
-        with public get() =
+    member private __.ViewModel
+        with get() =
             lock model (fun _ ->
                 model.Value
                 |> coreFuncs.view
             )
 
     /// Thread safe property of isRunning flag
-    member __.IsRunning
-        with public get() : bool =
+    member private __.IsRunning
+        with get() : bool =
             lock isRunning (fun _ -> isRunning.Value)
-        and private set(value) =
+        and set(value) =
             lock isRunning (fun _ -> isRunning.Value <- value)
 
-    /// Stop asynchronous loop of model
-    member public this.Stop() =
+    /// Stop asynchronous main loop
+    member private this.Stop() =
         this.IsRunning <- false
 
     /// Async.Start main loop
-    member public this.RunAsync() =
+    member private this.RunAsync() =
         let running = this.IsRunning
-        if running then ()
-        else
+        if not running then
             this.IsRunning <- true
 
             let update () =
@@ -107,3 +120,25 @@ type public Messenger<'Model, 'Msg, 'ViewModel when 'Model : struct>(coreFuncs) 
             async {
                 loop ()
             } |> Async.Start
+
+        this.IsRunning
+
+
+    interface IMessenger<'Msg, 'ViewModel> with
+        member this.PushMsg(msg) = this.PushMsg(msg)
+
+        member this.ViewModel
+            with get() = this.ViewModel
+
+        member this.IsRunning
+            with get() = this.IsRunning
+
+        member this.RunAsync() = this.RunAsync()
+
+        member this.Stop() = this.Stop()
+
+
+module IMessenger =
+    let createMessenger(coreFuncs) =
+        (new Messenger<_, _, _>(coreFuncs))
+        :> IMessenger<_, _>
