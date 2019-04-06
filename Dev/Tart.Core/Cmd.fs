@@ -1,24 +1,32 @@
 ﻿namespace wraikny.Tart.Core
 
-type 'Msg Cmd =
+type 'msg Cmd =
     {
-        commands : (('Msg -> unit) -> unit) list
+        commands : (('msg -> unit) -> unit) list
     }
 
 
 module Cmd =
-    let internal commands (cmd : 'Msg Cmd) = cmd.commands
+    let internal commands (cmd : 'msg Cmd) = cmd.commands
+
+    let internal init (commands) : 'msg Cmd =
+        {
+            commands = commands
+        }
+
+    let internal singleCommand ( command : ('msg -> unit) -> unit ) : 'msg Cmd =
+        init([command])
 
     /// Execute commands asynchronously
-    let internal execute (pushMsg : 'Msg -> unit) (cmd : 'Msg Cmd) =
+    let internal execute (pushMsg : 'msg -> unit) (cmd : 'msg Cmd) =
         for c in cmd.commands do
             c(pushMsg)
 
     /// Empty command
-    let none : 'Msg Cmd = { commands = [] }
+    let none : 'msg Cmd = { commands = [] }
 
 
-    let batch (cmds : 'Msg Cmd list) : 'Msg Cmd =
+    let batch (cmds : 'msg Cmd list) : 'msg Cmd =
         {
             commands =
                 cmds
@@ -27,7 +35,7 @@ module Cmd =
         }
 
 
-    let map(f : 'a -> 'Msg) (cmd : 'a Cmd) : 'Msg Cmd =
+    let map(f : 'a -> 'msg) (cmd : 'a Cmd) : 'msg Cmd =
         {
             commands =
                 cmd.commands
