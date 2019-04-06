@@ -22,12 +22,13 @@ open System.Collections.Concurrent
 
 /// Telling msg and viewModel, between modelLoop(async) and view(mainThread).
 [<Class>]
-type public Messenger<'Model, 'Msg, 'ViewModel>(setting) =
+type public Messenger<'Model, 'Msg, 'ViewModel when 'Model : struct>(setting) =
+
     let setting : MessengerSetting<'Model, 'Msg, 'ViewModel> = setting
 
     let msgQueue = new ConcurrentQueue<'Msg option>()
 
-    let mutable viewModel = new LockObject<'ViewModel>( setting.view(setting.init) )
+    let mutable model = new LockObject<'Model>( setting.init )
 
     let mutable isRunning = new LockObject<bool>(false)
 
@@ -42,16 +43,23 @@ type public Messenger<'Model, 'Msg, 'ViewModel>(setting) =
             result
         else
             None
+
+    /// Thread safe property of model
+    member private __.Model
+        with get() =
+            lock model (fun _ -> model.Value)
+
+        and set(value) =
+            lock model (fun _ ->
+                model.Value <- value
+            )
     
-    /// Thread safe property of ViewModel
+    /// Thread safe getter of ViewModel
     member __.ViewModel
         with public get() =
-            lock viewModel (fun _ ->
-                viewModel.Value
-            )
-        and private set(value) =
-            lock viewModel (fun _ ->
-                viewModel.Value <- value
+            lock model (fun _ ->
+                model.Value
+                |> setting.view
             )
 
     /// Thread safe property of isRunning flag
@@ -61,8 +69,8 @@ type public Messenger<'Model, 'Msg, 'ViewModel>(setting) =
         and private set(value) =
             lock isRunning (fun _ -> isRunning.Value <- value)
 
-    /// Exit asynchronous loop of model
-    member public this.Exit() =
+    /// Stop asynchronous loop of model
+    member public this.Stop() =
         this.IsRunning <- false
 
     /// StartImmediate model loop asynchronously
@@ -72,31 +80,30 @@ type public Messenger<'Model, 'Msg, 'ViewModel>(setting) =
         else
             this.IsRunning <- true
 
-            let update model =
+            let update () =
                 this.PopMsg() |> function
-                | None -> model
+                | None -> ()
 
                 | Some(msg) ->
-                    let newModel, cmd = setting.update msg model
+                    let newModel, cmd = setting.update msg this.Model
 
                     cmd |> Cmd.execute(fun msg -> this.PushMsg msg)
 
-                    this.ViewModel <- setting.view newModel
+                    this.Model <- newModel
 
-                    newModel
+                    ()
             
             /// Main Loop
-            let rec loop model =
+            let rec loop () =
                 // exit
                 if not this.IsRunning then ()
                 // next
-                elif msgQueue.IsEmpty then loop model
+                elif msgQueue.IsEmpty then loop ()
                 // update
                 else
-                    model
-                    |> update
-                    |> loop
+                    update ()
+                    loop ()
 
             async {
-                loop setting.init
+                loop ()
             } |> Async.StartImmediate
