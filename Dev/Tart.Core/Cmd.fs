@@ -11,10 +11,8 @@ module Cmd =
 
     /// Execute commands asynchronously
     let internal execute (pushMsg : 'Msg -> unit) (cmd : 'Msg Cmd) =
-        if cmd.commands |> List.isEmpty then ()
-        else
-            for c in cmd.commands do
-                c(pushMsg)
+        for c in cmd.commands do
+            c(pushMsg)
 
     /// Empty command
     let none : 'Msg Cmd = { commands = [] }
