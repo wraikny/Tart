@@ -61,7 +61,7 @@ module Random =
     let list (length : int) (generator : 'a Generator) : ('a list) Generator =
         Generator(fun seed ->
             seq {
-                for index in 0..length ->
+                for index in 0..length-1 ->
                     let seed =
                         seed |> Option.map(fun seed ->
                             initialSeed <| (seed.seed + index)
