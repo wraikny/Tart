@@ -38,8 +38,8 @@ type public Messenger<'Model, 'Msg, 'ViewModel when 'Model : struct>(coreFuncs) 
 
     /// Get Msg from ConcurrentQueue
     member private __.PopMsg() : 'Msg option =
-        let mutable result = None
-        if msgQueue.TryDequeue(&result) then
+        let success, result = msgQueue.TryDequeue()
+        if success then
             result
         else
             None
