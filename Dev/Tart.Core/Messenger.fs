@@ -73,7 +73,7 @@ type public Messenger<'Model, 'Msg, 'ViewModel when 'Model : struct>(setting) =
     member public this.Stop() =
         this.IsRunning <- false
 
-    /// StartImmediate model loop asynchronously
+    /// Async.Start main loop
     member public this.RunAsync() =
         let running = this.IsRunning
         if running then ()
@@ -106,4 +106,4 @@ type public Messenger<'Model, 'Msg, 'ViewModel when 'Model : struct>(setting) =
 
             async {
                 loop ()
-            } |> Async.StartImmediate
+            } |> Async.Start
