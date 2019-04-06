@@ -40,7 +40,7 @@ type private Messenger<'Model, 'Msg, 'ViewModel when 'Model : struct>(coreFuncs)
 
     let coreFuncs : CoreFunctions<'Model, 'Msg, 'ViewModel> = coreFuncs
 
-    let msgQueue = new ConcurrentQueue<'Msg option>()
+    let msgQueue = new ConcurrentQueue<'Msg>()
 
     let mutable model = new LockObject<'Model>( coreFuncs.init )
 
@@ -48,13 +48,13 @@ type private Messenger<'Model, 'Msg, 'ViewModel when 'Model : struct>(coreFuncs)
 
     /// Add Msg to ConcurrentQueue
     member private __.PushMsg(msg : 'Msg) : unit =
-        msgQueue.Enqueue(Some msg)
+        msgQueue.Enqueue(msg)
 
     /// Get Msg from ConcurrentQueue
-    member private __.PopMsg() : 'Msg option =
+    member private __.TryPopMsg() : 'Msg option =
         let success, result = msgQueue.TryDequeue()
         if success then
-            result
+            Some result
         else
             None
 
@@ -94,7 +94,7 @@ type private Messenger<'Model, 'Msg, 'ViewModel when 'Model : struct>(coreFuncs)
             this.IsRunning <- true
 
             let update () =
-                this.PopMsg() |> function
+                this.TryPopMsg() |> function
                 | None -> ()
 
                 | Some(msg) ->
