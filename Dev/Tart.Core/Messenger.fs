@@ -9,7 +9,7 @@ type private LockObject<'a>(value : 'a) =
     member val Value = value with get, set
 
 
-type MessengerSetting<'Model, 'Msg, 'ViewModel> =
+type CoreFunctions<'Model, 'Msg, 'ViewModel> =
     {
         init : 'Model
         update : 'Msg -> 'Model -> ('Model * 'Msg Cmd)
@@ -22,13 +22,13 @@ open System.Collections.Concurrent
 
 /// Telling msg and viewModel, between modelLoop(async) and view(mainThread).
 [<Class>]
-type public Messenger<'Model, 'Msg, 'ViewModel when 'Model : struct>(setting) =
+type public Messenger<'Model, 'Msg, 'ViewModel when 'Model : struct>(coreFuncs) =
 
-    let setting : MessengerSetting<'Model, 'Msg, 'ViewModel> = setting
+    let coreFuncs : CoreFunctions<'Model, 'Msg, 'ViewModel> = coreFuncs
 
     let msgQueue = new ConcurrentQueue<'Msg option>()
 
-    let mutable model = new LockObject<'Model>( setting.init )
+    let mutable model = new LockObject<'Model>( coreFuncs.init )
 
     let mutable isRunning = new LockObject<bool>(false)
 
@@ -59,7 +59,7 @@ type public Messenger<'Model, 'Msg, 'ViewModel when 'Model : struct>(setting) =
         with public get() =
             lock model (fun _ ->
                 model.Value
-                |> setting.view
+                |> coreFuncs.view
             )
 
     /// Thread safe property of isRunning flag
@@ -85,7 +85,7 @@ type public Messenger<'Model, 'Msg, 'ViewModel when 'Model : struct>(setting) =
                 | None -> ()
 
                 | Some(msg) ->
-                    let newModel, cmd = setting.update msg this.Model
+                    let newModel, cmd = coreFuncs.update msg this.Model
 
                     cmd |> Cmd.execute(fun msg -> this.PushMsg msg)
 
