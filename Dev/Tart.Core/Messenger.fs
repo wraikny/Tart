@@ -1,31 +1,4 @@
 ﻿namespace wraikny.Tart.Core
-open wraikny.Tart.Core
-
-
-type CoreFunctions<'Model, 'Msg, 'ViewModel when 'Model : struct> =
-    {
-        init : 'Model
-        update : 'Msg -> 'Model -> ('Model * 'Msg Cmd)
-        view : 'Model -> 'ViewModel
-    }
-
-
-/// Telling msg and viewModel, between modelLoop(async) and view(mainThread).
-[<Interface>]
-type public IMessenger<'Msg, 'ViewModel> =
-    /// Add Msg to ConcurrentQueue
-    abstract PushMsg : 'Msg -> unit
-    /// Thread safe getter of ViewModel
-    abstract TryViewModel : 'ViewModel option
-    /// Thread safe getter of isRunning flag
-    abstract IsRunning : bool with get
-    /// Async.Start main loop
-    abstract StartAsync : unit -> bool
-    /// Async.Start main loop from last model
-    abstract ResumeAsync : unit -> bool
-    /// Stop asynchronous main loop
-    abstract Stop : unit -> unit
-
 
 open wraikny.Tart.Helper.Wrapper
 open System.Collections.Concurrent
@@ -102,12 +75,14 @@ type private Messenger<'Model, 'Msg, 'ViewModel when 'Model : struct>(coreFuncs)
 
         // Is started main loop in this call
         not running
-        
+    
 
-    interface IMessenger<'Msg, 'ViewModel> with
+    interface IMessageSender<'Msg> with
         member this.PushMsg(msg) =
             msgQueue.Enqueue(msg)
 
+
+    interface IMessenger<'Msg, 'ViewModel> with
         member this.TryViewModel
             with get() =
                 modelQueue.TryDequeue()
