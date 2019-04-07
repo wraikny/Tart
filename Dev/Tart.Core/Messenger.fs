@@ -2,13 +2,6 @@
 open wraikny.Tart.Core
 
 
-/// Wrapper class for lock struct
-[<Class>]
-type private LockObject<'a>(value : 'a) =
-    let value = value
-    member val Value = value with get, set
-
-
 type CoreFunctions<'Model, 'Msg, 'ViewModel when 'Model : struct> =
     {
         init : 'Model
@@ -32,6 +25,7 @@ type public IMessenger<'Msg, 'ViewModel> =
     abstract Stop : unit -> unit
 
 
+open wraikny.Tart.Helper.Wrapper
 open System.Collections.Concurrent
 
 
@@ -42,9 +36,9 @@ type private Messenger<'Model, 'Msg, 'ViewModel when 'Model : struct>(coreFuncs)
 
     let msgQueue = new ConcurrentQueue<'Msg>()
 
-    let mutable model = new LockObject<'Model>( coreFuncs.init )
+    let model = new LockObject<'Model>( coreFuncs.init )
 
-    let mutable isRunning = new LockObject<bool>(false)
+    let isRunning = new LockObject<bool>(false)
 
     /// Add Msg to ConcurrentQueue
     member private __.PushMsg(msg : 'Msg) : unit =
@@ -61,27 +55,23 @@ type private Messenger<'Model, 'Msg, 'ViewModel when 'Model : struct>(coreFuncs)
     /// Thread safe property of model
     member private __.Model
         with get() =
-            lock model (fun _ -> model.Value)
+            model.Value
 
         and set(value) =
-            lock model (fun _ ->
-                model.Value <- value
-            )
+            model.Value <- value
     
     /// Thread safe getter of ViewModel
     member private __.ViewModel
         with get() =
-            lock model (fun _ ->
-                model.Value
-                |> coreFuncs.view
-            )
+            model.Value
+            |> coreFuncs.view
 
     /// Thread safe property of isRunning flag
     member private __.IsRunning
         with get() : bool =
-            lock isRunning (fun _ -> isRunning.Value)
+            isRunning.Value
         and set(value) =
-            lock isRunning (fun _ -> isRunning.Value <- value)
+            isRunning.Value <- value
 
     /// Stop asynchronous main loop
     member private this.Stop() =
