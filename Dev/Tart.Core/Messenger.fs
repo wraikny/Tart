@@ -2,13 +2,6 @@
 open wraikny.Tart.Core
 
 
-/// Wrapper class for lock struct
-[<Class>]
-type private LockObject<'a>(value : 'a) =
-    let value = value
-    member val Value = value with get, set
-
-
 type CoreFunctions<'Model, 'Msg, 'ViewModel when 'Model : struct> =
     {
         init : 'Model
@@ -23,15 +16,18 @@ type public IMessenger<'Msg, 'ViewModel> =
     /// Add Msg to ConcurrentQueue
     abstract PushMsg : 'Msg -> unit
     /// Thread safe getter of ViewModel
-    abstract ViewModel : 'ViewModel
+    abstract TryViewModel : 'ViewModel option
     /// Thread safe getter of isRunning flag
     abstract IsRunning : bool with get
     /// Async.Start main loop
-    abstract RunAsync : unit -> bool
+    abstract StartAsync : unit -> bool
+    /// Async.Start main loop from last model
+    abstract ResumeAsync : unit -> bool
     /// Stop asynchronous main loop
     abstract Stop : unit -> unit
 
 
+open wraikny.Tart.Helper.Wrapper
 open System.Collections.Concurrent
 
 
@@ -40,17 +36,19 @@ type private Messenger<'Model, 'Msg, 'ViewModel when 'Model : struct>(coreFuncs)
 
     let coreFuncs : CoreFunctions<'Model, 'Msg, 'ViewModel> = coreFuncs
 
+    let mutable lastModel :'Model option = None
+
     let msgQueue = new ConcurrentQueue<'Msg>()
 
-    let mutable model = new LockObject<'Model>( coreFuncs.init )
+    let modelQueue = new FixedSizeQueue<'Model>(1)
 
-    let mutable isRunning = new LockObject<bool>(false)
+    let isRunning = new LockObject<bool>(false)
 
-    /// Add Msg to ConcurrentQueue
-    member private __.PushMsg(msg : 'Msg) : unit =
+    
+    member private __.PushMsg(msg) =
         msgQueue.Enqueue(msg)
 
-    /// Get Msg from ConcurrentQueue
+
     member private __.TryPopMsg() : 'Msg option =
         let success, result = msgQueue.TryDequeue()
         if success then
@@ -58,84 +56,77 @@ type private Messenger<'Model, 'Msg, 'ViewModel when 'Model : struct>(coreFuncs)
         else
             None
 
-    /// Thread safe property of model
-    member private __.Model
-        with get() =
-            lock model (fun _ -> model.Value)
 
-        and set(value) =
-            lock model (fun _ ->
-                model.Value <- value
-            )
-    
-    /// Thread safe getter of ViewModel
-    member private __.ViewModel
-        with get() =
-            lock model (fun _ ->
-                model.Value
-                |> coreFuncs.view
-            )
-
-    /// Thread safe property of isRunning flag
     member private __.IsRunning
         with get() : bool =
-            lock isRunning (fun _ -> isRunning.Value)
+            isRunning.Value
         and set(value) =
-            lock isRunning (fun _ -> isRunning.Value <- value)
+            isRunning.Value <- value
 
-    /// Stop asynchronous main loop
-    member private this.Stop() =
-        this.IsRunning <- false
 
-    /// Async.Start main loop
-    member private this.RunAsync() =
+    member private this.MainLoop initModel =
         let running = this.IsRunning
         if not running then
             this.IsRunning <- true
 
-            let update () =
+            let update model =
                 this.TryPopMsg() |> function
-                | None -> ()
+                | None -> model
 
                 | Some(msg) ->
-                    let newModel, cmd = coreFuncs.update msg this.Model
+                    let newModel, cmd = coreFuncs.update msg model
 
                     cmd |> Cmd.execute(fun msg -> this.PushMsg msg)
 
-                    this.Model <- newModel
+                    modelQueue.Enqueue(newModel)
 
-                    ()
-            
+                    newModel
+        
             /// Main Loop
-            let rec loop () =
-                // exit
-                if not this.IsRunning then ()
-                // next
-                elif msgQueue.IsEmpty then loop ()
+            let rec loop model =
+                // stop with cache
+                if not this.IsRunning then
+                    lastModel <- Some model
+                    ()
+
                 // update
                 else
-                    update ()
-                    loop ()
+                    model
+                    |> update
+                    |> loop
 
             async {
-                loop ()
+                initModel
+                |> loop
             } |> Async.Start
 
-        this.IsRunning
-
+        // Is started main loop in this call
+        not running
+        
 
     interface IMessenger<'Msg, 'ViewModel> with
-        member this.PushMsg(msg) = this.PushMsg(msg)
+        member this.PushMsg(msg) =
+            msgQueue.Enqueue(msg)
 
-        member this.ViewModel
-            with get() = this.ViewModel
+        member this.TryViewModel
+            with get() =
+                modelQueue.TryDequeue()
+                |> Option.map coreFuncs.view
 
         member this.IsRunning
             with get() = this.IsRunning
 
-        member this.RunAsync() = this.RunAsync()
+        member this.StartAsync() =
+            coreFuncs.init
+            |> this.MainLoop
 
-        member this.Stop() = this.Stop()
+        member this.ResumeAsync() =
+            lastModel
+            |> Option.defaultValue coreFuncs.init
+            |> this.MainLoop
+
+        member this.Stop() =
+            this.IsRunning <- false
 
 
 module IMessenger =

@@ -47,7 +47,9 @@
     <Compile Include="Monad\Maybe.fs" />
     <Compile Include="Math\Vec2.fs" />
     <Compile Include="Math\Vec3.fs" />
-    <Compile Include="Collections\Seq.fs" />
+    <Compile Include="Extension\Seq.fs" />
+    <Compile Include="Wrapper\LockObject.fs" />
+    <Compile Include="Wrapper\FixedSizeQueue.fs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="FSharp.Core">
