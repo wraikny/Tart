@@ -1,4 +1,4 @@
-﻿namespace wraikny.Tart.Helper.Collections
+﻿namespace wraikny.Tart.Helper.Extension
 
 module Seq =
     let filterMap f =
