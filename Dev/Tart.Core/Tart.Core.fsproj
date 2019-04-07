@@ -45,6 +45,7 @@
     <Compile Include="AssemblyInfo.fs" />
     <Content Include="packages.config" />
     <Compile Include="Cmd.fs" />
+    <Compile Include="IMessenger.fs" />
     <Compile Include="Messenger.fs" />
     <Compile Include="Libraries\Random.fs" />
   </ItemGroup>
