@@ -5,9 +5,9 @@ open System.Collections.Concurrent
 
 
 [<Class>]
-type private Messenger<'Model, 'Msg, 'ViewModel when 'Model : struct>(coreFuncs) =
+type private Messenger<'Msg, 'Model, 'ViewModel when 'Model : struct>(coreFuncs) =
 
-    let coreFuncs : CoreFunctions<'Model, 'Msg, 'ViewModel> = coreFuncs
+    let coreFuncs : CoreFunctions<'Msg, 'Model, 'ViewModel> = coreFuncs
 
     let mutable lastModel :'Model option = None
 
