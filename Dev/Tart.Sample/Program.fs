@@ -23,19 +23,26 @@ module Program =
             printf "Input Messege:"
 
             let continue' =
-                Console.ReadLine() |> function
-                | "q" -> false
-
-                | "a" | "s" as s ->
-                    printf "Input Number:"
+                let inputNumMsg nextMsg =
                     readLineInt () |> function
                     | None ->
                         printfn "Input correctly!"
 
                     | Some n ->
-                        n
-                        |> if s = "a" then Counter.Msg.Add else Counter.Msg.Sub
-                        |> messenger.PushMsg
+                        messenger.PushMsg(nextMsg n)
+
+                Console.ReadLine() |> function
+                | "q" -> false
+
+                | "a" ->
+                    printf "Input Number:"
+                    inputNumMsg Counter.Msg.Add
+
+                    true
+
+                | "s" ->
+                    printf "Input Number:"
+                    inputNumMsg Counter.Msg.Sub
 
                     true
 
@@ -45,12 +52,7 @@ module Program =
 
                 | "r" ->
                     printf "Input Max of Random Number:"
-                    readLineInt () |> function
-                    | None ->
-                        printfn "Input correctly!"
-                        
-                    | Some n ->
-                        messenger.PushMsg(Counter.Msg.Random(0, n))
+                    inputNumMsg (fun n -> Counter.Msg.Random(0, n))
                     true
 
                 | _ ->
