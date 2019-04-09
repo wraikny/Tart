@@ -1,4 +1,4 @@
-﻿namespace wraikny.Tart.Core
+﻿namespace wraikny.Tart.Core.Libraries
 
 open wraikny.Tart.Helper.Basic
 open wraikny.Tart.Helper.Monad
@@ -43,15 +43,7 @@ module Task =
             let! ok2 = task2.f()
             return (f ok1 ok2)
         }
-        
         |> init
-            //(
-            //    [
-            //        task1.isAsync
-            //        task2.isAsync
-            //    ]
-            //    |> List.fold (||) false
-            //)
 
 
     let map3 (f : 'a -> 'b -> 'c -> 'd)
@@ -65,16 +57,7 @@ module Task =
             let! ok3 = task3.f()
             return (f ok1 ok2 ok3)
         }
-        
         |> init
-            //(
-            //    [
-            //        task1.isAsync
-            //        task2.isAsync
-            //        task3.isAsync
-            //    ]
-            //    |> List.fold (||) false
-            //)
 
 
     let map4 (f : 'a -> 'b -> 'c -> 'd -> 'e)
@@ -91,15 +74,6 @@ module Task =
             return (f ok1 ok2 ok3 ok4)
         }
         |> init
-            //(
-            //    [
-            //        task1.isAsync
-            //        task2.isAsync
-            //        task3.isAsync
-            //        task4.isAsync
-            //    ]
-            //    |> List.fold (||) false
-            //)
 
 
     let map5 (f : 'a -> 'b -> 'c -> 'd -> 'e -> 'f)
@@ -118,16 +92,6 @@ module Task =
             return (f ok1 ok2 ok3 ok4 ok5)
         }
         |> init
-            //(
-            //    [
-            //        task1.isAsync
-            //        task2.isAsync
-            //        task3.isAsync
-            //        task4.isAsync
-            //        task5.isAsync
-            //    ]
-            //    |> List.fold (||) false
-            //)
 
 
     let andThen (f : 'a -> Task<'b, 'x>) (task : Task<'a, 'x>) : Task<'b, 'x> =
@@ -164,6 +128,9 @@ module Task =
     let mapError (f : 'x -> 'y) (task : Task<'a, 'x>) : Task<'a, 'y> =
         task.f >> Result.mapError f
         |> init
+
+
+    open wraikny.Tart.Core
         
         
     let perform
