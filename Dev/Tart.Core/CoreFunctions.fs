@@ -2,7 +2,7 @@
 open wraikny.Tart.Core
 
 
-type CoreFunctions<'Model, 'Msg, 'ViewModel when 'Model : struct> =
+type CoreFunctions<'Msg, 'Model, 'ViewModel when 'Model : struct> =
     {
         init : 'Model
         update : 'Msg -> 'Model -> ('Model * 'Msg Cmd)
