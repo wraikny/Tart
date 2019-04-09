@@ -18,11 +18,14 @@ let update msg model : Model * Msg Cmd =
     | Clear -> 0, Cmd.none
 
 
-let view model : string =
+type ViewModel = string
+
+
+let view model : ViewModel =
     model.ToString()
 
 
-let messengerBuilder() =
+let messengerBuilder() : IMessenger<Msg, ViewModel> =
     IMessenger.createMessenger {
         init = init
         update = update
