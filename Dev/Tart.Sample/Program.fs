@@ -54,7 +54,7 @@ module Program =
                 printfn "Input correctly!"
 
 
-            if input = "q" then
+            if input <> "q" then
                 Thread.Sleep(10)
 
                 messenger.TryViewModel |> function
