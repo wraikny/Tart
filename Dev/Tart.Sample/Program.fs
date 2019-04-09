@@ -22,8 +22,7 @@ module Program =
             | Some viewModel ->
                 printfn "%s" viewModel
             | None ->
-                printfn "fail to get viewModel"
-                ()
+                loop()
 
             printfn "q: Quit, a: Add, s: Sub, c:Clear"
             printf "Input Messege:"
