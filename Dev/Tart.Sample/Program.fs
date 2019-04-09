@@ -21,7 +21,7 @@ module Program =
         let rec loop view =
             printfn "View: %s" <| view.ToString()
 
-            printfn "q: Quit, a: Add, s: Sub, c:Clear, r:Random(1, 6)"
+            printfn "q: Quit, a: Add, s: Sub, c:Clear, r:Random"
             printf "Input Messege:"
             let continueFlag =
                 Console.ReadLine() |> function
