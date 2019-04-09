@@ -1,4 +1,4 @@
-namespace wraikny.Tart.Sample
+﻿namespace wraikny.Tart.Sample
 
 open System
 open System.Threading
@@ -29,9 +29,11 @@ module Program =
                 | "a" | "s" as s ->
                     printf "Input Number:"
                     readLineInt() |> function
-                    | None -> ()
-                    | Some num ->
-                        num
+                    | None ->
+                        printfn "Input correctly!"
+                        ()
+                    | Some n ->
+                        n
                         |> if s = "a" then Counter.Msg.Add else Counter.Msg.Sub
                         |> messenger.PushMsg
 
@@ -41,9 +43,16 @@ module Program =
                     messenger.PushMsg(Counter.Msg.Clear)
                     true
                 | "r" ->
-                    messenger.PushMsg(Counter.Msg.Random(1, 6))
+                    printf "Input Max of Random Number:"
+                    readLineInt() |> function
+                    | None ->
+                        printfn "Input correctly!"
+                        ()
+                    | Some n ->
+                        messenger.PushMsg(Counter.Msg.Random(0, n))
                     true
                 | _ ->
+                    printfn "Input correctly!"
                     true
 
             if continueFlag then
