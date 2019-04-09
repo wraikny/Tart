@@ -1,25 +1,37 @@
 ﻿namespace wraikny.Tart.Core
 
+open wraikny.Tart.Helper.Basic
+
 
 type Task<'Ok, 'Error> =
     {
-        isAsync : bool
         f : unit -> Result<'Ok, 'Error>
     }
     
 
 module Task =
-    let internal init (isAsync) (f) =
-        { isAsync = isAsync; f = f }
+    let internal init (f) =
+        { f = f }
 
-    let internal isAsync (task) = task.isAsync
+
+    let internal f (task) = task.f
+
+
+    // let internal isAsync (task) = task.isAsync
+
 
     let succeed (a : 'a) : Task<'a, 'Error> =
-        (fun _ -> Result.Ok a) |> (init false)
+        (fun _ -> Result.Ok a) |> init
+
+
+    let fail (x : 'x) : Task<'Ok, 'x> =
+        (fun _ -> Result.Error x) |> init
+
 
     let map (f : 'a -> 'b) (task : Task<'a, 'Error>) : Task<'b, 'Error> =
         task.f >> Result.map f
-        |> init task.isAsync
+        |> init
+
 
     let map2 (f : 'a -> 'b -> 'c)
         (task1 : Task<'a, 'Error>)
@@ -33,13 +45,14 @@ module Task =
                 |> Result.Ok
             ))
         )
-        |> init(
-            [
-                task1.isAsync
-                task2.isAsync
-            ]
-            |> List.forall (fun x -> x)
-        )
+        |> init
+            //(
+            //    [
+            //        task1.isAsync
+            //        task2.isAsync
+            //    ]
+            //    |> List.fold (||) false
+            //)
 
 
     let map3 (f : 'a -> 'b -> 'c -> 'd)
@@ -56,14 +69,15 @@ module Task =
                 |> Result.Ok
             )))
         )
-        |> init(
-            [
-                task1.isAsync
-                task2.isAsync
-                task3.isAsync
-            ]
-            |> List.forall (fun x -> x)
-        )
+        |> init
+            //(
+            //    [
+            //        task1.isAsync
+            //        task2.isAsync
+            //        task3.isAsync
+            //    ]
+            //    |> List.fold (||) false
+            //)
 
 
     let map4 (f : 'a -> 'b -> 'c -> 'd -> 'e)
@@ -82,15 +96,16 @@ module Task =
                 |> Result.Ok
             ))))
         )
-        |> init(
-            [
-                task1.isAsync
-                task2.isAsync
-                task3.isAsync
-                task4.isAsync
-            ]
-            |> List.forall (fun x -> x)
-        )
+        |> init
+            //(
+            //    [
+            //        task1.isAsync
+            //        task2.isAsync
+            //        task3.isAsync
+            //        task4.isAsync
+            //    ]
+            //    |> List.fold (||) false
+            //)
 
 
     let map5 (f : 'a -> 'b -> 'c -> 'd -> 'e -> 'f)
@@ -111,22 +126,58 @@ module Task =
                 |> Result.Ok
             )))))
         )
-        |> init(
-            [
-                task1.isAsync
-                task2.isAsync
-                task3.isAsync
-                task4.isAsync
-                task5.isAsync
-            ]
-            |> List.forall (fun x -> x)
+        |> init
+            //(
+            //    [
+            //        task1.isAsync
+            //        task2.isAsync
+            //        task3.isAsync
+            //        task4.isAsync
+            //        task5.isAsync
+            //    ]
+            //    |> List.fold (||) false
+            //)
+
+
+    let andThen (f : 'a -> Task<'b, 'x>) (task : Task<'a, 'x>) : Task<'b, 'x> =
+        (fun _ ->
+            task.f() |> function
+            | Ok v -> (f v).f()
+            | Error e -> Result.Error e
         )
+        |> init
+
+
+    let sequence (tasks : Task<'a, 'x> list) : Task<'a list, 'x> =
+        let rec doTasks result tasks =
+            tasks |> function
+            | [] -> Result.Ok result
+            | task::xs ->
+                task.f() |> function
+                | Ok v -> doTasks (v::result) xs
+                | Error e -> Result.Error e
+
+        (fun _ -> doTasks [] tasks)
+        |> init
+
+
+    let oneError (f : 'x -> Task<'a, 'y>) (task : Task<'a, 'x>) : Task<'a, 'y> =
+        (fun _ ->
+            task.f() |> function
+            | Ok v -> Result.Ok v
+            | Error e -> (f e).f()
+        )
+        |> init
 
             
+    let mapError (f : 'x -> 'y) (task : Task<'a, 'x>) : Task<'a, 'y> =
+        task.f >> Result.mapError f
+        |> init
+        
         
     let perform
         (f : 'a -> 'Msg)
-        (task : Task<'a, unit>)
+        (task : Task<'a, Never>)
         : 'Msg Cmd =
         
         [
