@@ -12,14 +12,18 @@ module Task =
     let internal init (isAsync) (f) =
         { isAsync = isAsync; f = f }
 
+
     let internal isAsync (task) = task.isAsync
+
 
     let succeed (a : 'a) : Task<'a, 'Error> =
         (fun _ -> Result.Ok a) |> (init false)
 
+
     let map (f : 'a -> 'b) (task : Task<'a, 'Error>) : Task<'b, 'Error> =
         task.f >> Result.map f
         |> init task.isAsync
+
 
     let map2 (f : 'a -> 'b -> 'c)
         (task1 : Task<'a, 'Error>)
