@@ -22,6 +22,10 @@ module Task =
         (fun _ -> Result.Ok a) |> (init false)
 
 
+    let fail (x : 'x) : Task<'Ok, 'x> =
+        (fun _ -> Result.Error x) |> (init false)
+
+
     let map (f : 'a -> 'b) (task : Task<'a, 'Error>) : Task<'b, 'Error> =
         task.f >> Result.map f
         |> init task.isAsync
@@ -44,7 +48,7 @@ module Task =
                 task1.isAsync
                 task2.isAsync
             ]
-            |> List.forall (fun x -> x)
+            |> List.fold (||) false
         )
 
 
@@ -68,7 +72,7 @@ module Task =
                 task2.isAsync
                 task3.isAsync
             ]
-            |> List.forall (fun x -> x)
+            |> List.fold (||) false
         )
 
 
@@ -95,7 +99,7 @@ module Task =
                 task3.isAsync
                 task4.isAsync
             ]
-            |> List.forall (fun x -> x)
+            |> List.fold (||) false
         )
 
 
@@ -125,7 +129,7 @@ module Task =
                 task4.isAsync
                 task5.isAsync
             ]
-            |> List.forall (fun x -> x)
+            |> List.fold (||) false
         )
 
             
