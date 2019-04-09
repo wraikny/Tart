@@ -53,7 +53,7 @@ module Program =
             else
                 messenger.Stop()
                 ()
-                    
+
 
         messenger.StartAsync() |> ignore
 
