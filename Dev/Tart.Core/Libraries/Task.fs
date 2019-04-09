@@ -1,5 +1,7 @@
 ﻿namespace wraikny.Tart.Core
 
+open wraikny.Tart.Helper.Basic
+
 
 type Task<'Ok, 'Error> =
     {
@@ -130,7 +132,7 @@ module Task =
         
     let perform
         (f : 'a -> 'Msg)
-        (task : Task<'a, unit>)
+        (task : Task<'a, Never>)
         : 'Msg Cmd =
         
         [
