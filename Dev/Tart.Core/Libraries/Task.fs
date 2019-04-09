@@ -5,30 +5,29 @@ open wraikny.Tart.Helper.Basic
 
 type Task<'Ok, 'Error> =
     {
-        isAsync : bool
         f : unit -> Result<'Ok, 'Error>
     }
     
 
 module Task =
-    let internal init (isAsync) (f) =
-        { isAsync = isAsync; f = f }
+    let internal init (f) =
+        { f = f }
 
 
-    let internal isAsync (task) = task.isAsync
+    // let internal isAsync (task) = task.isAsync
 
 
     let succeed (a : 'a) : Task<'a, 'Error> =
-        (fun _ -> Result.Ok a) |> (init false)
+        (fun _ -> Result.Ok a) |> init
 
 
     let fail (x : 'x) : Task<'Ok, 'x> =
-        (fun _ -> Result.Error x) |> (init false)
+        (fun _ -> Result.Error x) |> init
 
 
     let map (f : 'a -> 'b) (task : Task<'a, 'Error>) : Task<'b, 'Error> =
         task.f >> Result.map f
-        |> init task.isAsync
+        |> init
 
 
     let map2 (f : 'a -> 'b -> 'c)
@@ -43,13 +42,14 @@ module Task =
                 |> Result.Ok
             ))
         )
-        |> init(
-            [
-                task1.isAsync
-                task2.isAsync
-            ]
-            |> List.fold (||) false
-        )
+        |> init
+            //(
+            //    [
+            //        task1.isAsync
+            //        task2.isAsync
+            //    ]
+            //    |> List.fold (||) false
+            //)
 
 
     let map3 (f : 'a -> 'b -> 'c -> 'd)
@@ -66,14 +66,15 @@ module Task =
                 |> Result.Ok
             )))
         )
-        |> init(
-            [
-                task1.isAsync
-                task2.isAsync
-                task3.isAsync
-            ]
-            |> List.fold (||) false
-        )
+        |> init
+            //(
+            //    [
+            //        task1.isAsync
+            //        task2.isAsync
+            //        task3.isAsync
+            //    ]
+            //    |> List.fold (||) false
+            //)
 
 
     let map4 (f : 'a -> 'b -> 'c -> 'd -> 'e)
@@ -92,15 +93,16 @@ module Task =
                 |> Result.Ok
             ))))
         )
-        |> init(
-            [
-                task1.isAsync
-                task2.isAsync
-                task3.isAsync
-                task4.isAsync
-            ]
-            |> List.fold (||) false
-        )
+        |> init
+            //(
+            //    [
+            //        task1.isAsync
+            //        task2.isAsync
+            //        task3.isAsync
+            //        task4.isAsync
+            //    ]
+            //    |> List.fold (||) false
+            //)
 
 
     let map5 (f : 'a -> 'b -> 'c -> 'd -> 'e -> 'f)
@@ -121,16 +123,17 @@ module Task =
                 |> Result.Ok
             )))))
         )
-        |> init(
-            [
-                task1.isAsync
-                task2.isAsync
-                task3.isAsync
-                task4.isAsync
-                task5.isAsync
-            ]
-            |> List.fold (||) false
-        )
+        |> init
+            //(
+            //    [
+            //        task1.isAsync
+            //        task2.isAsync
+            //        task3.isAsync
+            //        task4.isAsync
+            //        task5.isAsync
+            //    ]
+            //    |> List.fold (||) false
+            //)
 
             
         
