@@ -7,6 +7,8 @@ Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Tart.Helper", "Tart.Helper\
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Tart.Core", "Tart.Core\Tart.Core.fsproj", "{8C6E9ECF-5F33-47A3-AE3F-B9A77BD4F544}"
 EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Tart.Sample", "Tart.Sample\Tart.Sample.fsproj", "{11151C6D-F08D-4949-9493-BCD22FCC5966}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,10 @@ Global
 		{8C6E9ECF-5F33-47A3-AE3F-B9A77BD4F544}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{8C6E9ECF-5F33-47A3-AE3F-B9A77BD4F544}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{8C6E9ECF-5F33-47A3-AE3F-B9A77BD4F544}.Release|Any CPU.Build.0 = Release|Any CPU
+		{11151C6D-F08D-4949-9493-BCD22FCC5966}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{11151C6D-F08D-4949-9493-BCD22FCC5966}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{11151C6D-F08D-4949-9493-BCD22FCC5966}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{11151C6D-F08D-4949-9493-BCD22FCC5966}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
