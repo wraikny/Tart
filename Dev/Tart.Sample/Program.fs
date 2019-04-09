@@ -22,50 +22,45 @@ module Program =
             printfn "q: Quit, a: Add, s: Sub, c:Clear, r:Random"
             printf "Input Messege:"
 
-            let continue' =
-                let inputNumMsg nextMsg =
-                    readLineInt () |> function
-                    | None ->
-                        printfn "Input correctly!"
+            let input = readLine()
 
-                    | Some n ->
-                        messenger.PushMsg(nextMsg n)
-
-                Console.ReadLine() |> function
-                | "q" -> false
-
-                | "a" ->
-                    printf "Input Number:"
-                    inputNumMsg Counter.Msg.Add
-
-                    true
-
-                | "s" ->
-                    printf "Input Number:"
-                    inputNumMsg Counter.Msg.Sub
-
-                    true
-
-                | "c" ->
-                    messenger.PushMsg(Counter.Msg.Clear)
-                    true
-
-                | "r" ->
-                    printf "Input Max of Random Number:"
-                    inputNumMsg (fun n -> Counter.Msg.Random(0, n))
-                    true
-
-                | _ ->
+            let inputNumMsg nextMsg =
+                readLineInt () |> function
+                | None ->
                     printfn "Input correctly!"
-                    true
 
-            if continue' then
+                | Some n ->
+                    messenger.PushMsg(nextMsg n)
+
+            input |> function
+            | "q" -> ()
+
+            | "a" ->
+                printf "Input Number:"
+                inputNumMsg Counter.Msg.Add
+
+            | "s" ->
+                printf "Input Number:"
+                inputNumMsg Counter.Msg.Sub
+
+            | "r" ->
+                printf "Input Max of Random Number:"
+                inputNumMsg (fun n -> Counter.Msg.Random(0, n))
+
+            | "c" ->
+                messenger.PushMsg(Counter.Msg.Clear)
+
+            | _ ->
+                printfn "Input correctly!"
+
+
+            if input = "q" then
                 Thread.Sleep(10)
 
                 messenger.TryViewModel |> function
                 | Some view -> loop view
                 | None ->
-                    printfn "Failed to get viewModel"
+                    printfn "Failed to get viewModel. Display old one."
                     loop view
 
 
