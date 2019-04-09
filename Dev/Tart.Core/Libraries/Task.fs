@@ -14,6 +14,9 @@ module Task =
         { f = f }
 
 
+    let internal f (task) = task.f
+
+
     // let internal isAsync (task) = task.isAsync
 
 
@@ -135,7 +138,42 @@ module Task =
             //    |> List.fold (||) false
             //)
 
+
+    let andThen (f : 'a -> Task<'b, 'x>) (task : Task<'a, 'x>) : Task<'b, 'x> =
+        (fun _ ->
+            task.f() |> function
+            | Ok v -> (f v).f()
+            | Error e -> Result.Error e
+        )
+        |> init
+
+
+    let sequence (tasks : Task<'a, 'x> list) : Task<'a list, 'x> =
+        let rec doTasks result tasks =
+            tasks |> function
+            | [] -> Result.Ok result
+            | task::xs ->
+                task.f() |> function
+                | Ok v -> doTasks (v::result) xs
+                | Error e -> Result.Error e
+
+        (fun _ -> doTasks [] tasks)
+        |> init
+
+
+    let oneError (f : 'x -> Task<'a, 'y>) (task : Task<'a, 'x>) : Task<'a, 'y> =
+        (fun _ ->
+            task.f() |> function
+            | Ok v -> Result.Ok v
+            | Error e -> (f e).f()
+        )
+        |> init
+
             
+    let mapError (f : 'x -> 'y) (task : Task<'a, 'x>) : Task<'a, 'y> =
+        task.f >> Result.mapError f
+        |> init
+        
         
     let perform
         (f : 'a -> 'Msg)
