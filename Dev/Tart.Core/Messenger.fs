@@ -17,6 +17,9 @@ type private Messenger<'Msg, 'Model, 'ViewModel when 'Model : struct>(coreFuncs)
 
     let isRunning = new LockObject<bool>(false)
 
+    do
+        modelQueue.Enqueue(coreFuncs.init)
+
     
     member private __.PushMsg(msg) =
         msgQueue.Enqueue(msg)
