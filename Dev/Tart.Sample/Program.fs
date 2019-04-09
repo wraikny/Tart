@@ -62,7 +62,6 @@ module Program =
                     printfn "Failed to get viewModel"
                     loop view
             else
-                messenger.Stop()
                 ()
 
 
@@ -70,8 +69,10 @@ module Program =
 
         messenger.TryViewModel |> function
         | Some view -> loop view
-        | None ->
-            ()
+        | None -> ()
+
+        messenger.Stop()
+
 
         printfn "Enter to exit the program"
         Console.ReadLine() |> ignore
