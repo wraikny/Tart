@@ -11,7 +11,7 @@ type Task<'Ok, 'Error> =
     
 
 module Task =
-    let internal init (f) =
+    let init (f) =
         { f = f }
 
 
