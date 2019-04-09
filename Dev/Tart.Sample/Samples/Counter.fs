@@ -19,7 +19,8 @@ let update msg model : Model * Msg Cmd =
     | Add i -> model + i, Cmd.none
     | Sub i -> model - i, Cmd.none
     | Clear -> 0, Cmd.none
-    | Random (a, b) -> model, (Random.generate NewValue (Random.int a b))
+    | Random (a, b) ->
+        model, (Random.generate NewValue (Random.int a b))
     | NewValue i -> i, Cmd.none
 
 
