@@ -21,7 +21,7 @@ module Program =
         let rec loop view =
             printfn "View: %s" view
 
-            printfn "q: Quit, a: Add, s: Sub, c:Clear"
+            printfn "q: Quit, a: Add, s: Sub, c:Clear, r:Random(1, 6)"
             printf "Input Messege:"
             let continueFlag =
                 Console.ReadLine() |> function
@@ -39,6 +39,9 @@ module Program =
 
                 | "c" ->
                     messenger.PushMsg(Counter.Msg.Clear)
+                    true
+                | "r" ->
+                    messenger.PushMsg(Counter.Msg.Random(1, 6))
                     true
                 | _ ->
                     true
