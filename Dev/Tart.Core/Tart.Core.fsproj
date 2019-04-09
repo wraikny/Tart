@@ -49,6 +49,7 @@
     <Compile Include="CoreFunctions.fs" />
     <Compile Include="Messenger.fs" />
     <Compile Include="Libraries\Random.fs" />
+    <Compile Include="Libraries\Task.fs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="FSharp.Core">
