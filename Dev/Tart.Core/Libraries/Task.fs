@@ -1,6 +1,7 @@
 ﻿namespace wraikny.Tart.Core
 
 open wraikny.Tart.Helper.Basic
+open wraikny.Tart.Helper.Monad
 
 
 type Task<'Ok, 'Error> =
@@ -36,15 +37,13 @@ module Task =
     let map2 (f : 'a -> 'b -> 'c)
         (task1 : Task<'a, 'Error>)
         (task2 : Task<'b, 'Error>)
-        : Task<'c, 'Error>
-        =
-        (fun _ ->
-            task1.f() |> Result.bind(fun ok1 ->
-            task2.f() |> Result.bind(fun ok2 ->
-                f ok1 ok2
-                |> Result.Ok
-            ))
-        )
+        : Task<'c, 'Error> =
+        fun _ -> either {
+            let! ok1 = task1.f()
+            let! ok2 = task2.f()
+            return (f ok1 ok2)
+        }
+        
         |> init
             //(
             //    [
@@ -59,16 +58,14 @@ module Task =
         (task1 : Task<'a, 'Error>)
         (task2 : Task<'b, 'Error>)
         (task3 : Task<'c, 'Error>)
-        : Task<'d, 'Error>
-        =
-        (fun _ ->
-            task1.f() |> Result.bind(fun ok1 ->
-            task2.f() |> Result.bind(fun ok2 ->
-            task3.f() |> Result.bind(fun ok3 ->
-                f ok1 ok2 ok3
-                |> Result.Ok
-            )))
-        )
+        : Task<'d, 'Error> =
+        fun _ -> either {
+            let! ok1 = task1.f()
+            let! ok2 = task2.f()
+            let! ok3 = task3.f()
+            return (f ok1 ok2 ok3)
+        }
+        
         |> init
             //(
             //    [
@@ -85,17 +82,14 @@ module Task =
         (task2 : Task<'b, 'Error>)
         (task3 : Task<'c, 'Error>)
         (task4 : Task<'d, 'Error>)
-        : Task<'e, 'Error>
-        =
-        (fun _ ->
-            task1.f() |> Result.bind(fun ok1 ->
-            task2.f() |> Result.bind(fun ok2 ->
-            task3.f() |> Result.bind(fun ok3 ->
-            task4.f() |> Result.bind(fun ok4 ->
-                f ok1 ok2 ok3 ok4
-                |> Result.Ok
-            ))))
-        )
+        : Task<'e, 'Error> =
+        fun _ -> either {
+            let! ok1 = task1.f()
+            let! ok2 = task2.f()
+            let! ok3 = task3.f()
+            let! ok4 = task4.f()
+            return (f ok1 ok2 ok3 ok4)
+        }
         |> init
             //(
             //    [
@@ -114,18 +108,15 @@ module Task =
         (task3 : Task<'c, 'Error>)
         (task4 : Task<'d, 'Error>)
         (task5 : Task<'e, 'Error>)
-        : Task<'f, 'Error>
-        =
-        (fun _ ->
-            task1.f() |> Result.bind(fun ok1 ->
-            task2.f() |> Result.bind(fun ok2 ->
-            task3.f() |> Result.bind(fun ok3 ->
-            task4.f() |> Result.bind(fun ok4 ->
-            task5.f() |> Result.bind(fun ok5 ->
-                f ok1 ok2 ok3 ok4 ok5
-                |> Result.Ok
-            )))))
-        )
+        : Task<'f, 'Error> =
+        fun _ -> either {
+            let! ok1 = task1.f()
+            let! ok2 = task2.f()
+            let! ok3 = task3.f()
+            let! ok4 = task4.f()
+            let! ok5 = task5.f()
+            return (f ok1 ok2 ok3 ok4 ok5)
+        }
         |> init
             //(
             //    [
