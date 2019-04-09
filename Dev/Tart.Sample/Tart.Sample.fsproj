@@ -47,6 +47,7 @@
   <Import Project="$(FSharpTargetsPath)" />
   <ItemGroup>
     <Compile Include="AssemblyInfo.fs" />
+    <Compile Include="Samples\Counter.fs" />
     <Compile Include="Program.fs" />
     <None Include="App.config" />
     <Content Include="packages.config" />
@@ -63,6 +64,18 @@
       <HintPath>..\packages\System.ValueTuple.4.4.0\lib\netstandard1.0\System.ValueTuple.dll</HintPath>
       <Private>True</Private>
     </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Tart.Core\Tart.Core.fsproj">
+      <Name>Tart.Core</Name>
+      <Project>{8c6e9ecf-5f33-47a3-ae3f-b9a77bd4f544}</Project>
+      <Private>True</Private>
+    </ProjectReference>
+    <ProjectReference Include="..\Tart.Helper\Tart.Helper.fsproj">
+      <Name>Tart.Helper</Name>
+      <Project>{bf0abcce-5659-43b8-a783-6dd55180aacc}</Project>
+      <Private>True</Private>
+    </ProjectReference>
   </ItemGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
