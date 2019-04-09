@@ -19,7 +19,7 @@ module Program =
         let rec loop view =
             printfn "View: %s" <| view.ToString()
 
-            printfn "q: Quit, a: Add, s: Sub, c:Clear, r:Random"
+            printfn "q: Quit, a: Add, s: Sub, r:Random, c:Clear"
             printf "Input Messege:"
 
             let input = readLine()
