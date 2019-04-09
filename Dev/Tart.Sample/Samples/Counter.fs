@@ -23,11 +23,11 @@ let update msg model : Model * Msg Cmd =
     | NewValue i -> i, Cmd.none
 
 
-type ViewModel = string
+type ViewModel = Model
 
 
 let view model : ViewModel =
-    model.ToString()
+    model
 
 
 let messengerBuilder() : IMessenger<Msg, ViewModel> =
