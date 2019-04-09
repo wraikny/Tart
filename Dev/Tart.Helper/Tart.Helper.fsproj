@@ -44,6 +44,7 @@
   <ItemGroup>
     <Compile Include="AssemblyInfo.fs" />
     <Content Include="packages.config" />
+    <Compile Include="Basic.fs" />
     <Compile Include="Monad\Maybe.fs" />
     <Compile Include="Math\Vec2.fs" />
     <Compile Include="Math\Vec3.fs" />
