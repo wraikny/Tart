@@ -1,6 +1,7 @@
 ﻿namespace wraikny.Tart.Sample
 
 open System
+open System.Threading
 open wraikny.Tart.Helper.Monad
 
 
@@ -17,12 +18,8 @@ module Program =
     let main argv = 
         let messenger = Counter.messengerBuilder()
 
-        let rec loop () =
-            messenger.TryViewModel |> function
-            | Some viewModel ->
-                printfn "%s" viewModel
-            | None ->
-                loop()
+        let rec loop view =
+            printfn "View: %s" view
 
             printfn "q: Quit, a: Add, s: Sub, c:Clear"
             printf "Input Messege:"
@@ -47,13 +44,25 @@ module Program =
                     true
 
             if continueFlag then
-                loop()
+                Thread.Sleep(10)
+                messenger.TryViewModel |> function
+                | Some view -> loop view
+                | None ->
+                    printfn "Failed to get viewModel"
+                    loop view
             else
                 messenger.Stop()
                 ()
                     
 
         messenger.StartAsync() |> ignore
-        loop()
+
+        messenger.TryViewModel |> function
+        | Some view -> loop view
+        | None ->
+            ()
+
+        printfn "Enter to exit the program"
+        Console.ReadLine() |> ignore
 
         0
