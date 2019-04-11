@@ -15,10 +15,14 @@ type Updater<'Msg>() =
 
     
     member public this.Update() =
-        maybe {
-            let! msg = coreMessenger.TryPopMsg()
-            this.OnUpdate(msg)
-        }
+        let rec update() =
+            coreMessenger.TryPopMsg() |> function
+            | Some(msg) ->
+                this.OnUpdate(msg)
+                update()
+            | None -> ()
+
+        update()
 
 
     interface IMessageSender<'Msg> with

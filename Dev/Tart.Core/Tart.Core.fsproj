@@ -48,9 +48,9 @@
     <Compile Include="Cmd.fs" />
     <Compile Include="CoreProgram.fs" />
     <Compile Include="Messenger.fs" />
-    <Compile Include="Updater.fs" />
     <Compile Include="Libraries\Random.fs" />
     <Compile Include="Libraries\Task.fs" />
+    <Compile Include="Updater.fs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="FSharp.Core">
