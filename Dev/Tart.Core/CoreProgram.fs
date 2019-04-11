@@ -2,9 +2,9 @@
 open wraikny.Tart.Core
 
 
-type CoreFunctions<'Msg, 'Model, 'ViewModel> =
+type CoreProgram<'Msg, 'ViewMsg, 'Model, 'ViewModel> =
     {
         init : 'Model
-        update : 'Msg -> 'Model -> ('Model * 'Msg Cmd)
+        update : 'Msg -> 'Model -> ('Model * Cmd<'Msg, 'ViewMsg>)
         view : 'Model -> 'ViewModel
     }

@@ -44,10 +44,11 @@
   <ItemGroup>
     <Compile Include="AssemblyInfo.fs" />
     <Content Include="packages.config" />
-    <Compile Include="Cmd.fs" />
     <Compile Include="IMessenger.fs" />
-    <Compile Include="CoreFunctions.fs" />
+    <Compile Include="Cmd.fs" />
+    <Compile Include="CoreProgram.fs" />
     <Compile Include="Messenger.fs" />
+    <Compile Include="Updater.fs" />
     <Compile Include="Libraries\Random.fs" />
     <Compile Include="Libraries\Task.fs" />
   </ItemGroup>

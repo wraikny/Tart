@@ -148,7 +148,7 @@ module Random =
         )
 
 
-    let generate (msg : 'a -> 'Msg) (generator : 'a Generator) : 'Msg Cmd =
+    let generate (msg : 'a -> 'Msg) (generator : 'a Generator) : Cmd<'Msg, _> =
         (fun pushMsg ->
             pushMsg( (getFunc generator None) |> msg )
         )

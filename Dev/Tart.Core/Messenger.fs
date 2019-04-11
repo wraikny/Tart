@@ -4,14 +4,34 @@ open wraikny.Tart.Helper.Wrapper
 open System.Collections.Concurrent
 
 
-[<Class>]
-type private Messenger<'Msg, 'Model, 'ViewModel>(coreFuncs) =
 
-    let coreFuncs : CoreFunctions<'Msg, 'Model, 'ViewModel> = coreFuncs
+[<Class>]
+type private CoreMessenger<'Msg>() =
+    let msgQueue = new ConcurrentQueue<'Msg>()
+
+    member __.PushMsg(msg) =
+        msgQueue.Enqueue(msg)
+
+
+    member __.TryPopMsg() : 'Msg option =
+        let success, result = msgQueue.TryDequeue()
+        if success then
+            Some result
+        else
+            None
+
+
+
+[<Class>]
+type private Messenger<'Msg, 'ViewMsg, 'Model, 'ViewModel>(coreFuncs, updater) =
+
+    let coreFuncs : CoreProgram<_, _, _, _> = coreFuncs
+
+    let coreMessenger = new CoreMessenger<'Msg>()
+
+    let updater : IMessageSender<'ViewMsg> option = updater
 
     let mutable lastModel :'Model option = None
-
-    let msgQueue = new ConcurrentQueue<'Msg>()
 
     let modelQueue = new FixedSizeQueue<'Model>(1)
 
@@ -19,18 +39,6 @@ type private Messenger<'Msg, 'Model, 'ViewModel>(coreFuncs) =
 
     do
         modelQueue.Enqueue(coreFuncs.init)
-
-    
-    member private __.PushMsg(msg) =
-        msgQueue.Enqueue(msg)
-
-
-    member private __.TryPopMsg() : 'Msg option =
-        let success, result = msgQueue.TryDequeue()
-        if success then
-            Some result
-        else
-            None
 
 
     member private __.IsRunning
@@ -46,13 +54,15 @@ type private Messenger<'Msg, 'Model, 'ViewModel>(coreFuncs) =
             this.IsRunning <- true
 
             let update model =
-                this.TryPopMsg() |> function
+                coreMessenger.TryPopMsg() |> function
                 | None -> model
 
                 | Some(msg) ->
                     let newModel, cmd = coreFuncs.update msg model
 
-                    cmd |> Cmd.execute(fun msg -> this.PushMsg msg)
+                    cmd |> Cmd.execute
+                        (this :> IMessageSender<_>)
+                        updater
 
                     modelQueue.Enqueue(newModel)
 
@@ -78,12 +88,11 @@ type private Messenger<'Msg, 'Model, 'ViewModel>(coreFuncs) =
 
         // Is started main loop in this call
         not running
-    
+
 
     interface IMessageSender<'Msg> with
-        member this.PushMsg(msg) =
-            msgQueue.Enqueue(msg)
-
+        member this.PushMsg(msg) = coreMessenger.PushMsg(msg)
+    
 
     interface IMessenger<'Msg, 'ViewModel> with
         member this.TryViewModel
@@ -108,6 +117,6 @@ type private Messenger<'Msg, 'Model, 'ViewModel>(coreFuncs) =
 
 
 module IMessenger =
-    let createMessenger(coreFuncs) =
-        (new Messenger<_, _, _>(coreFuncs))
+    let createMessenger (coreFuncs) (updater) =
+        (new Messenger<_, _, _, _>(coreFuncs, updater))
         :> IMessenger<_, _>

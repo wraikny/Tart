@@ -24,7 +24,7 @@ type Msg =
 let setCount i model = { model with count = i }
 let addCount i model = setCount (model.count + i) model
 
-let update msg model : Model * Msg Cmd =
+let update msg model : Model * Cmd<_, _> =
     msg |> function
     | Add i ->
         model |> addCount i, Cmd.none
@@ -50,4 +50,4 @@ let messengerBuilder() : IMessenger<Msg, ViewModel> =
         init = init
         update = update
         view = view
-    }
+    } None
