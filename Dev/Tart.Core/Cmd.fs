@@ -20,6 +20,9 @@ module Cmd =
     let internal singleCommand ( command : ('Msg -> unit) -> unit ) : Cmd<'Msg, 'ViewMsg> =
         init [command] []
 
+    let pushViewMsgs (m) =
+        init [] m
+
     /// Execute commands asynchronously
     let internal execute
         (sender : IMessageSender<'Msg>)
