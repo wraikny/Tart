@@ -136,9 +136,9 @@ module Task =
     let perform
         (f : 'a -> 'Msg)
         (task : Task<'a, Never>)
-        : 'Msg Cmd =
+        : Cmd<'Msg, _> =
         
-        [
+        Cmd.init [
             (fun pushMsg ->
                 async {
                     task.f() |> function
@@ -148,16 +148,15 @@ module Task =
                 }
                 |> Async.Start
             )
-        ]
-        |> Cmd.init
+        ] []
 
 
     let attempt
         (f : Result<'Ok, 'Error> -> 'Msg)
         (task : Task<'Ok, 'Error>)
-        : 'Msg Cmd =
+        : Cmd<'Msg, _> =
 
-        [
+        Cmd.init [
             (fun pushMsg ->
                 async {
                     task.f()
@@ -166,5 +165,4 @@ module Task =
                 }
                 |> Async.Start
             )
-        ]
-        |> Cmd.init
+        ] []

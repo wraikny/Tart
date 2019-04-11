@@ -1,41 +1,59 @@
 ﻿namespace wraikny.Tart.Core
 
-type 'msg Cmd =
+type Cmd<'Msg, 'ViewMsg> =
     {
-        commands : (('msg -> unit) -> unit) list
+        commands : (('Msg -> unit) -> unit) list
+        viewMsgs : 'ViewMsg list
     }
 
 
 module Cmd =
-    let internal commands (cmd : 'msg Cmd) = cmd.commands
+    let internal commands (cmd : Cmd<_, _>) = cmd.commands
+    let internal viewMsgs (cmd : Cmd<_, _>) = cmd.viewMsgs
 
-    let internal init (commands) : 'msg Cmd =
+    let internal init (commands) (viewCommands) : Cmd<'Msg, 'ViewMsg> =
         {
             commands = commands
+            viewMsgs = viewCommands
         }
 
-    let internal singleCommand ( command : ('msg -> unit) -> unit ) : 'msg Cmd =
-        init([command])
+    let internal singleCommand ( command : ('Msg -> unit) -> unit ) : Cmd<'Msg, 'ViewMsg> =
+        init [command] []
 
     /// Execute commands asynchronously
-    let internal execute (pushMsg : 'msg -> unit) (cmd : 'msg Cmd) =
+    let internal execute
+        (sender : IMessageSender<'Msg>)
+        (viewSender : IMessageSender<'ViewMsg> option)
+        (cmd : Cmd<'Msg, 'ViewMsg>) =
         for c in cmd.commands do
-            c(pushMsg)
+            c(fun msg -> sender.PushMsg(msg))
+
+        
+        viewSender |> function
+        | None -> ()
+        | Some(viewSender) ->
+            for msg in cmd.viewMsgs do
+                viewSender.PushMsg(msg)
+
 
     /// Empty command
-    let none : 'msg Cmd = { commands = [] }
+    let none : Cmd<'Msg, 'ViewMsg> = { commands = []; viewMsgs = [] }
 
 
-    let batch (cmds : 'msg Cmd list) : 'msg Cmd =
+    let batch (cmds : Cmd<'Msg, 'ViewMsg> list) : Cmd<'Msg, 'ViewMsg> =
         {
             commands =
                 cmds
                 |> List.map commands
                 |> List.concat
+            viewMsgs =
+                cmds
+                |> List.map viewMsgs
+                |> List.concat
         }
 
 
-    let map(f : 'a -> 'msg) (cmd : 'a Cmd) : 'msg Cmd =
+    let map(f : 'a -> 'Msg) (cmd : Cmd<'a, 'ViewMsg>) : Cmd<'Msg, 'ViewMsg> =
         {
             commands =
                 cmd.commands
@@ -44,4 +62,6 @@ module Cmd =
                         c(f >> pushMsg)
                     )
                 )
+
+            viewMsgs = cmd.viewMsgs
         }
