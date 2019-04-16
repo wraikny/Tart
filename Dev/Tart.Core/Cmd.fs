@@ -1,8 +1,11 @@
 ﻿namespace wraikny.Tart.Core
 
+type internal PushMessage<'Msg> = 'Msg -> unit
+type internal Command<'Msg> = IEnvCore -> PushMessage<'Msg> -> unit
+
 type Cmd<'Msg, 'ViewMsg> =
     {
-        commands : (('Msg -> unit) -> unit) list
+        commands : Command<'Msg> list
         viewMsgs : 'ViewMsg list
     }
 
@@ -17,7 +20,7 @@ module Cmd =
             viewMsgs = viewCommands
         }
 
-    let internal singleCommand ( command : ('Msg -> unit) -> unit ) : Cmd<'Msg, 'ViewMsg> =
+    let internal singleCommand ( command : Command<'Msg> ) : Cmd<'Msg, 'ViewMsg> =
         init [command] []
 
     let pushViewMsgs (m) =
@@ -25,18 +28,18 @@ module Cmd =
 
     /// Execute commands asynchronously
     let internal execute
-        (sender : IMessageSender<'Msg>)
-        (viewSender : IMessageSender<'ViewMsg> option)
+        (sender : IMsgSender<'Msg>)
+        (env : Environment<'ViewMsg>)
         (cmd : Cmd<'Msg, 'ViewMsg>) =
         for c in cmd.commands do
-            c(fun msg -> sender.PushMsg(msg))
+            c (env :> IEnvCore) (fun msg -> sender.PushMsg msg)
 
         
-        viewSender |> function
+        env.Updater |> function
         | None -> ()
-        | Some(viewSender) ->
+        | Some(sender) ->
             for msg in cmd.viewMsgs do
-                viewSender.PushMsg(msg)
+                sender.PushMsg(msg)
 
 
     /// Empty command
@@ -61,8 +64,8 @@ module Cmd =
             commands =
                 cmd.commands
                 |> List.map(fun c ->
-                    (fun pushMsg ->
-                        c(f >> pushMsg)
+                    (fun env pushMsg ->
+                        c env (f >> pushMsg)
                     )
                 )
 

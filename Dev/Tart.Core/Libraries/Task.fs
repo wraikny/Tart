@@ -139,7 +139,7 @@ module Task =
         : Cmd<'Msg, _> =
         
         Cmd.init [
-            (fun pushMsg ->
+            (fun _ pushMsg ->
                 async {
                     task.f() |> function
                     | Ok v ->
@@ -157,7 +157,7 @@ module Task =
         : Cmd<'Msg, _> =
 
         Cmd.init [
-            (fun pushMsg ->
+            (fun _ pushMsg ->
                 async {
                     task.f()
                     |> f

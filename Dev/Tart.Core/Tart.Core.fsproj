@@ -45,6 +45,7 @@
     <Compile Include="AssemblyInfo.fs" />
     <Content Include="packages.config" />
     <Compile Include="IMessenger.fs" />
+    <Compile Include="Environment.fs" />
     <Compile Include="Cmd.fs" />
     <Compile Include="CoreProgram.fs" />
     <Compile Include="Messenger.fs" />

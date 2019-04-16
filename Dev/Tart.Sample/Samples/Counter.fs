@@ -46,8 +46,10 @@ let view model : ViewModel =
 
 
 let messengerBuilder() : IMessenger<Msg, ViewModel> =
-    IMessenger.createMessenger {
-        init = init
-        update = update
-        view = view
-    } None
+    IMessenger.createMessenger
+        ( new Environment<_>() )
+        {
+            init = init
+            update = update
+            view = view
+        }
