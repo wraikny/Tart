@@ -2,7 +2,7 @@
 
 
 /// Telling msg and viewModel, to modelLoop(async).
-type IMessageSender<'Msg> =
+type IMsgSender<'Msg> =
     /// Add Msg to ConcurrentQueue
     abstract PushMsg : 'Msg -> unit
 
@@ -10,7 +10,7 @@ type IMessageSender<'Msg> =
 /// Telling msg and viewModel, between modelLoop(async) and view(mainThread).
 [<Interface>]
 type IMessenger<'Msg, 'ViewModel> =
-    inherit IMessageSender<'Msg>
+    inherit IMsgSender<'Msg>
 
     /// Thread safe getter of ViewModel
     abstract TryViewModel : 'ViewModel option

@@ -23,13 +23,13 @@ type private CoreMessenger<'Msg>() =
 
 
 [<Class>]
-type private Messenger<'Msg, 'ViewMsg, 'Model, 'ViewModel>(coreFuncs, updater) =
+type private Messenger<'Msg, 'ViewMsg, 'Model, 'ViewModel>(environment, coreFuncs) =
 
     let coreFuncs : CoreProgram<_, _, _, _> = coreFuncs
 
-    let coreMessenger = new CoreMessenger<'Msg>()
+    let environment : Environment<'ViewMsg> = environment
 
-    let updater : IMessageSender<'ViewMsg> option = updater
+    let coreMessenger = new CoreMessenger<'Msg>()
 
     let mutable lastModel :'Model option = None
 
@@ -61,8 +61,8 @@ type private Messenger<'Msg, 'ViewMsg, 'Model, 'ViewModel>(coreFuncs, updater) =
                     let newModel, cmd = coreFuncs.update msg model
 
                     cmd |> Cmd.execute
-                        (this :> IMessageSender<_>)
-                        updater
+                        (this :> IMsgSender<_>)
+                        environment
 
                     modelQueue.Enqueue(newModel)
 
@@ -90,7 +90,7 @@ type private Messenger<'Msg, 'ViewMsg, 'Model, 'ViewModel>(coreFuncs, updater) =
         not running
 
 
-    interface IMessageSender<'Msg> with
+    interface IMsgSender<'Msg> with
         member this.PushMsg(msg) = coreMessenger.PushMsg(msg)
     
 
@@ -117,6 +117,6 @@ type private Messenger<'Msg, 'ViewMsg, 'Model, 'ViewModel>(coreFuncs, updater) =
 
 
 module IMessenger =
-    let createMessenger (coreFuncs) (updater) =
-        (new Messenger<_, _, _, _>(coreFuncs, updater))
+    let createMessenger (environment) (coreFuncs) =
+        (new Messenger<_, _, _, _>(environment, coreFuncs))
         :> IMessenger<_, _>

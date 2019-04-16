@@ -25,5 +25,5 @@ type Updater<'Msg>() =
         update()
 
 
-    interface IMessageSender<'Msg> with
+    interface IMsgSender<'Msg> with
         member this.PushMsg(msg) = coreMessenger.PushMsg(msg)
