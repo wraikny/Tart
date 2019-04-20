@@ -116,7 +116,7 @@ type private Messenger<'Msg, 'ViewMsg, 'Model, 'ViewModel>(environment, coreFunc
             this.IsRunning <- false
 
 
-module IMessenger =
+module Messenger =
     let createMessenger (environment) (coreFuncs) =
         (new Messenger<_, _, _, _>(environment, coreFuncs))
         :> IMessenger<_, _>
