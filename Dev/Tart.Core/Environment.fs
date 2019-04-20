@@ -3,8 +3,9 @@
 open System
 
 [<Interface>]
-type internal IEnvCore =
+type internal IEnvironmentCore =
     abstract Random : Random
+
 
 [<Class>]
 type public Environment<'ViewMsg>() =
@@ -15,7 +16,7 @@ type public Environment<'ViewMsg>() =
     member __.Updater
         with get() = updater
 
-    member this.SetUpdater(updater' : #IMsgSender<_>) =
+    member this.SetUpdater(updater' : IMsgSender<_>) =
         updater <- Some(updater' :> IMsgSender<_>)
         this
 
@@ -25,6 +26,32 @@ type public Environment<'ViewMsg>() =
 
     static member Initialize<'ViewMsg>() = new Environment<'ViewMsg>()
 
-    interface IEnvCore with
+    interface IEnvironmentCore with
         member this.Random
             with get() = random
+
+
+type EnvironmentBuilder<'ViewMsg> =
+    {
+        seed : int option
+        updater : IMsgSender<'ViewMsg> option
+    }
+
+
+module EnvironmentBuilder =
+    let init() =
+        {
+            seed = None
+            updater = None
+        }
+
+    let build (builder) =
+        let env = new Environment<_>()
+        builder.seed |> function
+        | None -> ()
+        | Some seed -> env.SetRandom(new Random(seed)) |> ignore
+
+        builder.updater |> function
+        | None -> ()
+        | Some updater -> env.SetUpdater(updater) |> ignore
+        env

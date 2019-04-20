@@ -120,3 +120,8 @@ module IMessenger =
     let createMessenger (environment) (coreFuncs) =
         (new Messenger<_, _, _, _>(environment, coreFuncs))
         :> IMessenger<_, _>
+
+
+    let buildMessenger (envBuilder) (coreFuncs) =
+        (new Messenger<_, _, _, _>(envBuilder |> EnvironmentBuilder.build, coreFuncs))
+        :> IMessenger<_, _>
