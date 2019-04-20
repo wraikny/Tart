@@ -48,8 +48,10 @@
     <Compile Include="Basic.fs" />
     <Compile Include="Monad\Maybe.fs" />
     <Compile Include="Monad\Either.fs" />
+    <Compile Include="Math\Angle.fs" />
     <Compile Include="Math\Vec2.fs" />
     <Compile Include="Math\Vec3.fs" />
+    <Compile Include="Math\Interpolation.fs" />
     <Compile Include="Extension\Seq.fs" />
     <Compile Include="Wrapper\LockObject.fs" />
     <Compile Include="Wrapper\FixedSizeQueue.fs" />
