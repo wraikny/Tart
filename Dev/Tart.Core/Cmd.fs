@@ -1,7 +1,7 @@
 ﻿namespace wraikny.Tart.Core
 
 type internal PushMessage<'Msg> = 'Msg -> unit
-type internal Command<'Msg> = IEnvCore -> PushMessage<'Msg> -> unit
+type internal Command<'Msg> = IEnvironmentCore -> PushMessage<'Msg> -> unit
 
 type Cmd<'Msg, 'ViewMsg> =
     {
@@ -32,7 +32,7 @@ module Cmd =
         (env : Environment<'ViewMsg>)
         (cmd : Cmd<'Msg, 'ViewMsg>) =
         for c in cmd.commands do
-            c (env :> IEnvCore) (fun msg -> sender.PushMsg msg)
+            c (env :> IEnvironmentCore) (fun msg -> sender.PushMsg msg)
 
         
         env.Updater |> function
