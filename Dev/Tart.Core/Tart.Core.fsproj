@@ -52,6 +52,7 @@
     <Compile Include="Libraries\Random.fs" />
     <Compile Include="Libraries\Task.fs" />
     <Compile Include="Updater.fs" />
+    <Compile Include="Notifier.fs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="FSharp.Core">
