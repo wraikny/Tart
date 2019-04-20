@@ -6,13 +6,10 @@ open System.Collections.Concurrent
 
 
 [<AbstractClass>]
-type Updater<'Msg>() =
-    
-    let coreMessenger = new CoreMessenger<'Msg>()
+type Updater<'ViewMsg>() =
+    let coreMessenger = new CoreMessenger<'ViewMsg>()
 
-
-    abstract OnUpdate : 'Msg -> unit
-
+    abstract OnUpdate : 'ViewMsg -> unit
     
     member public this.Update() =
         let rec update() =
@@ -25,5 +22,5 @@ type Updater<'Msg>() =
         update()
 
 
-    interface IMsgSender<'Msg> with
+    interface IMsgSender<'ViewMsg> with
         member this.PushMsg(msg) = coreMessenger.PushMsg(msg)
