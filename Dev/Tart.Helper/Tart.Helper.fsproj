@@ -46,6 +46,7 @@
     <Content Include="packages.config" />
     <Compile Include="Observer.fs" />
     <Compile Include="Basic.fs" />
+    <Compile Include="Coroutine.fs" />
     <Compile Include="Monad\Maybe.fs" />
     <Compile Include="Monad\Either.fs" />
     <Compile Include="Math\Angle.fs" />
