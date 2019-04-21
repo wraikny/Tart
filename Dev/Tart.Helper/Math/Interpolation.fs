@@ -105,7 +105,7 @@ let getEasing easing (frame : int) (current : int) : float32 =
             if t = 1.0f then 1.0f else -pow(2.0f, -10.0f * t) + 1.0f
         | InOutExpo ->
             if t = 0.0f then 0.0f
-            elif t = 1.0f then 0.0f
+            elif t = 1.0f then 1.0f
             elif t < 0.5f then
                 (pow(2.0f, 16.0f * t) - 1.0f) / 510.0f
             else
