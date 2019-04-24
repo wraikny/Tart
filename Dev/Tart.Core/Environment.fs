@@ -38,13 +38,16 @@ type EnvironmentBuilder<'ViewMsg> =
     }
 
 
+[<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
 module EnvironmentBuilder =
+    [<CompiledName "Init">]
     let init() =
         {
             seed = None
             updater = None
         }
 
+    [<CompiledName "Builder">]
     let build (builder) =
         let env = new Environment<_>()
         builder.seed |> function

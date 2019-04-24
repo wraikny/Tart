@@ -116,12 +116,15 @@ type private Messenger<'Msg, 'ViewMsg, 'Model, 'ViewModel>(environment, coreFunc
             this.IsRunning <- false
 
 
+[<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
 module Messenger =
+    [<CompiledName "CreateMessenger">]
     let createMessenger (environment) (coreFuncs) =
         (new Messenger<_, _, _, _>(environment, coreFuncs))
         :> IMessenger<_, _>
 
 
+    [<CompiledName "BuildMessenger">]
     let buildMessenger (envBuilder) (coreFuncs) =
         (new Messenger<_, _, _, _>(envBuilder |> EnvironmentBuilder.build, coreFuncs))
         :> IMessenger<_, _>
