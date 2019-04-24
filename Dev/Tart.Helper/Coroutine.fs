@@ -5,10 +5,13 @@ open System.Collections
 open System.Linq
 
 /// 指定したフレーム数待機するコルーチンを生成する。
-let waitFrames n = seq{ for _ in 1..n -> () }
+[<CompiledName "WaitFrames">]
+let waitFrames n =
+    seq { for _ in 1..n -> () }
 
 
 /// 複数のコルーチンを同時に実行するコルーチンを生成する。
+[<CompiledName "AsParallel">]
 let asParallel (coroutines : #seq<seq<unit>>) =
     seq {
         let coroutines =

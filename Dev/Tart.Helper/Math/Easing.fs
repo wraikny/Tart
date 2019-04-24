@@ -40,6 +40,7 @@ open System
 open wraikny.Tart.Helper.Math
 
 
+[<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
 module Easing =
     [<CompiledName "Calculate">]
     let calculate easing (frame : int) (current : int) : float32 =
