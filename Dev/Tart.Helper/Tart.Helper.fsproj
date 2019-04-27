@@ -53,6 +53,7 @@
     <Compile Include="Math\Vec2.fs" />
     <Compile Include="Math\Vec3.fs" />
     <Compile Include="Math\Easing.fs" />
+    <Compile Include="Math\Rect.fs" />
     <Compile Include="Extension\Seq.fs" />
     <Compile Include="Wrapper\LockObject.fs" />
     <Compile Include="Wrapper\FixedSizeQueue.fs" />
