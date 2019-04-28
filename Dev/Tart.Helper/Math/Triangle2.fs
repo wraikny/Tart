@@ -74,3 +74,21 @@ module Triangle2 =
         let r = Vec2.length <| Vec2.init(center.x - x1, center.y - y1)
 
         Circle2.init(center, r)
+
+
+type Triangle2Float32(triangle) =
+    let triangle : float32 Triangle2 = triangle
+
+    member val Triangle = triangle with get
+
+    override this.GetHashCode() =
+        let hashCode q = (q this.Triangle).GetHashCode()
+        (hashCode Triangle2.p1)
+        ^^^ (hashCode Triangle2.p1)
+        ^^^ (hashCode Triangle2.p1)
+
+    override this.Equals(o) =
+        o |> function
+        | :? Triangle2Float32 as other ->
+            Triangle2.equal this.Triangle other.Triangle
+        | _ -> false
