@@ -53,6 +53,7 @@ module Triangle =
         |> Seq.fold (||) false
 
 
+    [<CompiledName "CircumscribedCircle">]
     let inline circumscribedCircle (t : Triangle< ^a, ^a Vec2 >) : Circle< ^a, ^a Vec2 > =
         let x1, y1 = t.p1.x, t.p1.y
         let x2, y2 = t.p2.x, t.p2.y
