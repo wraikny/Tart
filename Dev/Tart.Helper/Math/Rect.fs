@@ -26,8 +26,6 @@ module Rect =
 
     [<CompiledName "DiagonalPosition">]
     let inline diagonalPosition (r) =
-        [ Vec2.x; Vec2.y ]
-        |>
         Vec2.init(
             r.position.x + r.size.x
             , r.position.y + r.size.y
