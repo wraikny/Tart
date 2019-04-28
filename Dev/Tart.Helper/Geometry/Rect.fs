@@ -26,18 +26,42 @@ module Rect =
     [<CompiledName "Size">]
     let inline size r = r.size
 
+    [<CompiledName "Left">]
+    let inline left r = r.position.x
+
+    [<CompiledName "Right">]
+    let inline right r = r.position.x + r.size.x
+
+    [<CompiledName "Up">]
+    let inline up r = r.position.y
+
+    [<CompiledName "Down">]
+    let inline down r = r.position.y + r.size.y
+
+    // TODO : unresolved type parameter issue
     [<CompiledName "DiagonalPosition">]
-    let inline diagonalPosition (r) =
+    let inline diagonalPosition (r : ^a Rect) : ^a Vec2 =
         Vec2.init(
             r.position.x + r.size.x
             , r.position.y + r.size.y
         )
 
-    //[<CompiledName "IsCollided">]
-    //let inline isCollided (a : ^a Rect) (b : ^a Rect) : bool =
-    //    let aRU : ^a Vec2 = a.position
-    //    let aLD : ^a Vec2 = aRU + a.size
-    //    let bRU : ^a Vec2 = b.position
-    //    let bLD : ^a Vec2 = bRU + b.size
+    let inline private get_LU_RD (r : ^a Rect) : (^a Vec2 * ^a Vec2) =
+        r.position, diagonalPosition r
 
-    //    false
+
+    //[<CompiledName "Collision">]
+    //let inline collision (a : ^a Rect, b : ^a Rect) : (^a Vec2 * ^a Vec2) option =
+    //    let aLU, aRD = get_LU_RD a
+    //    let bLU, bRD = get_LU_RD b
+
+    //    let isCollided =
+    //        not (aRD.x < bLU.x || bRD.x < aLU.x)
+    //        && not (aRD.y < bLU.y || bRD.y < aLU.y)
+
+    //    if isCollided then
+            
+    //        None
+    //    else
+    //        None
+
