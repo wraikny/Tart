@@ -54,7 +54,7 @@
     <Compile Include="Math\Vec3.fs" />
     <Compile Include="Math\VectorClass.fs" />
     <Compile Include="Math\Rect.fs" />
-    <Compile Include="Math\Circle2.fs" />
+    <Compile Include="Math\Line.fs" />
     <Compile Include="Math\Circle.fs" />
     <Compile Include="Math\Triangle.fs" />
     <Compile Include="Math\Easing.fs" />
