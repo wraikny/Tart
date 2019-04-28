@@ -52,9 +52,11 @@
     <Compile Include="Math\Angle.fs" />
     <Compile Include="Math\Vec2.fs" />
     <Compile Include="Math\Vec3.fs" />
+    <Compile Include="Math\VectorClass.fs" />
     <Compile Include="Math\Rect.fs" />
     <Compile Include="Math\Circle2.fs" />
-    <Compile Include="Math\Triangle2.fs" />
+    <Compile Include="Math\Circle.fs" />
+    <Compile Include="Math\Triangle.fs" />
     <Compile Include="Math\Easing.fs" />
     <Compile Include="Graph\Delaunay.fs" />
     <Compile Include="Extension\Seq.fs" />

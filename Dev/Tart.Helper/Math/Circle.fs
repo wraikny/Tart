@@ -1,20 +1,23 @@
 ﻿namespace wraikny.Tart.Helper.Math
 
-type ^a Circle2 =
+
+type Circle< ^a, ^Vec
+        when (VectorBuiltin or ^Vec) : (static member VectorImpl : ^Vec -> VectorClass< ^a, ^Vec >)
+    > =
     {
-        center : ^a Vec2
+        center : ^Vec
         radius : ^a
     }
 
 
 [<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
-module Circle2 =
+module Circle =
     [<CompiledName "Init">]
-    let inline init(c, r) : ^a Circle2 =
+    let inline init(c, r) : Circle<_, _> =
         { center = c; radius = r; }
 
     [<CompiledName "Zero">]
-    let inline zero() : ^a Circle2 =
+    let inline zero() : Circle<_, _> =
         let zero : ^a = LanguagePrimitives.GenericZero
         init(Vec2.zero(), zero)
 

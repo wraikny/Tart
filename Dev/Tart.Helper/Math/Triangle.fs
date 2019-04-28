@@ -1,23 +1,25 @@
 ﻿namespace wraikny.Tart.Helper.Math
 
-type ^a Triangle2 =
+type Triangle< ^a, ^Vec
+        when (VectorBuiltin or ^Vec) : (static member VectorImpl : ^Vec -> VectorClass< ^a, ^Vec >)
+    > =
     {
-        p1 : ^a Vec2
-        p2 : ^a Vec2
-        p3 : ^a Vec2
+        p1 : ^Vec
+        p2 : ^Vec
+        p3 : ^Vec
     }
 
 
 
 [<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
-module Triangle2 =
+module Triangle =
     [<CompiledName "Init">]
-    let inline init(p1, p2, p3) : ^a Triangle2 =
+    let inline init(p1, p2, p3) : Triangle<_, _> =
         { p1 = p1; p2 = p2; p3 = p3 }
 
     [<CompiledName "Zero">]
-    let inline zero() : ^a Triangle2 =
-        let zero = Vec2.zero()
+    let inline zero() : Triangle< ^a, _> =
+        let zero = VectorClass.zero()
         init(zero, zero, zero)
 
     [<CompiledName "P1">]
@@ -51,7 +53,7 @@ module Triangle2 =
         |> Seq.fold (||) false
 
 
-    let inline circumscribedCircle (t : ^a Triangle2) : ^a Circle2 =
+    let inline circumscribedCircle (t : Triangle< ^a, ^a Vec2 >) : Circle< ^a, ^a Vec2 > =
         let x1, y1 = t.p1.x, t.p1.y
         let x2, y2 = t.p2.x, t.p2.y
         let x3, y3 = t.p3.x, t.p3.y
@@ -73,22 +75,22 @@ module Triangle2 =
 
         let r = Vec2.length <| Vec2.init(center.x - x1, center.y - y1)
 
-        Circle2.init(center, r)
+        Circle.init(center, r)
 
 
 type Triangle2Float32(triangle) =
-    let triangle : float32 Triangle2 = triangle
+    let triangle : Triangle<float32, Vec2<float32>> = triangle
 
     member val Triangle = triangle with get
 
     override this.GetHashCode() =
         let hashCode q = (q this.Triangle).GetHashCode()
-        (hashCode Triangle2.p1)
-        ^^^ (hashCode Triangle2.p1)
-        ^^^ (hashCode Triangle2.p1)
+        (hashCode Triangle.p1)
+        ^^^ (hashCode Triangle.p1)
+        ^^^ (hashCode Triangle.p1)
 
     override this.Equals(o) =
         o |> function
         | :? Triangle2Float32 as other ->
-            Triangle2.equal this.Triangle other.Triangle
+            Triangle.equal this.Triangle other.Triangle
         | _ -> false
