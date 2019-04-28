@@ -69,6 +69,15 @@ module Vec3 =
         let zero = LanguagePrimitives.GenericZero
         init(zero, zero, zero)
 
+    [<CompiledName "X">]
+    let inline x v = v.x
+
+    [<CompiledName "Y">]
+    let inline y v = v.y
+
+    [<CompiledName "Z">]
+    let inline z v = v.z
+
     [<CompiledName "Map">]
     let inline map (f : ^a -> ^b) (v : ^a Vec3) : ^b Vec3 =
         {x = f v.x; y = f v.y; z = f v.z }
