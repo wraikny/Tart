@@ -1,4 +1,6 @@
-﻿namespace wraikny.Tart.Helper.Math
+﻿namespace wraikny.Tart.Helper.Geometry
+
+open wraikny.Tart.Helper.Math
 
 type ^a Rect =
     {

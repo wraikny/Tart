@@ -1,4 +1,7 @@
-﻿namespace wraikny.Tart.Helper.Math
+﻿namespace wraikny.Tart.Helper.Geometry
+
+open wraikny.Tart.Helper.Math
+
 
 type Triangle< ^a, ^Vec
         when (VectorBuiltin or ^Vec) : (static member VectorImpl : ^Vec -> VectorClass< ^a, ^Vec >)

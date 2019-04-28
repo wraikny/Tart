@@ -1,6 +1,7 @@
 ﻿namespace wraikny.Tart.Helper.Graph
 
 open wraikny.Tart.Helper.Math
+open wraikny.Tart.Helper.Geometry
 
 
 [<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
