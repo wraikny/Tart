@@ -7,7 +7,7 @@ open wraikny.Tart.Helper.Math
 module Delaunay2 =
     /// 全体を包含する正三角形を求める
     [<CompiledName "GetHugeTriangle">]
-    let getHugeTriangle (range : float32 Rect) : float32 Triangle2 =
+    let getHugeTriangle (range : float32 Rect) : Triangle<float32, Vec2<float32>> =
         let leftUp = range.position
         let rightDown = range.position + range.size
 
@@ -28,13 +28,13 @@ module Delaunay2 =
         let y3 = center.y + 2.0f * radius
         let p3 = Vec2.init(center.x, y3)
 
-        Triangle2.init(p1, p2, p3)
+        Triangle.init(p1, p2, p3)
 
     open System.Collections.Generic
     open System.Linq
 
     [<CompiledName "GetTrianglesList">]
-    let getTrianglesList (range) (points : float32 Vec2 list) : float32 Triangle2 list =
+    let getTrianglesList (range) (points : float32 Vec2 list) : Triangle<float32, Vec2<float32>> list =
         let hugeTriangle = getHugeTriangle range
 
         let trianglesSet = new HashSet<Triangle2Float32>()
@@ -63,15 +63,15 @@ module Delaunay2 =
             // 与えられた点が各々の三角形の外接円の中に含まれるかどうか判定  
             for t in (new HashSet<_>(trianglesSet)) do
                 // 外接円
-                let c = Triangle2.circumscribedCircle t.Triangle
+                let c = Triangle.circumscribedCircle t.Triangle
 
                 let sqDistance = Vec2.squaredLength (c.center - p)
 
                 if(sqDistance < c.radius * c.radius) then
                     let tri = t.Triangle
-                    addToTmpSet( Triangle2.init(p, tri.p1, tri.p2) )
-                    addToTmpSet( Triangle2.init(p, tri.p2, tri.p3) )
-                    addToTmpSet( Triangle2.init(p, tri.p3, tri.p1) )
+                    addToTmpSet( Triangle.init(p, tri.p1, tri.p2) )
+                    addToTmpSet( Triangle.init(p, tri.p2, tri.p3) )
+                    addToTmpSet( Triangle.init(p, tri.p3, tri.p1) )
                     
                     trianglesSet.Remove(t) |> ignore
 
@@ -83,7 +83,7 @@ module Delaunay2 =
 
 
         let trianglesHavingCommonPointOfHuge =
-            trianglesSet.Where(fun x -> Triangle2.hasCommonPoint x.Triangle hugeTriangle)
+            trianglesSet.Where(fun x -> Triangle.hasCommonPoint x.Triangle hugeTriangle)
 
         
         for t in trianglesHavingCommonPointOfHuge do
