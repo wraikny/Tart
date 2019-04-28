@@ -23,3 +23,7 @@ module Rect =
 
     [<CompiledName "Size">]
     let size r = r.size
+
+    //[<CompiledName "DiagonalPosition">]
+    //let inline diagonalPosition (r) =
+    //    r.position + r.size
