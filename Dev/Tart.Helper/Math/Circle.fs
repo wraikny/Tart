@@ -2,7 +2,8 @@
 
 
 type Circle< ^a, ^Vec
-        when (VectorBuiltin or ^Vec) : (static member VectorImpl : ^Vec -> VectorClass< ^a, ^Vec >)
+        when (VectorBuiltin or ^Vec) :
+            (static member VectorImpl : ^Vec -> VectorClass< ^a, ^Vec >)
     > =
     {
         center : ^Vec
