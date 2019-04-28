@@ -60,7 +60,7 @@
     <Compile Include="Math\Easing.fs" />
     <Compile Include="Graph\Graph.fs" />
     <Compile Include="Graph\UnionFold.fs" />
-    <Compile Include="Graph\Kruskal.fs" />
+    <Compile Include="Graph\SpanningTree.fs" />
     <Compile Include="Graph\Delaunay.fs" />
     <Compile Include="Extension\Seq.fs" />
     <Compile Include="Wrapper\LockObject.fs" />
