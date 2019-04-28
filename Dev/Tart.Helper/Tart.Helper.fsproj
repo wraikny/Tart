@@ -56,6 +56,7 @@
     <Compile Include="Math\Circle2.fs" />
     <Compile Include="Math\Triangle2.fs" />
     <Compile Include="Math\Easing.fs" />
+    <Compile Include="Graph\Delaunay.fs" />
     <Compile Include="Extension\Seq.fs" />
     <Compile Include="Wrapper\LockObject.fs" />
     <Compile Include="Wrapper\FixedSizeQueue.fs" />
