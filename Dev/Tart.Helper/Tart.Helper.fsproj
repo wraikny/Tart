@@ -53,11 +53,11 @@
     <Compile Include="Math\Vec2.fs" />
     <Compile Include="Math\Vec3.fs" />
     <Compile Include="Math\VectorClass.fs" />
-    <Compile Include="Math\Rect.fs" />
-    <Compile Include="Math\Line.fs" />
-    <Compile Include="Math\Circle.fs" />
-    <Compile Include="Math\Triangle.fs" />
     <Compile Include="Math\Easing.fs" />
+    <Compile Include="Geometry\Rect.fs" />
+    <Compile Include="Geometry\Line.fs" />
+    <Compile Include="Geometry\Circle.fs" />
+    <Compile Include="Geometry\Triangle.fs" />
     <Compile Include="Graph\Graph.fs" />
     <Compile Include="Graph\UnionFold.fs" />
     <Compile Include="Graph\SpanningTree.fs" />
