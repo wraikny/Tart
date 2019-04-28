@@ -23,13 +23,13 @@ type UnionFold(num) =
             r
 
 
-    member this.InSameSet(node1, node2) =
-        this.Root(node1) = this.Root(node2)
+    member this.InSameSet(edge : Edge<_, _>) =
+        this.Root(edge.node1.label) = this.Root(edge.node2.label)
 
 
-    member this.Unite(node1, node2) =
-        let x = this.Root(node1)
-        let y = this.Root(node2)
+    member this.Unite(edge : Edge<_, _>) =
+        let x = this.Root(edge.node1.label)
+        let y = this.Root(edge.node2.label)
 
         if x = y then ()
         elif rank.[x] < rank.[y] then
