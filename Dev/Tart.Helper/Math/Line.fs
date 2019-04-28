@@ -27,3 +27,8 @@ module Line =
 
     [<CompiledName "EndPoint">]
     let inline endPoint l = l.endPoint
+
+
+    [<CompiledName "Length">]
+    let inline length l =
+        VectorClass.length(l.startPoint - l.endPoint)
