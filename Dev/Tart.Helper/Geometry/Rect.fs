@@ -12,13 +12,13 @@ type ^a Rect =
 [<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
 module Rect =
     [<CompiledName "Init">]
-    let inline init(p, s) : _ Rect =
-        { position = p; size = s }
+    let inline init position size : _ Rect =
+        { position = position; size = size }
 
     [<CompiledName "Zero">]
     let inline zero() : ^a Rect =
         let zero = Vec2.zero()
-        init(zero, zero)
+        init zero zero
 
     [<CompiledName "Position">]
     let inline position r = r.position
@@ -46,18 +46,23 @@ module Rect =
             , r.position.y + r.size.y
         )
 
-    let inline private get_LU_RD (r : ^a Rect) : (^a Vec2 * ^a Vec2) =
+    let inline get_LU_RD (r : ^a Rect) : (^a Vec2 * ^a Vec2) =
         r.position, diagonalPosition r
 
 
+    [<CompiledName "IsCollidedX">]
+    let inline isCollidedAxis(axis : ^a Vec2 -> ^a) (aLU, aRD) (bLU, bRD) : bool =
+        not (axis aRD < axis bLU || axis bRD < axis aLU)
+
+
     [<CompiledName "IsCollided">]
-    let inline isCollided (a : ^a Rect, b : ^a Rect) : bool =
-        let aLU, aRD = get_LU_RD a
-        let bLU, bRD = get_LU_RD b
+    let inline isCollided (a : ^a Rect) (b : ^a Rect) : bool =
+        let aLURD = get_LU_RD a
+        let bLURD = get_LU_RD b
 
         let isCollided =
-            not (aRD.x < bLU.x || bRD.x < aLU.x)
-            && not (aRD.y < bLU.y || bRD.y < aLU.y)
+            (isCollidedAxis Vec2.x aLURD bLURD)
+            && (isCollidedAxis Vec2.y aLURD bLURD)
 
         isCollided
 
