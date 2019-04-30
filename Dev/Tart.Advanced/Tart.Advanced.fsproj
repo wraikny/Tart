@@ -44,7 +44,7 @@
   <ItemGroup>
     <Compile Include="AssemblyInfo.fs" />
     <Content Include="packages.config" />
-    <Compile Include="Dungeon\Room.fs" />
+    <Compile Include="Dungeon\DungeonModel.fs" />
     <Compile Include="Dungeon\DungeonBuilder.fs" />
   </ItemGroup>
   <ItemGroup>
