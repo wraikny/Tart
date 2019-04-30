@@ -2,41 +2,60 @@
 
 open wraikny.Tart.Helper.Math
 open wraikny.Tart.Helper.Geometry
+open wraikny.Tart.Helper.Graph
 
-type DungeonBuilder = {
-    /// 乱数生成に用いるシード値
-    seed : int
-    /// 生成する部屋の数
-    roomCount : int
-    /// 部屋を生成する楕円の範囲
-    roomGeneratedRange : float32 * float32
-
-    /// 生成する部屋のマスの最小数
-    minRoomSize : int Vec2
-    /// 生成する部屋のマスの最大数
-    maxRoomSize : int Vec2
-
-    /// メインの部屋を決定する部屋するしきい値に使う平均に対する割合。
-    /// 1.25f程度で良い結果が得られる。
-    roomMeanThreshold : float32
-
-    /// 木から復元するエッジの割合(0.0f ~ 1.0f)。
-    /// 0.08f ~ 0.15f で良い結果が得られる。
-    restoreEdgeRate : float32
-}
+type SpaceID =
+    | Large of int
+    | Small of int
+    | Corridor of int
 
 
-type Room = {
+[<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
+module SpaceID =
+    let id id = id |> function
+        | Large id
+        | Small id
+        | Corridor id -> id
+
+
+type Space = {
+    id : SpaceID
     rect : int Rect
-    id : int
 }
 
-module Room =
-    let internal init rect id = {rect = rect; id = id}
+
+module Space =
+    let internal init id rect = {
+        id = id
+        rect = rect
+    }
 
 
 type DungeonModel = {
-    largeRooms : Room list
-    smallRooms : Room list
-    corridors : Room list
+    largeRooms : Map<int, Space>
+    smallRooms : Map<int, Space>
+    corridors : Map<int, Space>
+
+    /// 大部屋のIDをノードに、距離を重みにもつノードのリスト
+    largeRoomEdges : Edge<unit, float32> list
+
+    cells : Map<int Vec2, SpaceID>
 }
+
+module DungeonModel =
+    let tryFindSpace id dungeon =
+        let target, id = id |> function
+            | Large id -> dungeon.largeRooms, id
+            | Small id -> dungeon.smallRooms, id
+            | Corridor id -> dungeon.corridors, id
+
+        target
+        |> Map.tryFind id
+
+        
+    let getSpaceAt coordinate dungeon =
+        dungeon.cells
+        |> Map.tryFind coordinate
+        |> Option.bind(fun id ->
+            tryFindSpace id dungeon
+        )
