@@ -5,6 +5,7 @@ type Node<'V> = {
     value : 'V
 }
 
+[<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
 module Node =
     [<CompiledName "Init">]
     let init (label, value) = { label = label; value = value }
@@ -12,6 +13,13 @@ module Node =
     [<CompiledName "Equal">]
     let equal (n1 : Node<'a>) (n2 : Node<'a>) =
         n1.label = n2.label
+
+    [<CompiledName "Map">]
+    let map f node =
+        {
+            label = node.label
+            value = f node
+        }
 
 
 
@@ -43,6 +51,18 @@ module Edge =
     let equal (e1 : Edge<'a, 'b>) (e2 : Edge<'a, 'b>) =
         ( (Node.equal e1.node1 e2.node1) && (Node.equal e1.node2 e2.node2) )
         || ( (Node.equal e1.node1 e2.node2) && (Node.equal e1.node2 e2.node1) )
+
+    [<CompiledName "Values">]
+    let values edge =
+        edge.node1.value, edge.node2.value
+
+    [<CompiledName "MapValues">]
+    let mapValues f edge =
+        {
+            weight = edge.weight
+            node1 = edge.node1 |> Node.map f
+            node2 = edge.node2 |> Node.map f
+        }
 
 
 
