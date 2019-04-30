@@ -38,7 +38,16 @@ module Rect =
     [<CompiledName "Down">]
     let inline down r = r.position.y + r.size.y
 
-    // TODO : unresolved type parameter issue
+    [<CompiledName "Map">]
+    let inline map f rect =
+        {
+            position = rect.position |> f
+            size = rect.size |> f
+        }
+
+    [<CompiledName "Map1">]
+    let inline map1 f = (Vec2.map f) |> map
+
     [<CompiledName "DiagonalPosition">]
     let inline diagonalPosition (r : ^a Rect) : ^a Vec2 =
         Vec2.init(
