@@ -50,18 +50,14 @@ module Rect =
         r.position, diagonalPosition r
 
 
-    //[<CompiledName "Collision">]
-    //let inline collision (a : ^a Rect, b : ^a Rect) : (^a Vec2 * ^a Vec2) option =
-    //    let aLU, aRD = get_LU_RD a
-    //    let bLU, bRD = get_LU_RD b
+    [<CompiledName "IsCollided">]
+    let inline isCollided (a : ^a Rect, b : ^a Rect) : bool =
+        let aLU, aRD = get_LU_RD a
+        let bLU, bRD = get_LU_RD b
 
-    //    let isCollided =
-    //        not (aRD.x < bLU.x || bRD.x < aLU.x)
-    //        && not (aRD.y < bLU.y || bRD.y < aLU.y)
+        let isCollided =
+            not (aRD.x < bLU.x || bRD.x < aLU.x)
+            && not (aRD.y < bLU.y || bRD.y < aLU.y)
 
-    //    if isCollided then
-            
-    //        None
-    //    else
-    //        None
+        isCollided
 
