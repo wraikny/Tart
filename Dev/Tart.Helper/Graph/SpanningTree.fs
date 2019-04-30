@@ -7,7 +7,7 @@ open System.Collections.Generic
 [<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
 module SpanningTree =
     [<CompiledName "Kruskal">]
-    let inline kruskal nodeCount (edges : Edge<_, _> list) =
+    let kruskal nodeCount (edges : Edge<_, _> list) =
         
         let uf = new UnionFold(nodeCount)
 

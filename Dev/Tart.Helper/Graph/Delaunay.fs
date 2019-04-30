@@ -34,15 +34,43 @@ module Delaunay2 =
     open System.Collections.Generic
     open System.Linq
 
+
     [<CompiledName "GetTrianglesList">]
-    let getTrianglesList (range) (points : float32 Vec2 list) : Triangle<float32, Vec2<float32>> list =
+    let getTrianglesList (points : Node<float32 Vec2> list) : Edge<Vec2<float32>, float32> list =
+        let minX, minY, maxX, maxY =
+            let rec f (ps : Node<float32 Vec2> list) result =
+                ps |> function
+                | [] -> result
+                | {value = {x = x; y = y}}::ps ->
+                    let ix, iy, ax, ay = result
+
+                    let ix, ax = min x ix, max x ax
+                    let iy, ay = min y iy, max y ay
+
+                    f ps (ix, ax, iy, ay)
+
+            f points (0.0f, 0.0f, 0.0f, 0.0f)
+
+        let range =
+            {
+                position = Vec2.init(minX, minY)
+                size = Vec2.init(maxX - minX, maxY - minY)
+            }
+
         let hugeTriangle = getHugeTriangle range
 
-        let trianglesSet = new HashSet<Triangle2Float32>()
-        let addTriangleToSet tri =
-            trianglesSet.Add( new Triangle2Float32(tri) )
+        let trianglesSet = new HashSet<NodeTriangle>()
+        let addTriangleToSet nodes =
+            trianglesSet.Add( new NodeTriangle(nodes) )
 
-        addTriangleToSet(hugeTriangle) |> ignore
+        let hugeTriangleNodes =
+            let node1 = Node.init (-1, hugeTriangle.p1)
+            let node2 = Node.init (-2, hugeTriangle.p1)
+            let node3 = Node.init (-3, hugeTriangle.p1)
+
+            (node1, node2, node3)
+
+        addTriangleToSet(hugeTriangleNodes) |> ignore
 
         // 点を逐次添加し、反復的に三角分割を行う  
         for p in points do
@@ -50,9 +78,9 @@ module Delaunay2 =
             /// 追加候補の三角形を保持する一時ハッシュ
             /// Key : 三角形
             /// Value : 重複しているか
-            let tmpTriangleSet = new Dictionary<Triangle2Float32, bool>()
+            let tmpTriangleSet = new Dictionary<NodeTriangle, bool>()
             let addToTmpSet tri =
-                let tri = new Triangle2Float32(tri)
+                let tri = new NodeTriangle(tri)
                 let isDuplicated = not <| tmpTriangleSet.ContainsKey(tri)
                 if isDuplicated then
                     tmpTriangleSet.Add(tri, isDuplicated)
@@ -66,13 +94,13 @@ module Delaunay2 =
                 // 外接円
                 let c = Triangle.circumscribedCircle t.Triangle
 
-                let sqDistance = Vec2.squaredLength (c.center - p)
+                let sqDistance = Vec2.squaredLength (c.center - p.value)
 
                 if(sqDistance < c.radius * c.radius) then
-                    let tri = t.Triangle
-                    addToTmpSet( Triangle.init(p, tri.p1, tri.p2) )
-                    addToTmpSet( Triangle.init(p, tri.p2, tri.p3) )
-                    addToTmpSet( Triangle.init(p, tri.p3, tri.p1) )
+                    let tri = t
+                    addToTmpSet( (p, tri.Node1, tri.Node2) )
+                    addToTmpSet( (p, tri.Node2, tri.Node3) )
+                    addToTmpSet( (p, tri.Node3, tri.Node1) )
                     
                     trianglesSet.Remove(t) |> ignore
 
@@ -84,14 +112,24 @@ module Delaunay2 =
 
 
         let trianglesHavingCommonPointOfHuge =
-            trianglesSet.Where(fun x -> Triangle.hasCommonPoint x.Triangle hugeTriangle)
+            trianglesSet.Where(fun x ->
+                Triangle.hasCommonPoint x.Triangle hugeTriangle
+            )
 
         
         for t in trianglesHavingCommonPointOfHuge do
             trianglesSet.Remove(t) |> ignore
         
 
-        seq {
-            for t in trianglesSet -> t.Triangle
-        }
-        |> Seq.toList
+        let edges = new List<Edge<float32 Vec2, float32>>()
+        for t in trianglesSet do
+            let (e1, e2, e3) = t.Edges
+            let addEdge e = 
+                if not <| edges.Exists(fun e0 -> Edge.equal e e0) then
+                    edges.Add(e)
+            addEdge e1
+            addEdge e2
+            addEdge e3
+
+
+        [for e in edges -> e ]
