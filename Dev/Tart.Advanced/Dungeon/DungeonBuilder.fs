@@ -16,9 +16,9 @@ type DungeonBuilder = {
     roomGeneratedRange : float32 * float32
 
     /// 生成する部屋のマスの最小数
-    minRoomSize : int Vec2
+    minRoomSize : int * int
     /// 生成する部屋のマスの最大数
-    maxRoomSize : int Vec2
+    maxRoomSize : int * int
 
     /// x << 1.0f
     roomMoveRate : float32
@@ -73,10 +73,12 @@ module private WithRandom =
             let size =
                 let min =
                     builder.parameter.minRoomSize
+                    |> Vec2.init
                     |> Vec2.map float32
 
                 let max =
                     builder.parameter.maxRoomSize
+                    |> Vec2.init
                     |> Vec2.map float32
 
                 let rand = builder |> getRandomValue
@@ -100,7 +102,7 @@ module private WithRandom =
                 let pos = rect.position |> Vec2.map float32
                 Node.init (id, pos)
             )
-            |> Delaunay2.getTrianglesList
+            |> Delaunay2.getNodeList
         
         let largeRoomsSpanningTree =
             largeRoomEdges
@@ -140,9 +142,8 @@ module DungeonBuilder =
             let len = rooms |> List.length |> float32
             let sum =
                 rooms
-                |> List.map Rect.size
-                |> List.map (Vec2.map float32)
-                |> List.fold (fun s r -> s + r) (Vec2.zero())
+                |> List.map ( Rect.size >> (Vec2.map float32) )
+                |> List.fold (+) (Vec2.zero())
             (sum * rate / len)
 
         rooms
@@ -151,44 +152,23 @@ module DungeonBuilder =
             size.x >= threshold.x && size.y > threshold.y
         )
 
-
-    let private moveRooms (rooms : int Rect list) moveRate : int Rect list =
-        let move diff room =
-            { room with position = room.position + diff }
+    open System.Collections.Generic
+    // open System.Linq
 
 
-        let rec update isBreaked rooms =
-            if isBreaked then rooms
-            else
-                let isCollided r1 r2 =
-                    Rect.isCollided (Rect.map1 int r1) (Rect.map1 int r2)
+    let private moveRooms (rooms : int Rect list) movingRate : int Rect list =
+        let roomsList = new List<MovingRoom>()
 
-                let rec updateRoom isMoved rooms room =
-                    rooms |> function
-                    | [] -> (isMoved, room)
-                    | r::rs when isCollided room r ->
-                        let dir =
-                            ((r.position + r.size / 2.0f) - (room.position + room.size / 2.0f))
-                            |> Vec2.normalize
-                        let room = room |> move (dir * moveRate)
-                        updateRoom true rs room
-                    | _::rs ->
-                        updateRoom isMoved rs room
-                
-                let rec updateRooms rooms (continued, result) =
-                    rooms |> function
-                    | [] -> (continued, result)
-                    | room::rs ->
-                        let isMoved, room = room |> updateRoom false rooms
-                        updateRooms rs (continued || isMoved, room::result)
+        for r in rooms do
+            let movingRoom = new MovingRoom(r |> Rect.map1 float32, movingRate, roomsList)
+            roomsList.Add(movingRoom)
 
-                let continued, rooms =
-                    updateRooms rooms (false, [])
 
-                update (not continued) rooms
-                    
+        while roomsList.Exists(fun r -> r.IsMoving) do
+            roomsList.ForEach(fun r -> r.Update())
+
             
-        rooms
+        [ for r in roomsList -> r.RectI ]
 
 
     let private generateCorridors (width) (rect1 : int Rect, rect2 : int Rect) : int Rect list =
