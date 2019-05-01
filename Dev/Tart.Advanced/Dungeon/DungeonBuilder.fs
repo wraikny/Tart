@@ -20,6 +20,7 @@ type DungeonBuilder = {
     /// 生成する部屋のマスの最大数
     maxRoomSize : int Vec2
 
+    /// x << 1.0f
     roomMoveRate : float32
 
     /// メインの部屋を決定する部屋するしきい値に使う平均に対する割合。
@@ -149,54 +150,6 @@ module DungeonBuilder =
             let size = rect.size |> Vec2.map float32
             size.x >= threshold.x && size.y > threshold.y
         )
-
-    [<Class>]
-    type private MovingRoom(rect : float32 Rect, rate) =
-        let rate : float32 = rate
-
-        let position = ref rect.position
-
-        let rightDown = ref (rect |> Rect.diagonalPosition)
-
-        member val Position = !position with get
-
-        member val RightDown = !rightDown with get
-
-        member val Size = rect.size |> Vec2.map int with get
-
-        member val IsUpdated = false with get, set
-
-        member this.RectI
-            with get() : int Rect =
-                {
-                    position = this.Position |> Vec2.map int
-                    size = this.Size
-                }
-
-        member this.IsCollidedWith(other : MovingRoom) =
-            Rect.isCollided this.RectI other.RectI
-
-
-        member this.UpdatePosition(diff) =
-            position := diff + this.Position
-            rightDown := !rightDown + diff
-
-
-        member this.Move(other : MovingRoom) =
-            let getDiff axis =
-                if (axis this.Position < axis other.Position) then
-                    axis other.RightDown - axis this.Position
-                else
-                    axis this.RightDown - axis other.Position
-
-            let dx, dy = getDiff Vec2.x, getDiff Vec2.y
-            let diff = Vec2.init(dx, dy) * 0.5f * rate
-
-            this.UpdatePosition(diff)
-            ()
-
-
-
 
 
     let private moveRooms (rooms : int Rect list) moveRate : int Rect list =
