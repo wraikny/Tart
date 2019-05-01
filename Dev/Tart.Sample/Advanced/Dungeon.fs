@@ -8,12 +8,12 @@ open wraikny.Tart.Helper.Math
 let generate() =
     let builder : DungeonBuilder = {
         seed = 0
-        roomCount = 200
+        roomCount = 500
         roomGeneratedRange = (100.0f, 100.0f)
-        minRoomSize = (6, 6)
-        maxRoomSize = (20, 20)
-        roomMoveRate = 0.2f
-        roomMeanThreshold = 1.3f
+        minRoomSize = (8, 8)
+        maxRoomSize = (16, 16)
+        roomMoveRate = 0.3f
+        roomMeanThreshold = 1.25f
         restoreEdgeRate = 0.1f
         corridorWidth = 3
     }
@@ -61,7 +61,7 @@ let generate() =
     scene.AddLayer(larges)
     scene.AddLayer(edges)
 
-    let n = 5.0f
+    let n = 4.0f
 
     let create (r : int Rect) =
         let r = r |> Rect.map1 (float32 >> (*) n)
