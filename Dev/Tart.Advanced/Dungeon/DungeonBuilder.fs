@@ -165,7 +165,7 @@ module DungeonBuilder =
 
 
         while roomsList.Exists(fun r -> r.IsMoving) do
-            roomsList.ForEach(fun r -> r.Update())
+            for r in roomsList do r.Update()
 
             
         [ for r in roomsList -> r.RectI ]

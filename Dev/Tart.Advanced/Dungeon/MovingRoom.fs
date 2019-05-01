@@ -8,7 +8,7 @@ open wraikny.Tart.Helper.Geometry
 
 
 [<Class>]
-type private MovingRoom(rect : float32 Rect, movingRate, rooms) =
+type internal MovingRoom(rect : float32 Rect, movingRate, rooms) =
     let rooms : IReadOnlyList<MovingRoom> = rooms
 
     let movingRate : float32 = movingRate
