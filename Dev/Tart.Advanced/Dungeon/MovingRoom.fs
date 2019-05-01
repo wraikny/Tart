@@ -40,12 +40,16 @@ type internal MovingRoom(rect : float32 Rect, movingRate, rooms) =
         for other in targets do
             if (len this) > (len other) then
                 this.Move(other)
-                other.Move(this)
+
+                if this.IsCollidedWith other then
+                    other.Move(this)
             else
                 other.Move(this)
-                this.Move(other)
 
-        let d = 0.1f * movingRate * movingRate * count
+                if this.IsCollidedWith other then
+                    this.Move(other)
+
+        let d = 1.0f * movingRate * movingRate * count
         this.IsMoving <- Vec2.squaredLength (lastPosition - position) > d * d
     
 
@@ -68,21 +72,25 @@ type internal MovingRoom(rect : float32 Rect, movingRate, rooms) =
 
     member this.Move(other : MovingRoom) =
         let getDiff axis =
-            if (axis other.Center < axis this.Center) then
-                axis other.RightDown - axis this.Position
-            else
-                axis this.RightDown - axis other.Position
+            let centerOrder = sign ((axis this.Center) - (axis other.Center)) |> float32
+            let diff =
+                if centerOrder > 0.0f then
+                    axis other.RightDown - axis this.Position
+                else
+                    axis other.Position - axis this.RightDown
+
+            (abs(diff) + 1.0f / movingRate) * centerOrder
 
         let dx, dy = getDiff Vec2.x, getDiff Vec2.y
 
-        // let diff = Vec2.init <| if dx < dy then (dx, 0.0f) else (0.0f, dy)
-        let diff = Vec2.init(dx, dy)
+        let diff = Vec2.init <| if dx < dy then (dx, 0.0f) else (0.0f, dy)
+        // let diff = Vec2.init(dx, dy)
 
-        let diff = diff * 0.5f * movingRate
+        let diff = diff * movingRate
 
-        if not <| nearEnough diff (Vec2.zero()) then
-            this.UpdatePosition(diff)
+        this.UpdatePosition(diff)
 
 
     member private this.UpdatePosition(diff) =
         position <- this.Position + diff
+        position <- position |> (Vec2.map int >> Vec2.map float32)
