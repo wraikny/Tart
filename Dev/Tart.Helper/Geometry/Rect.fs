@@ -55,6 +55,15 @@ module Rect =
             , r.position.y + r.size.y
         )
 
+    [<CompiledName "CenterPosition">]
+    let inline centerPosition (r : ^a Rect) : ^a Vec2 =
+        let one = LanguagePrimitives.GenericOne
+        let two = one + one
+        Vec2.init(
+            r.position.x + r.size.x / two
+            , r.position.y + r.size.y / two
+        )
+
     let inline get_LU_RD (r : ^a Rect) : (^a Vec2 * ^a Vec2) =
         r.position, diagonalPosition r
 
