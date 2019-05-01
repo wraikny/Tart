@@ -51,31 +51,27 @@ module Triangle =
             yield (s, t)
         }
         |> Seq.map(fun (s, t) ->
-            s a = s b
+            (s a = t b)
         )
         |> Seq.fold (||) false
 
 
     [<CompiledName "CircumscribedCircle">]
-    let inline circumscribedCircle (t : Triangle< ^a, ^a Vec2 >) : Circle< ^a, ^a Vec2 > =
+    let inline circumscribedCircle (t : Triangle< float32, float32 Vec2 >) : Circle< float32, float32 Vec2 > =
         let x1, y1 = t.p1.x, t.p1.y
         let x2, y2 = t.p2.x, t.p2.y
         let x3, y3 = t.p3.x, t.p3.y
+        let c = 2.0f * ((x2 - x1) * (y3 - y1) - (y2 - y1) * (x3 - x1))
 
-        let one : ^a = LanguagePrimitives.GenericOne
-        let two : ^a = one + one
-
-        let c : ^a = (two * ((x2 - x1) * (y3 - y1) - (y2 - y1) * (x3 - x1))) ** -one
-
-        let x : ^a =
+        let x =
             ( (y3 - y1) * (x2 * x2 - x1 * x1 + y2 * y2 - y1 * y1)
-            + (y1 - y2) * (x3 * x3 - x1 * x1 + y3 * y3 - y1 * y1)) * c
+            + (y1 - y2) * (x3 * x3 - x1 * x1 + y3 * y3 - y1 * y1)) / c
 
-        let y : ^a = 
+        let y = 
             ( (x1 - x3) * (x2 * x2 - x1 * x1 + y2 * y2 - y1 * y1)
-            + (x2 - x1) * (x3 * x3 - x1 * x1 + y3 * y3 - y1 * y1)) * c
+            + (x2 - x1) * (x3 * x3 - x1 * x1 + y3 * y3 - y1 * y1)) / c
 
-        let center : ^a Vec2 = Vec2.init(x, y)
+        let center = Vec2.init(x, y)
 
         let r = Vec2.length <| Vec2.init(center.x - x1, center.y - y1)
 
