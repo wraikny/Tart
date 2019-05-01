@@ -48,6 +48,7 @@
   <ItemGroup>
     <Compile Include="AssemblyInfo.fs" />
     <Compile Include="Samples\Counter.fs" />
+    <Compile Include="Advanced\Dungeon.fs" />
     <Compile Include="Program.fs" />
     <None Include="App.config" />
     <Content Include="packages.config" />
@@ -66,6 +67,11 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\Tart.Advanced\Tart.Advanced.fsproj">
+      <Name>Tart.Advanced</Name>
+      <Project>{ce58dc38-831b-4bd5-87cb-bf861687a3bf}</Project>
+      <Private>True</Private>
+    </ProjectReference>
     <ProjectReference Include="..\Tart.Core\Tart.Core.fsproj">
       <Name>Tart.Core</Name>
       <Project>{8c6e9ecf-5f33-47a3-ae3f-b9a77bd4f544}</Project>
