@@ -36,7 +36,7 @@ module Delaunay2 =
 
 
     [<CompiledName "GetTrianglesList">]
-    let getTrianglesList (points : Node<float32 Vec2> list) : Edge<Vec2<float32>, float32> list =
+    let getTrianglesList (points : Node<float32 Vec2> list) : HashSet<NodeTriangle> =
         let minX, minY, maxX, maxY =
             let rec f (ps : Node<float32 Vec2> list) result =
                 ps |> function
@@ -114,15 +114,21 @@ module Delaunay2 =
         let trianglesHavingCommonPointOfHuge =
             trianglesSet.Where(fun x ->
                 Triangle.hasCommonPoint x.Triangle hugeTriangle
-            )
+            ).ToList()
 
         
         for t in trianglesHavingCommonPointOfHuge do
             trianglesSet.Remove(t) |> ignore
-        
+
+
+        trianglesSet
+
+
+    let getNodeList points : Edge<Vec2<float32>, float32> list =
+        let triangles = getTrianglesList points
 
         let edges = new List<Edge<float32 Vec2, float32>>()
-        for t in trianglesSet do
+        for t in triangles do
             let (e1, e2, e3) = t.Edges
             let addEdge e = 
                 if not <| edges.Exists(fun e0 -> Edge.equal e e0) then
@@ -130,6 +136,5 @@ module Delaunay2 =
             addEdge e1
             addEdge e2
             addEdge e3
-
 
         [for e in edges -> e ]
