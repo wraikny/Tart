@@ -3,13 +3,11 @@
 open wraikny.Tart.Helper.Math
 
 
-type Triangle< ^a, ^Vec
-        when (VectorBuiltin or ^Vec) : (static member VectorImpl : ^Vec -> VectorClass< ^a, ^Vec >)
-    > =
+type Triangle< ^a> =
     {
-        p1 : ^Vec
-        p2 : ^Vec
-        p3 : ^Vec
+        p1 : ^a
+        p2 : ^a
+        p3 : ^a
     }
 
 
@@ -17,12 +15,12 @@ type Triangle< ^a, ^Vec
 [<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
 module Triangle =
     [<CompiledName "Init">]
-    let inline init(p1, p2, p3) : Triangle<_, _> =
+    let inline init(p1, p2, p3) : Triangle<_> =
         { p1 = p1; p2 = p2; p3 = p3 }
 
     [<CompiledName "Zero">]
-    let inline zero() : Triangle< ^a, _> =
-        let zero = VectorClass.zero()
+    let inline zero() : Triangle< ^a> =
+        let zero = LanguagePrimitives.GenericZero
         init(zero, zero, zero)
 
     [<CompiledName "P1">]
@@ -57,7 +55,7 @@ module Triangle =
 
 
     [<CompiledName "CircumscribedCircle">]
-    let inline circumscribedCircle (t : Triangle< float32, float32 Vec2 >) : Circle< float32, float32 Vec2 > =
+    let inline circumscribedCircle (t : Triangle< float32 Vec2 >) : Circle< float32, float32 Vec2 > =
         let x1, y1 = t.p1.x, t.p1.y
         let x2, y2 = t.p2.x, t.p2.y
         let x3, y3 = t.p3.x, t.p3.y
@@ -76,21 +74,3 @@ module Triangle =
         let r = Vec2.length <| Vec2.init(center.x - x1, center.y - y1)
 
         Circle.init(center, r)
-
-
-type Triangle2Float32(triangle) =
-    let triangle : Triangle<float32, Vec2<float32>> = triangle
-
-    member val Triangle = triangle with get
-
-    override this.GetHashCode() =
-        let hashCode q = (q this.Triangle).GetHashCode()
-        (hashCode Triangle.p1)
-        ^^^ (hashCode Triangle.p1)
-        ^^^ (hashCode Triangle.p1)
-
-    override this.Equals(o) =
-        o |> function
-        | :? Triangle2Float32 as other ->
-            Triangle.equal this.Triangle other.Triangle
-        | _ -> false

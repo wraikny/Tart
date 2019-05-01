@@ -8,7 +8,7 @@ open wraikny.Tart.Helper.Geometry
 module Delaunay2 =
     /// 全体を包含する正三角形を求める
     [<CompiledName "GetHugeTriangle">]
-    let getHugeTriangle (range : float32 Rect) : Triangle<float32, Vec2<float32>> =
+    let getHugeTriangle (range : float32 Rect) : Triangle<Vec2<float32>> =
         let leftUp = range.position
         let rightDown = range.position + range.size
 
