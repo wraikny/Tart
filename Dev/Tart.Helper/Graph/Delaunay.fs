@@ -60,13 +60,14 @@ module Delaunay2 =
         let hugeTriangle = getHugeTriangle range
 
         let trianglesSet = new HashSet<NodeTriangle>()
+
         let addTriangleToSet nodes =
             trianglesSet.Add( new NodeTriangle(nodes) )
 
         let hugeTriangleNodes =
             let node1 = Node.init (-1, hugeTriangle.p1)
-            let node2 = Node.init (-2, hugeTriangle.p1)
-            let node3 = Node.init (-3, hugeTriangle.p1)
+            let node2 = Node.init (-2, hugeTriangle.p2)
+            let node3 = Node.init (-3, hugeTriangle.p3)
 
             (node1, node2, node3)
 
@@ -74,18 +75,19 @@ module Delaunay2 =
 
         // 点を逐次添加し、反復的に三角分割を行う  
         for p in points do
-            
             /// 追加候補の三角形を保持する一時ハッシュ
             /// Key : 三角形
             /// Value : 重複しているか
             let tmpTriangleSet = new Dictionary<NodeTriangle, bool>()
+
             let addToTmpSet tri =
                 let tri = new NodeTriangle(tri)
-                let isDuplicated = not <| tmpTriangleSet.ContainsKey(tri)
+
+                let isDuplicated = tmpTriangleSet.ContainsKey(tri)
                 if isDuplicated then
-                    tmpTriangleSet.Add(tri, isDuplicated)
+                    tmpTriangleSet.[tri] <- false
                 else
-                    tmpTriangleSet.[tri] <- isDuplicated
+                    tmpTriangleSet.Add(tri, true)
 
 
             // 現在の三角形リストから要素を一つずつ取り出して、  
@@ -107,7 +109,7 @@ module Delaunay2 =
             
             // 一時ハッシュのうち、重複のないものを三角形リストに追加
             for pair in tmpTriangleSet do
-                if(pair.Value) then
+                if pair.Value then
                     trianglesSet.Add(pair.Key) |> ignore
 
 
@@ -124,7 +126,8 @@ module Delaunay2 =
         trianglesSet
 
 
-    let getNodeList points : Edge<Vec2<float32>, float32> list =
+    [<CompiledName "GetNodesList">]
+    let getNodesList points : Edge<Vec2<float32>, float32> list =
         let triangles = getTrianglesList points
 
         let edges = new List<Edge<float32 Vec2, float32>>()
