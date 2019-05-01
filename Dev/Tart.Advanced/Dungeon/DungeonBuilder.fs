@@ -178,7 +178,8 @@ module DungeonBuilder =
 
     let private generateCorridors (width) (rect1 : int Rect, rect2 : int Rect) : int Rect list =
         
-        let middle = (rect1.position + rect2.position) / 2
+        let center1, center2 = Rect.centerPosition rect1, Rect.centerPosition rect2
+        let middle = (center1 + center2) / 2
 
         let lurd1 = rect1 |> Rect.get_LU_RD
         let lurd2 = rect2 |> Rect.get_LU_RD
@@ -186,14 +187,11 @@ module DungeonBuilder =
         let isCollidedX = Rect.isCollidedAxis Vec2.x lurd1 lurd2
         let isCollidedY = Rect.isCollidedAxis Vec2.y lurd1 lurd2
 
-        let manhattanDist =
-            let center r = r.position + r.size / 2
-            (center rect1 - center rect2)
-            |> Vec2.map abs
+        let manhattanDist = (center1 - center2) |> Vec2.map abs
 
         let sizeDict =
             Vec2.init(
-                Vec2.init(manhattanDist.y + width, width)
+                Vec2.init(manhattanDist.x + width, width)
                 , Vec2.init(width, manhattanDist.y + width)
             )
 
