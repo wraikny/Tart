@@ -68,7 +68,7 @@ module Rect =
         r.position, diagonalPosition r
 
 
-    [<CompiledName "IsCollidedX">]
+    [<CompiledName "IsCollidedAxis">]
     let inline isCollidedAxis(axis : ^a Vec2 -> ^a) (aLU, aRD) (bLU, bRD) : bool =
         not (axis aRD < axis bLU || axis bRD < axis aLU)
 
