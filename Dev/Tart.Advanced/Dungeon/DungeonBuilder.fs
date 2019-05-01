@@ -53,7 +53,7 @@ module private WithRandom =
         builder.random.NextDouble() |> float32
 
     let roomRects (builder : WithRandom) =
-        let getRandomPointInCircle (builder : WithRandom) : int Vec2 =
+        let getRandomPointInCircle () : int Vec2 =
             let w, h = builder.parameter.roomGeneratedRange
 
             let t = 2.0f * Angle.pi * getRandomValue(builder)
@@ -66,9 +66,7 @@ module private WithRandom =
 
         [for _ in 1..builder.parameter.roomCount -> ()]
         |> List.map(fun () ->
-            let pos =
-                builder
-                |> getRandomPointInCircle
+            let pos = getRandomPointInCircle()
 
             let size =
                 let min =
@@ -100,9 +98,10 @@ module private WithRandom =
             largeRooms
             |> List.map(fun (id, rect) ->
                 let pos = rect.position |> Vec2.map float32
-                Node.init (id, pos)
+                let size = rect.size |> Vec2.map float32
+                Node.init (id, pos + size / 2.0f)
             )
-            |> Delaunay2.getNodeList
+            |> Delaunay2.getNodesList
         
         let largeRoomsSpanningTree =
             largeRoomEdges
@@ -121,8 +120,8 @@ module private WithRandom =
                     )
         
                 let restoreCount =
-                        let count = List.length exclusiondSpanningTree |> float32
-                        count * withRandom.parameter.restoreEdgeRate |> int
+                    let count = List.length exclusiondSpanningTree |> float32
+                    count * withRandom.parameter.restoreEdgeRate |> int
         
                 yield!
                     exclusiondSpanningTree
@@ -164,10 +163,16 @@ module DungeonBuilder =
             roomsList.Add(movingRoom)
 
 
+        let mutable count = 0.0f
         while roomsList.Exists(fun r -> r.IsMoving) do
-            for r in roomsList do r.Update()
-
+            count <- count + 1.0f
             
+            if int count % 100 = 0 then
+                printfn "Count: %f" count
+
+            for r in roomsList do r.Update(1.0f + count)
+
+
         [ for r in roomsList -> r.RectI ]
 
 
@@ -220,8 +225,6 @@ module DungeonBuilder =
         >> Map.ofList
 
 
-    open System.Collections.Generic
-
     [<CompiledName "Generate">]
     let generate (builder : DungeonBuilder) : DungeonModel =
         let withRandom = builder |> WithRandom.init
@@ -229,7 +232,6 @@ module DungeonBuilder =
         let roomRects = withRandom |> WithRandom.roomRects
 
         let movedRooms = moveRooms roomRects builder.roomMoveRate
-
 
         let largeRoomRects, smallRoomRects =
             distributeRooms movedRooms builder.roomMeanThreshold
@@ -268,6 +270,9 @@ module DungeonBuilder =
                         generateCorridors builder.corridorWidth (room1.rect, room2.rect)
             }
             |> Seq.toList
+
+
+        printfn "Corridors: %A" corridorRects
 
 
         let corridors =
