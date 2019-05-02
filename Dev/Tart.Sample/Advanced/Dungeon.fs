@@ -2,15 +2,13 @@
 
 open wraikny.Tart.Advanced.Dungeon
 open wraikny.Tart.Helper.Geometry
-open wraikny.Tart.Helper.Graph
 open wraikny.Tart.Helper.Math
 
-open System.Linq
 
 let generate() =
     let builder : DungeonBuilder = {
         seed = 0
-        roomCount = 500
+        roomCount = 300
 
         roomGeneratedRange = (100.0f, 100.0f)
 
