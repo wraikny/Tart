@@ -39,13 +39,17 @@ module Space =
 
 
 type DungeonModel = {
+    /// IDと大部屋の対応
     largeRooms : Map<int, Space>
+    /// IDと小さい部屋の対応
     smallRooms : Map<int, Space>
+    /// IDと廊下の対応
     corridors : Map<int, Space>
 
-    /// 大部屋のIDをノードに、距離を重みにもつノードのリスト
+    /// 大部屋のIDをノードのラベルに、距離を重みにもつノードのリスト
     largeRoomEdges : Edge<unit, float32> list
 
+    /// マスの座標と空間IDの対応
     cells : Map<int Vec2, SpaceID>
 }
 
