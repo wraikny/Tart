@@ -52,10 +52,19 @@
     <Compile Include="Math\Angle.fs" />
     <Compile Include="Math\Vec2.fs" />
     <Compile Include="Math\Vec3.fs" />
+    <Compile Include="Math\VectorClass.fs" />
     <Compile Include="Math\Easing.fs" />
+    <Compile Include="Geometry\Rect.fs" />
+    <Compile Include="Geometry\Line.fs" />
+    <Compile Include="Geometry\Circle.fs" />
+    <Compile Include="Geometry\Triangle.fs" />
+    <Compile Include="Graph\Graph.fs" />
+    <Compile Include="Graph\UnionFold.fs" />
+    <Compile Include="Graph\SpanningTree.fs" />
+    <Compile Include="Graph\Delaunay.fs" />
     <Compile Include="Extension\Seq.fs" />
-    <Compile Include="Wrapper\LockObject.fs" />
-    <Compile Include="Wrapper\FixedSizeQueue.fs" />
+    <Compile Include="Utils\FixedSizeQueue.fs" />
+    <Compile Include="Utils\LockObject.fs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="FSharp.Core">

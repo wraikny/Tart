@@ -10,7 +10,9 @@ type Task<'Ok, 'Error> =
     }
     
 
+[<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
 module Task =
+    [<CompiledName "Init">]
     let init (f) =
         { f = f }
 
@@ -20,20 +22,23 @@ module Task =
 
     // let internal isAsync (task) = task.isAsync
 
-
+    [<CompiledName "Succeed">]
     let succeed (a : 'a) : Task<'a, 'Error> =
         (fun _ -> Result.Ok a) |> init
 
 
+    [<CompiledName "Fail">]
     let fail (x : 'x) : Task<'Ok, 'x> =
         (fun _ -> Result.Error x) |> init
 
 
+    [<CompiledName "Map">]
     let map (f : 'a -> 'b) (task : Task<'a, 'Error>) : Task<'b, 'Error> =
         task.f >> Result.map f
         |> init
 
 
+    [<CompiledName "Map2">]
     let map2 (f : 'a -> 'b -> 'c)
         (task1 : Task<'a, 'Error>)
         (task2 : Task<'b, 'Error>)
@@ -46,6 +51,7 @@ module Task =
         |> init
 
 
+    [<CompiledName "Map3">]
     let map3 (f : 'a -> 'b -> 'c -> 'd)
         (task1 : Task<'a, 'Error>)
         (task2 : Task<'b, 'Error>)
@@ -60,6 +66,7 @@ module Task =
         |> init
 
 
+    [<CompiledName "Map4">]
     let map4 (f : 'a -> 'b -> 'c -> 'd -> 'e)
         (task1 : Task<'a, 'Error>)
         (task2 : Task<'b, 'Error>)
@@ -76,6 +83,7 @@ module Task =
         |> init
 
 
+    [<CompiledName "Map5">]
     let map5 (f : 'a -> 'b -> 'c -> 'd -> 'e -> 'f)
         (task1 : Task<'a, 'Error>)
         (task2 : Task<'b, 'Error>)
@@ -94,6 +102,7 @@ module Task =
         |> init
 
 
+    [<CompiledName "AndThen">]
     let andThen (f : 'a -> Task<'b, 'x>) (task : Task<'a, 'x>) : Task<'b, 'x> =
         (fun _ ->
             task.f() |> function
@@ -103,6 +112,7 @@ module Task =
         |> init
 
 
+    [<CompiledName "Sequence">]
     let sequence (tasks : Task<'a, 'x> list) : Task<'a list, 'x> =
         let rec doTasks result tasks =
             tasks |> function
@@ -116,7 +126,8 @@ module Task =
         |> init
 
 
-    let oneError (f : 'x -> Task<'a, 'y>) (task : Task<'a, 'x>) : Task<'a, 'y> =
+    [<CompiledName "OnError">]
+    let onError (f : 'x -> Task<'a, 'y>) (task : Task<'a, 'x>) : Task<'a, 'y> =
         (fun _ ->
             task.f() |> function
             | Ok v -> Result.Ok v
@@ -125,6 +136,7 @@ module Task =
         |> init
 
             
+    [<CompiledName "MapError">]
     let mapError (f : 'x -> 'y) (task : Task<'a, 'x>) : Task<'a, 'y> =
         task.f >> Result.mapError f
         |> init
@@ -133,6 +145,7 @@ module Task =
     open wraikny.Tart.Core
         
         
+    [<CompiledName "Perform">]
     let perform
         (f : 'a -> 'Msg)
         (task : Task<'a, Never>)
@@ -151,6 +164,7 @@ module Task =
         ] []
 
 
+    [<CompiledName "Attempt">]
     let attempt
         (f : Result<'Ok, 'Error> -> 'Msg)
         (task : Task<'Ok, 'Error>)

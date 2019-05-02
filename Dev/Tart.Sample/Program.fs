@@ -4,6 +4,8 @@ open System
 open System.Threading
 
 
+
+
 module Program =
     let readLine () = Console.ReadLine()
 
@@ -12,8 +14,7 @@ module Program =
         if success then Some result else None
 
 
-    [<EntryPoint>]
-    let main _ = 
+    let counter() =
         let messenger = Counter.messengerBuilder()
 
         let rec loop view =
@@ -76,4 +77,11 @@ module Program =
         printfn "Enter to exit the program"
         Console.ReadLine() |> ignore
 
+
+    [<EntryPoint>]
+    let main _ = 
+        // counter()
+        Advanced.Dungeon.generate()
+
+        Console.ReadLine() |> ignore
         0

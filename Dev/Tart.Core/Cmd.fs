@@ -10,6 +10,7 @@ type Cmd<'Msg, 'ViewMsg> =
     }
 
 
+[<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
 module Cmd =
     let internal commands (cmd : Cmd<_, _>) = cmd.commands
     let internal viewMsgs (cmd : Cmd<_, _>) = cmd.viewMsgs
@@ -23,10 +24,11 @@ module Cmd =
     let internal singleCommand ( command : Command<'Msg> ) : Cmd<'Msg, 'ViewMsg> =
         init [command] []
 
-    let pushViewMsgs (m) =
+    [<CompiledName "ViewMsg">]
+    let viewMsg (m) =
         init [] m
 
-    /// Execute commands asynchronously
+
     let internal execute
         (sender : IMsgSender<'Msg>)
         (env : Environment<'ViewMsg>)
@@ -43,9 +45,11 @@ module Cmd =
 
 
     /// Empty command
+    [<CompiledName "None">]
     let none : Cmd<'Msg, 'ViewMsg> = { commands = []; viewMsgs = [] }
 
 
+    [<CompiledName "Batch">]
     let batch (cmds : Cmd<'Msg, 'ViewMsg> list) : Cmd<'Msg, 'ViewMsg> =
         {
             commands =
@@ -59,6 +63,7 @@ module Cmd =
         }
 
 
+    [<CompiledName "Map">]
     let map(f : 'a -> 'Msg) (cmd : Cmd<'a, 'ViewMsg>) : Cmd<'Msg, 'ViewMsg> =
         {
             commands =

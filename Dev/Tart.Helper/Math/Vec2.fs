@@ -50,30 +50,45 @@ type ^a Vec2 =
         }
 
 
+[<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
 module Vec2 =
+    [<CompiledName "Init">]
     let inline init(x, y) : ^a Vec2 =
         { x = x; y = y }
 
+    [<CompiledName "Zero">]
     let inline zero() : ^a Vec2 =
         let zero = LanguagePrimitives.GenericZero
         init(zero, zero)
 
+    [<CompiledName "X">]
+    let inline x v = v.x
+
+    [<CompiledName "Y">]
+    let inline y v = v.y
+
+    [<CompiledName "Map">]
     let inline map (f : ^a -> ^b) (v : ^a Vec2) : ^b Vec2 =
         {x = f v.x; y = f v.y }
 
-    let inline dot (a : ^a Vec2) (b : ^a Vec2) : ^b =
+    [<CompiledName "Dot">]
+    let inline dot (a : ^a Vec2) (b : ^a Vec2) : ^a =
         a.x * b.x + a.y * b.y
 
-    let inline squaredLength(v : ^a Vec2) : ^b =
+    [<CompiledName "SquaredLength">]
+    let inline squaredLength(v : ^a Vec2) : ^a =
         dot v v
 
-    let inline length (v : ^a Vec2) : ^b =
+    [<CompiledName "Length">]
+    let inline length (v : ^a Vec2) : ^a =
         sqrt (squaredLength v)
 
-    let inline normalize(v : ^a Vec2) : ^b Vec2=
-        let len : ^c = (length v)
-        let one : ^d = LanguagePrimitives.GenericOne
+    [<CompiledName "Normalize">]
+    let inline normalize(v : ^a Vec2) : ^a Vec2=
+        let len : ^a = (length v)
+        let one : ^a = LanguagePrimitives.GenericOne
         v * (len ** -one)
 
-    let inline angle(v : ^a Vec2) : ^b =
+    [<CompiledName "Angle">]
+    let inline angle(v : ^a Vec2) : ^a =
         atan2 v.y v.x

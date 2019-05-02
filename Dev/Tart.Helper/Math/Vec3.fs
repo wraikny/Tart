@@ -58,27 +58,44 @@ type ^a Vec3 =
         }
 
 
+[<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
 module Vec3 =
+    [<CompiledName "Init">]
     let inline init(x, y, z) : ^a Vec3 =
         { x = x; y = y; z = z }
 
+    [<CompiledName "Zero">]
     let inline zero() : ^a Vec3 =
         let zero = LanguagePrimitives.GenericZero
         init(zero, zero, zero)
 
+    [<CompiledName "X">]
+    let inline x v = v.x
+
+    [<CompiledName "Y">]
+    let inline y v = v.y
+
+    [<CompiledName "Z">]
+    let inline z v = v.z
+
+    [<CompiledName "Map">]
     let inline map (f : ^a -> ^b) (v : ^a Vec3) : ^b Vec3 =
         {x = f v.x; y = f v.y; z = f v.z }
 
-    let inline dot (a : ^a Vec3) (b : ^a Vec3) : ^b =
+    [<CompiledName "Dot">]
+    let inline dot (a : ^a Vec3) (b : ^a Vec3) : ^a =
         a.x * b.x + a.y * b.y + a.z * b.z
 
-    let inline squaredLength(v : ^a Vec3) : ^b =
+    [<CompiledName "SquaredLength">]
+    let inline squaredLength(v : ^a Vec3) : ^a =
         dot v v
 
-    let inline length (v : ^a Vec3) : ^b =
+    [<CompiledName "Length">]
+    let inline length (v : ^a Vec3) : ^a =
         sqrt (squaredLength v)
 
-    let inline normalize(v : ^a Vec3) : ^b Vec3=
-        let len : ^c = (length v)
-        let one : ^d = LanguagePrimitives.GenericOne
+    [<CompiledName "Normalize">]
+    let inline normalize(v : ^a Vec3) : ^a Vec3=
+        let len : ^a = (length v)
+        let one : ^a = LanguagePrimitives.GenericOne
         v * (len ** -one)

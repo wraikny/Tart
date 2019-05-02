@@ -1,4 +1,4 @@
-﻿namespace wraikny.Tart.Helper.Wrapper
+﻿namespace wraikny.Tart.Helper.Utils
 
 open System.Collections.Generic
 

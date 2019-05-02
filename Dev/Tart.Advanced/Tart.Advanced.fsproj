@@ -5,17 +5,15 @@
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>11151c6d-f08d-4949-9493-bcd22fcc5966</ProjectGuid>
-    <OutputType>Exe</OutputType>
-    <RootNamespace>Tart.Sample</RootNamespace>
-    <AssemblyName>Tart.Sample</AssemblyName>
+    <ProjectGuid>ce58dc38-831b-4bd5-87cb-bf861687a3bf</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <RootNamespace>Tart.Advanced</RootNamespace>
+    <AssemblyName>Tart.Advanced</AssemblyName>
+    <UseStandardResourceNames>true</UseStandardResourceNames>
     <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
-    <UseStandardResourceNames>true</UseStandardResourceNames>
     <WarningsAsErrors>3239;$(WarningsAsErrors)</WarningsAsErrors>
-    <Name>Tart.Sample</Name>
-    <NuGetPackageImportStamp>
-    </NuGetPackageImportStamp>
+    <Name>Tart.Advanced</Name>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -25,9 +23,7 @@
     <OutputPath>bin\$(Configuration)\</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <WarningLevel>3</WarningLevel>
-    <PlatformTarget>AnyCPU</PlatformTarget>
     <DocumentationFile>bin\$(Configuration)\$(AssemblyName).XML</DocumentationFile>
-    <Prefer32Bit>true</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -36,9 +32,7 @@
     <OutputPath>bin\$(Configuration)\</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
     <WarningLevel>3</WarningLevel>
-    <PlatformTarget>AnyCPU</PlatformTarget>
     <DocumentationFile>bin\$(Configuration)\$(AssemblyName).XML</DocumentationFile>
-    <Prefer32Bit>true</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup>
     <MinimumVisualStudioVersion Condition="'$(MinimumVisualStudioVersion)' == ''">11</MinimumVisualStudioVersion>
@@ -49,16 +43,12 @@
   <Import Project="$(FSharpTargetsPath)" />
   <ItemGroup>
     <Compile Include="AssemblyInfo.fs" />
-    <Compile Include="Samples\Counter.fs" />
-    <Compile Include="Advanced\Dungeon.fs" />
-    <Compile Include="Program.fs" />
-    <None Include="App.config" />
     <Content Include="packages.config" />
+    <Compile Include="Dungeon\DungeonModel.fs" />
+    <Compile Include="Dungeon\MovingRoom.fs" />
+    <Compile Include="Dungeon\DungeonBuilder.fs" />
   </ItemGroup>
   <ItemGroup>
-    <Reference Include="Altseed">
-      <HintPath>..\packages\AltseedDotNet.1.1.6\lib\net45\Altseed.dll</HintPath>
-    </Reference>
     <Reference Include="FSharp.Core">
       <HintPath>..\packages\FSharp.Core.4.6.2\lib\net45\FSharp.Core.dll</HintPath>
     </Reference>
@@ -72,29 +62,12 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Tart.Advanced\Tart.Advanced.fsproj">
-      <Name>Tart.Advanced</Name>
-      <Project>{ce58dc38-831b-4bd5-87cb-bf861687a3bf}</Project>
-      <Private>True</Private>
-    </ProjectReference>
-    <ProjectReference Include="..\Tart.Core\Tart.Core.fsproj">
-      <Name>Tart.Core</Name>
-      <Project>{8c6e9ecf-5f33-47a3-ae3f-b9a77bd4f544}</Project>
-      <Private>True</Private>
-    </ProjectReference>
     <ProjectReference Include="..\Tart.Helper\Tart.Helper.fsproj">
       <Name>Tart.Helper</Name>
       <Project>{bf0abcce-5659-43b8-a783-6dd55180aacc}</Project>
       <Private>True</Private>
     </ProjectReference>
   </ItemGroup>
-  <Import Project="..\packages\AltseedDotNet.1.1.6\build\net45\AltseedDotNet.targets" Condition="Exists('..\packages\AltseedDotNet.1.1.6\build\net45\AltseedDotNet.targets')" />
-  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
-    <PropertyGroup>
-      <ErrorText>このプロジェクトは、このコンピューター上にない NuGet パッケージを参照しています。それらのパッケージをダウンロードするには、[NuGet パッケージの復元] を使用します。詳細については、http://go.microsoft.com/fwlink/?LinkID=322105 を参照してください。見つからないファイルは {0} です。</ErrorText>
-    </PropertyGroup>
-    <Error Condition="!Exists('..\packages\AltseedDotNet.1.1.6\build\net45\AltseedDotNet.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\AltseedDotNet.1.1.6\build\net45\AltseedDotNet.targets'))" />
-  </Target>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">
