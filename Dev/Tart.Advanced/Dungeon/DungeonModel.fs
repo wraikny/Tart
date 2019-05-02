@@ -12,6 +12,7 @@ type SpaceID =
 
 [<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
 module SpaceID =
+    [<CompiledName "ID">]
     let id id = id |> function
         | Large id
         | Small id
@@ -30,6 +31,12 @@ module Space =
         rect = rect
     }
 
+    [<CompiledName "ID">]
+    let id s = s.id
+
+    [<CompiledName "Rect">]
+    let rect s = s.rect
+
 
 type DungeonModel = {
     largeRooms : Map<int, Space>
@@ -43,6 +50,7 @@ type DungeonModel = {
 }
 
 module DungeonModel =
+    [<CompiledName "TryFindSpace">]
     let tryFindSpace id dungeon =
         let target, id = id |> function
             | Large id -> dungeon.largeRooms, id
@@ -53,6 +61,7 @@ module DungeonModel =
         |> Map.tryFind id
 
         
+    [<CompiledName "GetSpaceAt">]
     let getSpaceAt coordinate dungeon =
         dungeon.cells
         |> Map.tryFind coordinate
