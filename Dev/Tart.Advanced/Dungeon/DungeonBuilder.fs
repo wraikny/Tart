@@ -191,27 +191,26 @@ module DungeonBuilder =
 
         let sizeDict =
             Vec2.init(
-                Vec2.init(manhattanDist.x + width, width)
-                , Vec2.init(width, manhattanDist.y + width)
+                Vec2.init(manhattanDist.x, width)
+                , Vec2.init(width, manhattanDist.y)
             )
 
-        let createCorridorAt axis pos =
-            let size = axis sizeDict
+        let createCorridorAt size pos =
             Rect.init (pos - size / 2) size
 
 
         if isCollidedX && isCollidedY then
             []
         elif isCollidedX then
-            [ createCorridorAt Vec2.y middle ]
+            [ createCorridorAt sizeDict.y middle ]
         elif isCollidedY then
-            [ createCorridorAt Vec2.x middle ]
+            [ createCorridorAt sizeDict.x middle ]
         else
             seq {
                 let f = createCorridorAt
-                for pos in [rect1.position; rect2.position ] do
-                    yield f Vec2.x ({ middle with y = pos.y})
-                    yield f Vec2.y ({ middle with x = pos.x})
+                for center in [center1; center2 ] do
+                    yield f (sizeDict.x + Vec2.init(width, 0)) ({ middle with y = center.y})
+                    yield f (sizeDict.y + Vec2.init(0, width)) ({ middle with x = center.x})
             }
             |> Seq.toList
 
