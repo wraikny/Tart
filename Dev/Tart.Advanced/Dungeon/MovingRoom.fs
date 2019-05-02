@@ -17,15 +17,11 @@ type internal MovingRoom(rect : float32 Rect, movingRate, rooms) =
     let mutable position = rect.position
     let mutable lastPosition = position
 
-    let len (o : MovingRoom) = o.Position |> Vec2.squaredLength
 
-    let nearEnough a b =
-        let d = 1.0f * movingRate
-        Vec2.squaredLength (a - b) < d * d
+    member this.Position with get() = position
+    member this.RightDown with get() = position + size
+    member this.Center with get() = position + size / 2.0f
 
-    member val Position = position with get
-    member val RightDown = position + size with get
-    member val Center = position + size / 2.0f with get
     member val IsMoving = true with get, set
 
 
@@ -38,26 +34,20 @@ type internal MovingRoom(rect : float32 Rect, movingRate, rooms) =
         lastPosition <- position
 
         for other in targets do
+            let len (o : MovingRoom) = o.Center |> Vec2.squaredLength
             if (len this) > (len other) then
                 this.Move(other)
-
-                if this.IsCollidedWith other then
-                    other.Move(this)
-            else
                 other.Move(this)
 
-                if this.IsCollidedWith other then
-                    this.Move(other)
+            else
+                other.Move(this)
+                this.Move(other)
 
-        let d = 1.0f * movingRate * movingRate * count
+
+        let d = 0.5f * movingRate * movingRate * count
         this.IsMoving <- Vec2.squaredLength (lastPosition - position) > d * d
     
 
-    member this.RectI
-        with get() : int Rect = {
-            position = this.Position |> Vec2.map int
-            size = size |> Vec2.map int
-        }
 
     member this.RectF
         with get() : float32 Rect = {
@@ -65,32 +55,36 @@ type internal MovingRoom(rect : float32 Rect, movingRate, rooms) =
             size = size
         }
 
+    member this.RectI
+        with get() : int Rect = this.RectF |> Rect.map1 int
+
 
     member private this.IsCollidedWith(other : MovingRoom) =
         Rect.isCollided this.RectF other.RectF
 
 
     member this.Move(other : MovingRoom) =
+
         let getDiff axis =
-            let centerOrder = sign ((axis this.Center) - (axis other.Center)) |> float32
+            let centerOrder = ((axis this.Center) - (axis other.Center)) |> sign |> float32
             let diff =
                 if centerOrder > 0.0f then
                     axis other.RightDown - axis this.Position
                 else
                     axis other.Position - axis this.RightDown
 
-            (abs(diff) + 1.0f / movingRate) * centerOrder
+            diff
 
         let dx, dy = getDiff Vec2.x, getDiff Vec2.y
 
-        let diff = Vec2.init <| if dx < dy then (dx, 0.0f) else (0.0f, dy)
+        let diff = Vec2.init <| if abs dx < abs dy then (dx, 0.0f) else (0.0f, dy)
         // let diff = Vec2.init(dx, dy)
 
         let diff = diff * movingRate
 
         this.UpdatePosition(diff)
+        // this.UpdatePosition(this.Center |> Vec2.normalize)
 
 
     member private this.UpdatePosition(diff) =
-        position <- this.Position + diff
-        position <- position |> (Vec2.map int >> Vec2.map float32)
+        position <- (position + diff) |> Vec2.map floor
