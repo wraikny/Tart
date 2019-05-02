@@ -25,6 +25,7 @@ type Space = {
 }
 
 
+[<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
 module Space =
     let internal init id rect = {
         id = id
@@ -53,6 +54,8 @@ type DungeonModel = {
     cells : Map<int Vec2, SpaceID>
 }
 
+
+[<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
 module DungeonModel =
     [<CompiledName "TryFindSpace">]
     let tryFindSpace id dungeon =

@@ -41,7 +41,7 @@ type private WithRandom = {
     random : Random
 }
 
-
+[<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
 module private WithRandom =
     let init (parameter : DungeonBuilder) : WithRandom =
         {
@@ -135,6 +135,7 @@ module private WithRandom =
         )
 
 
+[<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
 module DungeonBuilder =
     let private distributeRooms (rooms : int Rect list) (rate : float32) =
         let threshold =
