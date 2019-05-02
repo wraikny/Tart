@@ -5,14 +5,19 @@ open wraikny.Tart.Helper.Geometry
 open wraikny.Tart.Helper.Graph
 open wraikny.Tart.Helper.Math
 
+open System.Linq
+
 let generate() =
     let builder : DungeonBuilder = {
         seed = 0
         roomCount = 500
+
         roomGeneratedRange = (100.0f, 100.0f)
+
         minRoomSize = (8, 8)
         maxRoomSize = (16, 16)
-        roomMoveRate = 0.3f
+
+        roomMoveRate = 0.2f
         roomMeanThreshold = 1.25f
         restoreEdgeRate = 0.1f
         corridorWidth = 3
@@ -44,24 +49,12 @@ let generate() =
     let larges = new asd.Layer2D()
     let edges = new asd.Layer2D()
 
-    let camera() =
-        let ws = asd.Engine.WindowSize
-        new asd.CameraObject2D(
-            Src = new asd.RectI(-ws / 2, ws)
-            , Dst = new asd.RectI(new asd.Vector2DI(0, 0), ws)
-        )
-
-    corridors.AddObject(camera())
-    smalls.AddObject(camera())
-    larges.AddObject(camera())
-    edges.AddObject(camera())
-
     scene.AddLayer(corridors)
     scene.AddLayer(smalls)
     scene.AddLayer(larges)
     scene.AddLayer(edges)
 
-    let n = 4.0f
+    let n = 2.0f
 
     let create (r : int Rect) =
         let r = r |> Rect.map1 (float32 >> (*) n)
@@ -82,7 +75,9 @@ let generate() =
         c.Color <- new asd.Color(0uy, 0uy, 255uy, 200uy)
         corridors.AddObject(c)
 
-    for (id, c) in (dungeonModel.largeRooms |> Map.toSeq) do
+    let largeRooms = dungeonModel.largeRooms |> Map.toList
+
+    for (id, c) in largeRooms do
         let c = create c.rect
         c.Color <- new asd.Color(255uy, 0uy, 0uy, 200uy)
         corridors.AddObject(c)
@@ -106,7 +101,30 @@ let generate() =
         let g = new asd.GeometryObject2D(Shape = line)
         edges.AddObject(g)
 
-        ()
+    let camera() =
+        let ws = asd.Engine.WindowSize
+        let posList = largeRooms |> List.map(fun (_, s) -> n * Vec2.map float32 s.rect.position)
+        let minX = posList |> List.map Vec2.x |> List.min
+        let maxX = posList |> List.map Vec2.x |> List.max
+        let minY = posList |> List.map Vec2.y |> List.min
+        let maxY = posList |> List.map Vec2.y |> List.max
+
+        let w = maxX - minX
+        let h = maxY - minY
+        let d = 1.2f
+        let camN = max (w / float32 ws.X) (h / float32 ws.Y)
+        let size = ws.To2DF() * camN * d
+        let center = new asd.Vector2DF((minX + maxX) / 2.0f, (minY + maxY) / 2.0f)
+        let src = new asd.RectF(center - size / 2.0f, size)
+        new asd.CameraObject2D(
+            Src = (src).ToI()
+            , Dst = new asd.RectI(new asd.Vector2DI(0, 0), ws)
+        )
+
+    corridors.AddObject(camera())
+    smalls.AddObject(camera())
+    larges.AddObject(camera())
+    edges.AddObject(camera())
 
     asd.Engine.ChangeScene scene
 
