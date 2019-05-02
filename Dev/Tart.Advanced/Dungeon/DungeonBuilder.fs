@@ -166,9 +166,6 @@ module DungeonBuilder =
         let mutable count = 0.0f
         while roomsList.Exists(fun r -> r.IsMoving) do
             count <- count + 1.0f
-            
-            if int count % 100 = 0 then
-                printfn "Count: %f" count
 
             for r in roomsList do r.Update(1.0f + count)
 
@@ -268,10 +265,6 @@ module DungeonBuilder =
             }
             |> Seq.toList
 
-
-        printfn "Corridors: %A" corridorRects
-
-
         let corridors =
             corridorRects
             |> List.indexed
@@ -282,13 +275,13 @@ module DungeonBuilder =
 
         let collidedSmallRooms =
             smallRooms
-            |> List.filter(fun room ->
-                corridorRects
-                |> List.exists(fun cr ->
-                    room.rect
-                    |> Rect.isCollided cr
-                )
-            )
+             |> List.filter(fun room ->
+                 corridorRects
+                 |> List.exists(fun cr ->
+                     room.rect
+                     |> Rect.isCollided cr
+                 )
+             )
 
         let cellsMap =
             let getCells (spaces : Space list) =
