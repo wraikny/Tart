@@ -78,6 +78,18 @@ module Vec3 =
     [<CompiledName "Z">]
     let inline z v = v.z
 
+    [<CompiledName "XY">]
+    let inline xy (v : ^a Vec3) = v.x, v.y
+
+    [<CompiledName "YZ">]
+    let inline yz (v : ^a Vec3) = v.y, v.z
+
+    [<CompiledName "ZX">]
+    let inline zx (v : ^a Vec3) = v.z, v.x
+
+    [<CompiledName "XYZ">]
+    let inline xyz (v : ^a Vec3) = v.x, v.y, v.z
+
     [<CompiledName "Map">]
     let inline map (f : ^a -> ^b) (v : ^a Vec3) : ^b Vec3 =
         {x = f v.x; y = f v.y; z = f v.z }

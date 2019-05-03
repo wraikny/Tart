@@ -67,6 +67,9 @@ module Vec2 =
     [<CompiledName "Y">]
     let inline y v = v.y
 
+    [<CompiledName "XY">]
+    let inline xy v = v.x, v.y
+
     [<CompiledName "Map">]
     let inline map (f : ^a -> ^b) (v : ^a Vec2) : ^b Vec2 =
         {x = f v.x; y = f v.y }
