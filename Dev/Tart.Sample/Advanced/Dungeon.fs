@@ -11,15 +11,15 @@ let createScene builder =
 
 
     // printfn "%A" dungeonModel
-
-    printfn "----------------------------------------"
-    printfn "----------------------------------------"
-
+    printfn "Seed: %d" builder.seed
     printfn "Large: %d" <| (Map.toSeq >> Seq.length) dungeonModel.largeRooms
     printfn "Small: %d" <| (Map.toSeq >> Seq.length) dungeonModel.smallRooms
     printfn "Corridor: %d" <| (Map.toSeq >> Seq.length) dungeonModel.corridors
     printfn "Edges: %d" <| (Seq.length) dungeonModel.largeRoomEdges
     printfn "Cells: %d" <| (Map.toSeq >> Seq.length) dungeonModel.cells
+
+    printfn "----------------------------------------"
+    printfn "----------------------------------------"
 
     let scene = new asd.Scene()
 
@@ -115,7 +115,7 @@ let generate() =
     let rand = new System.Random(0)
 
     let builder : DungeonBuilder = {
-        seed = rand.Next()
+        seed = 1649316166
         roomCount = 300
 
         roomGeneratedRange = (100.0f, 100.0f)

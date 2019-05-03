@@ -13,7 +13,7 @@ module Delaunay2 =
         let rightDown = range.position + range.size
 
         // 与えられた矩形を包含する円を求める  
-        let center = (rightDown - leftUp) / 2.0f
+        let center = range |> Rect.centerPosition
         let radius = Vec2.length (leftUp - center)
 
         // その円に外接する正三角形を求める  
@@ -47,7 +47,7 @@ module Delaunay2 =
                     let ix, ax = min x ix, max x ax
                     let iy, ay = min y iy, max y ay
 
-                    f ps (ix, ax, iy, ay)
+                    f ps (ix, iy, ax, ay)
 
             f points (0.0f, 0.0f, 0.0f, 0.0f)
 
@@ -99,11 +99,13 @@ module Delaunay2 =
                 let sqDistance = Vec2.squaredLength (c.center - p.value)
 
                 if(sqDistance < c.radius * c.radius) then
+                    // 新しい三角形を作り、一時ハッシュに入れる  
                     let tri = t
                     addToTmpSet( (p, tri.Node1, tri.Node2) )
                     addToTmpSet( (p, tri.Node2, tri.Node3) )
                     addToTmpSet( (p, tri.Node3, tri.Node1) )
                     
+                    // 旧い三角形を削除
                     trianglesSet.Remove(t) |> ignore
 
             
