@@ -78,20 +78,6 @@ module Vec2 =
     let inline dot (a : ^a Vec2) (b : ^a Vec2) : ^a =
         a.x * b.x + a.y * b.y
 
-    [<CompiledName "SquaredLength">]
-    let inline squaredLength(v : ^a Vec2) : ^a =
-        dot v v
-
-    [<CompiledName "Length">]
-    let inline length (v : ^a Vec2) : ^a =
-        sqrt (squaredLength v)
-
-    [<CompiledName "Normalize">]
-    let inline normalize(v : ^a Vec2) : ^a Vec2=
-        let len : ^a = (length v)
-        let one : ^a = LanguagePrimitives.GenericOne
-        v * (len ** -one)
-
     [<CompiledName "Angle">]
     let inline angle(v : ^a Vec2) : ^a =
         atan2 v.y v.x

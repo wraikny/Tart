@@ -12,7 +12,7 @@ module Delaunay2 =
 
         // 与えられた矩形を包含する円を求める  
         let center = range |> Rect.centerPosition
-        let radius = Vec2.length (range.position - center)
+        let radius = VectorClass.length (range.position - center)
 
         // その円に外接する正三角形を求める  
         let sqrt3 = sqrt(3.0f)
@@ -94,7 +94,7 @@ module Delaunay2 =
                 // 外接円
                 let c = Triangle.circumscribedCircle t.Triangle
 
-                let sqDistance = Vec2.squaredLength (c.center - p.value)
+                let sqDistance = VectorClass.squaredLength (c.center - p.value)
 
                 if(sqDistance < c.radius * c.radius) then
                     // 新しい三角形を作り、一時ハッシュに入れる  

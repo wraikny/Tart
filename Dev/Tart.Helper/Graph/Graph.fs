@@ -76,7 +76,7 @@ type NodeTriangle(node1, node2, node3) =
 
     let edges =
         let createEdge (a : Node<float32 Vec2>) (b : Node<float32 Vec2>) =
-            let w = Vec2.length(a.value - b.value)
+            let w = VectorClass.length(a.value - b.value)
             Edge.init a b w
 
         let e1 = createEdge node1 node2

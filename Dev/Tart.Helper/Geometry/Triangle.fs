@@ -71,6 +71,6 @@ module Triangle =
 
         let center = Vec2.init(x, y)
 
-        let r = Vec2.length <| Vec2.init(center.x - x1, center.y - y1)
+        let r = VectorClass.length <| Vec2.init(center.x - x1, center.y - y1)
 
         Circle.init(center, r)
