@@ -38,6 +38,8 @@ type private Messenger<'Msg, 'ViewMsg, 'Model, 'ViewModel>(environment, coreFunc
 
     let isRunning = new LockObject<bool>(false)
 
+    let mutable sleepTime = 5
+
     do
         modelQueue.Enqueue(coreFuncs.init)
 
@@ -66,7 +68,7 @@ type private Messenger<'Msg, 'ViewMsg, 'Model, 'ViewModel>(environment, coreFunc
                         environment
 
                     modelQueue.Enqueue(newModel)
-                    Thread.Sleep(5)
+                    Thread.Sleep(sleepTime)
                     newModel
         
             /// Main Loop
@@ -96,6 +98,10 @@ type private Messenger<'Msg, 'ViewMsg, 'Model, 'ViewModel>(environment, coreFunc
     
 
     interface IMessenger<'Msg, 'ViewModel> with
+        member this.SleepTime
+            with get() = sleepTime
+            and  set(value) = sleepTime <- value
+
         member this.TryViewModel
             with get() =
                 modelQueue.TryDequeue()
