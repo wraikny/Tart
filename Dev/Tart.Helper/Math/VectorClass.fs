@@ -1,4 +1,4 @@
-namespace wraikny.Tart.Helper.Math
+﻿namespace wraikny.Tart.Helper.Math
 
 
 type VectorClass< ^a, ^Vec > = {
@@ -24,6 +24,13 @@ type VectorBuiltin = VectorBuiltin with
             Dot = Vec3.dot
         }
 
+    static member inline VectorImpl(_ : ^a Vec4): VectorClass< ^a, ^a Vec4 >
+        when (^a or ^a Vec4) : (static member (*) : ^a Vec4 * ^a -> ^a Vec4)
+        =
+        {
+            Zero = Vec4.zero
+            Dot = Vec4.dot
+        }
 
 
 [<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
