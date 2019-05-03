@@ -1,5 +1,6 @@
 ﻿namespace wraikny.Tart.Core
 
+open System.Threading
 open wraikny.Tart.Helper.Utils
 open System.Collections.Concurrent
 
@@ -65,7 +66,7 @@ type private Messenger<'Msg, 'ViewMsg, 'Model, 'ViewModel>(environment, coreFunc
                         environment
 
                     modelQueue.Enqueue(newModel)
-
+                    Thread.Sleep(5)
                     newModel
         
             /// Main Loop
