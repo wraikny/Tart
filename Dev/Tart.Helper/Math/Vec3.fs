@@ -34,40 +34,12 @@ type ^a Vec3 =
             y = a.y * b.y
             z = a.z * b.z
         }
-  
-    static member inline (*) (a, b) =
-        {
-            x = a.x * b
-            y = a.y * b
-            z = a.z * b
-        }
-
-    static member inline (*) (a, b) =
-        {
-            x = a * b.x
-            y = a * b.y
-            z = a * b.z
-        }
 
     static member inline (/) (a : ^b Vec3, b : ^b Vec3) : ^b Vec3 =
         {
             x = a.x / b.x
             y = a.y / b.y
             z = a.z / b.z
-        }
-
-    static member inline (/) (a, b) =
-        {
-            x = a.x / b
-            y = a.y / b
-            z = a.z / b
-        }
-
-    static member inline (/) (a, b) =
-        {
-            x = a / b.x
-            y = a / b.y
-            z = a / b.z
         }
 
 
@@ -81,6 +53,9 @@ module Vec3 =
     let inline zero() : ^a Vec3 =
         let zero = LanguagePrimitives.GenericZero
         init(zero, zero, zero)
+
+    [<CompiledName "FromScalar">]
+    let inline fromScalar a = init(a, a, a)
 
     [<CompiledName "X">]
     let inline x v = v.x
