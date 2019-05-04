@@ -6,25 +6,25 @@ type ^a Vec2 =
         y : ^a
     }
 
-    static member inline (~-) a =
+    static member inline (~-) (a : ^b Vec2) : ^b Vec2 =
         {
             x = -a.x
             y = -a.y
         }
 
-    static member inline (+) (a, b) =
+    static member inline (+) (a : ^b Vec2, b : ^b Vec2) : ^b Vec2 =
         {
             x = a.x + b.x
             y = a.y + b.y
         }
 
-    static member inline (-) (a, b) =
+    static member inline (-) (a : ^b Vec2, b : ^b Vec2) : ^b Vec2 =
         {
             x = a.x - b.x
             y = a.y - b.y
         }
 
-    static member inline (*) (a, b) =
+    static member inline (*) (a : ^b Vec2, b : ^b Vec2) : ^b Vec2 =
         {
             x = a.x * b.x
             y = a.y * b.y
@@ -42,7 +42,7 @@ type ^a Vec2 =
             y = a * b.y
         }
 
-    static member inline (/) (a, b) =
+    static member inline (/) (a : ^b Vec2, b : ^b Vec2) : ^b Vec2 =
         {
             x = a.x / b.x
             y = a.y / b.y

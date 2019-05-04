@@ -8,25 +8,19 @@ type VectorClass< ^a, ^Vec > = {
 
 
 type VectorBuiltin = VectorBuiltin with
-    static member inline VectorImpl(_ : ^a Vec2) : VectorClass< ^a, ^a Vec2 >
-        when (^a or ^a Vec2) : (static member (*) : ^a Vec2 * ^a -> ^a Vec2)
-        =
+    static member inline VectorImpl(_ : ^a Vec2) : VectorClass< ^a, ^a Vec2 > =
         {
             Zero = Vec2.zero
             Dot = Vec2.dot
         }
     
-    static member inline VectorImpl(_ : ^a Vec3): VectorClass< ^a, ^a Vec3 >
-        when (^a or ^a Vec3) : (static member (*) : ^a Vec3 * ^a -> ^a Vec3)
-        =
+    static member inline VectorImpl(_ : ^a Vec3): VectorClass< ^a, ^a Vec3 > =
         {
             Zero = Vec3.zero
             Dot = Vec3.dot
         }
 
-    static member inline VectorImpl(_ : ^a Vec4): VectorClass< ^a, ^a Vec4 >
-        when (^a or ^a Vec4) : (static member (*) : ^a Vec4 * ^a -> ^a Vec4)
-        =
+    static member inline VectorImpl(_ : ^a Vec4): VectorClass< ^a, ^a Vec4 > =
         {
             Zero = Vec4.zero
             Dot = Vec4.dot

@@ -7,28 +7,28 @@ type ^a Vec3 =
         z : ^a
     }
 
-    static member inline (~-) a =
+    static member inline (~-) (a : ^b Vec3) : ^b Vec3 =
         {
             x = -a.x
             y = -a.y
             z = -a.z
         }
 
-    static member inline (+) (a, b) =
+    static member inline (+) (a : ^b Vec3, b : ^b Vec3) : ^b Vec3 =
         {
             x = a.x + b.x
             y = a.y + b.y
             z = a.z + b.z
         }
 
-    static member inline (-) (a, b) =
+    static member inline (-) (a : ^b Vec3, b : ^b Vec3) : ^b Vec3 =
         {
             x = a.x - b.x
             y = a.y - b.y
             z = a.z - b.z
         }
 
-    static member inline (*) (a, b) =
+    static member inline (*) (a : ^b Vec3, b : ^b Vec3) : ^b Vec3 =
         {
             x = a.x * b.x
             y = a.y * b.y
@@ -49,7 +49,7 @@ type ^a Vec3 =
             z = a * b.z
         }
 
-    static member inline (/) (a, b) =
+    static member inline (/) (a : ^b Vec3, b : ^b Vec3) : ^b Vec3 =
         {
             x = a.x / b.x
             y = a.y / b.y
