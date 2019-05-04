@@ -10,12 +10,6 @@ type Model =
 
 type ViewModel = Model
 
-let init : Model * Cmd<'Msg, 'ViewModel> =
-    {
-        count = 0
-        tmp = 0
-    }, Cmd.none
-
 type Msg =
     | Add of int
     | Sub of int
@@ -42,6 +36,13 @@ let update msg model : Model * Cmd<_, _> =
 
 let view model : ViewModel =
     model
+
+
+let init : Model * Cmd<Msg, _> =
+    {
+        count = 0
+        tmp = 0
+    }, Cmd.none
 
 
 let messengerBuilder() : IMessenger<Msg, ViewModel> =
