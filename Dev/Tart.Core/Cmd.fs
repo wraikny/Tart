@@ -63,8 +63,8 @@ module Cmd =
         }
 
 
-    [<CompiledName "Map">]
-    let map(f : 'a -> 'Msg) (cmd : Cmd<'a, 'ViewMsg>) : Cmd<'Msg, 'ViewMsg> =
+    [<CompiledName "MapCommands">]
+    let mapCommands (f : 'a -> 'Msg) (cmd : Cmd<'a, 'ViewMsg>) : Cmd<'Msg, 'ViewMsg> =
         {
             commands =
                 cmd.commands
@@ -75,4 +75,11 @@ module Cmd =
                 )
 
             viewMsgs = cmd.viewMsgs
+        }
+
+    [<CompiledName "MapViewMsgs">]
+    let mapViewMsgs (f : 'a -> 'ViewMsg) (cmd : Cmd<'Msg, 'a>) : Cmd<'Msg, 'ViewMsg> =
+        {
+            commands = cmd.commands
+            viewMsgs = cmd.viewMsgs |> List.map f
         }
