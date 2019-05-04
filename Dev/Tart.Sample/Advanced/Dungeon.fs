@@ -4,41 +4,22 @@ open wraikny.Tart.Advanced.Dungeon
 open wraikny.Tart.Helper.Geometry
 open wraikny.Tart.Helper.Math
 
-
-let generate() =
-    let builder : DungeonBuilder = {
-        seed = 0
-        roomCount = 300
-
-        roomGeneratedRange = (100.0f, 100.0f)
-
-        minRoomSize = (8, 8)
-        maxRoomSize = (16, 16)
-
-        roomMoveRate = 0.2f
-        roomMeanThreshold = 1.25f
-        restoreEdgeRate = 0.1f
-        corridorWidth = 3
-    }
-
+let createScene builder =
     let dungeonModel =
         builder
         |> DungeonBuilder.generate
 
 
     // printfn "%A" dungeonModel
-
-    printfn "----------------------------------------"
-    printfn "----------------------------------------"
-
+    printfn "Seed: %d" builder.seed
     printfn "Large: %d" <| (Map.toSeq >> Seq.length) dungeonModel.largeRooms
     printfn "Small: %d" <| (Map.toSeq >> Seq.length) dungeonModel.smallRooms
     printfn "Corridor: %d" <| (Map.toSeq >> Seq.length) dungeonModel.corridors
     printfn "Edges: %d" <| (Seq.length) dungeonModel.largeRoomEdges
     printfn "Cells: %d" <| (Map.toSeq >> Seq.length) dungeonModel.cells
 
-    
-    asd.Engine.Initialize("Dungeon", 1600, 900, new asd.EngineOption()) |> ignore
+    printfn "----------------------------------------"
+    printfn "----------------------------------------"
 
     let scene = new asd.Scene()
 
@@ -124,9 +105,39 @@ let generate() =
     larges.AddObject(camera())
     edges.AddObject(camera())
 
+    scene
+
+
+
+let generate() =
+    asd.Engine.Initialize("Dungeon", 1600, 900, new asd.EngineOption()) |> ignore
+    
+    let rand = new System.Random(0)
+
+    let builder : DungeonBuilder = {
+        seed = 1649316166
+        roomCount = 300
+
+        roomGeneratedRange = (100.0f, 100.0f)
+
+        minRoomSize = (8, 8)
+        maxRoomSize = (16, 16)
+
+        roomMoveRate = 0.2f
+        roomMeanThreshold = 1.25f
+        restoreEdgeRate = 0.1f
+        corridorWidth = 3
+    }
+
+    let scene = createScene builder
+
     asd.Engine.ChangeScene scene
 
     while asd.Engine.DoEvents() do
         asd.Engine.Update()
+        if asd.Engine.Keyboard.GetKeyState asd.Keys.Space = asd.ButtonState.Release then
+            let scene = createScene { builder with seed = rand.Next() }
+            asd.Engine.ChangeScene scene
+        
 
     asd.Engine.Terminate()

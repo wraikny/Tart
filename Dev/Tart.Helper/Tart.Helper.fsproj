@@ -52,7 +52,9 @@
     <Compile Include="Math\Angle.fs" />
     <Compile Include="Math\Vec2.fs" />
     <Compile Include="Math\Vec3.fs" />
+    <Compile Include="Math\Vec4.fs" />
     <Compile Include="Math\VectorClass.fs" />
+    <Compile Include="Math\Color.fs" />
     <Compile Include="Math\Easing.fs" />
     <Compile Include="Geometry\Rect.fs" />
     <Compile Include="Geometry\Line.fs" />

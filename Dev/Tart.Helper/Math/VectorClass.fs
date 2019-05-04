@@ -4,9 +4,6 @@
 type VectorClass< ^a, ^Vec > = {
     Zero : unit -> ^Vec
     Dot : ^Vec -> ^Vec -> ^a
-    SquaredLength : ^Vec -> ^a
-    Length : ^Vec -> ^a
-    Normalize : ^Vec -> ^Vec
 }
 
 
@@ -17,9 +14,6 @@ type VectorBuiltin = VectorBuiltin with
         {
             Zero = Vec2.zero
             Dot = Vec2.dot
-            SquaredLength = Vec2.squaredLength
-            Length = Vec2.length
-            Normalize = Vec2.normalize
         }
     
     static member inline VectorImpl(_ : ^a Vec3): VectorClass< ^a, ^a Vec3 >
@@ -28,9 +22,14 @@ type VectorBuiltin = VectorBuiltin with
         {
             Zero = Vec3.zero
             Dot = Vec3.dot
-            SquaredLength = Vec3.squaredLength
-            Length = Vec3.length
-            Normalize = Vec3.normalize
+        }
+
+    static member inline VectorImpl(_ : ^a Vec4): VectorClass< ^a, ^a Vec4 >
+        when (^a or ^a Vec4) : (static member (*) : ^a Vec4 * ^a -> ^a Vec4)
+        =
+        {
+            Zero = Vec4.zero
+            Dot = Vec4.dot
         }
 
 
@@ -61,18 +60,14 @@ module VectorClass =
 
     [<CompiledName "SquaredLength">]
     let inline squaredLength (v : ^Vec) : ^a =
-        ( getImpl VectorBuiltin
-            (Unchecked.defaultof<VectorClass< ^a, ^Vec >>)
-        ).SquaredLength v
+        dot v v
 
     [<CompiledName "Length">]
     let inline length (v : ^Vec) : ^b =
-        ( getImpl VectorBuiltin
-            (Unchecked.defaultof<VectorClass< _, ^Vec >>)
-        ).Length v
+        sqrt (squaredLength v)
 
     [<CompiledName "Normalize">]
     let inline normalize (v : ^Vec) : ^Vec =
-        ( getImpl VectorBuiltin
-            (Unchecked.defaultof<VectorClass< _, ^Vec >>)
-        ).Normalize v
+        let len : ^a = (length v)
+        let one : ^a = LanguagePrimitives.GenericOne
+        v * (len ** -one)
