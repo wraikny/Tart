@@ -24,9 +24,10 @@ type private CoreMessenger<'Msg>() =
 
 
 [<Class>]
-type private Messenger<'Msg, 'ViewMsg, 'Model, 'ViewModel>(environment, coreFuncs) =
+type private Messenger<'Msg, 'ViewMsg, 'Model, 'ViewModel>
+    (environment, corePrograms) =
 
-    let coreFuncs : CoreProgram<_, _, _, _> = coreFuncs
+    let corePrograms : CoreProgram<_, _, _, _> = corePrograms
 
     let environment : Environment<'ViewMsg> = environment
 
@@ -39,9 +40,6 @@ type private Messenger<'Msg, 'ViewMsg, 'Model, 'ViewModel>(environment, coreFunc
     let isRunning = new LockObject<bool>(false)
 
     let mutable sleepTime = 5
-
-    do
-        modelQueue.Enqueue(coreFuncs.init)
 
 
     member private __.IsRunning
@@ -61,7 +59,7 @@ type private Messenger<'Msg, 'ViewMsg, 'Model, 'ViewModel>(environment, coreFunc
                 | None -> model
 
                 | Some(msg) ->
-                    let newModel, cmd = coreFuncs.update msg model
+                    let newModel, cmd = corePrograms.update msg model
 
                     cmd |> Cmd.execute
                         (this :> IMsgSender<_>)
@@ -93,6 +91,18 @@ type private Messenger<'Msg, 'ViewMsg, 'Model, 'ViewModel>(environment, coreFunc
         not running
 
 
+    member private this.InitializeModel() =
+        let model, cmd = corePrograms.init
+        
+        cmd |> Cmd.execute
+            (this :> IMsgSender<_>)
+            environment
+        
+        modelQueue.Enqueue(model)
+
+        model
+
+
     interface IMsgSender<'Msg> with
         member this.PushMsg(msg) = coreMessenger.PushMsg(msg)
     
@@ -105,19 +115,20 @@ type private Messenger<'Msg, 'ViewMsg, 'Model, 'ViewModel>(environment, coreFunc
         member this.TryViewModel
             with get() =
                 modelQueue.TryDequeue()
-                |> Option.map coreFuncs.view
+                |> Option.map corePrograms.view
 
         member this.IsRunning
             with get() = this.IsRunning
 
         member this.StartAsync() =
-            coreFuncs.init
+            this.InitializeModel()
             |> this.MainLoop
 
         member this.ResumeAsync() =
-            lastModel
-            |> Option.defaultValue coreFuncs.init
-            |> this.MainLoop
+            lastModel |> function
+            | Some model -> this.MainLoop(model)
+            | None ->
+                (this :> IMessenger<'Msg, 'ViewModel>).StartAsync()
 
         member this.Stop() =
             this.IsRunning <- false
@@ -126,12 +137,12 @@ type private Messenger<'Msg, 'ViewMsg, 'Model, 'ViewModel>(environment, coreFunc
 [<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
 module Messenger =
     [<CompiledName "CreateMessenger">]
-    let createMessenger (environment) (coreFuncs) =
-        (new Messenger<_, _, _, _>(environment, coreFuncs))
+    let createMessenger (environment) (corePrograms) =
+        (new Messenger<_, _, _, _>(environment, corePrograms))
         :> IMessenger<_, _>
 
 
     [<CompiledName "BuildMessenger">]
-    let buildMessenger (envBuilder) (coreFuncs) =
-        (new Messenger<_, _, _, _>(envBuilder |> EnvironmentBuilder.build, coreFuncs))
+    let buildMessenger (envBuilder) (corePrograms) =
+        (new Messenger<_, _, _, _>(envBuilder |> EnvironmentBuilder.build, corePrograms))
         :> IMessenger<_, _>
