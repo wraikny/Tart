@@ -1,7 +1,13 @@
 ﻿namespace wraikny.Tart.Helper.Math
 
 
-type VectorClass< ^a, ^Vec > = {
+type VectorClass< ^a, ^Vec
+    when ^Vec : (static member (~-) : ^Vec -> ^Vec)
+    and  ^Vec : (static member (+) : ^Vec * ^Vec -> ^Vec)
+    and  ^Vec : (static member (-) : ^Vec * ^Vec -> ^Vec)
+    and  ^Vec : (static member (*) : ^Vec * ^Vec -> ^Vec)
+    and  ^Vec : (static member (/) : ^Vec * ^Vec -> ^Vec)
+    > = {
     Zero : unit -> ^Vec
     FromScalar : ^a -> ^Vec
     Dot : ^Vec -> ^Vec -> ^a
