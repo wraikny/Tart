@@ -33,26 +33,17 @@ type public Environment<'ViewMsg>() =
 
 type EnvironmentBuilder<'ViewMsg> =
     {
-        seed : int option
+        seed : int
         updater : IMsgSender<'ViewMsg> option
     }
 
 
 [<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
 module EnvironmentBuilder =
-    [<CompiledName "Init">]
-    let init() =
-        {
-            seed = None
-            updater = None
-        }
-
     [<CompiledName "Builder">]
     let build (builder) =
         let env = new Environment<_>()
-        builder.seed |> function
-        | None -> ()
-        | Some seed -> env.SetRandom(new Random(seed)) |> ignore
+        env.SetRandom(new Random(builder.seed)) |> ignore
 
         builder.updater |> function
         | None -> ()
