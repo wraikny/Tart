@@ -8,11 +8,13 @@ type Model =
         tmp : int
     }
 
-let init : Model =
+type ViewModel = Model
+
+let init : Model * Cmd<'Msg, 'ViewModel> =
     {
         count = 0
         tmp = 0
-    }
+    }, Cmd.none
 
 type Msg =
     | Add of int
@@ -38,16 +40,16 @@ let update msg model : Model * Cmd<_, _> =
         model |> setCount i, Cmd.none
 
 
-type ViewModel = Model
-
-
 let view model : ViewModel =
     model
 
 
 let messengerBuilder() : IMessenger<Msg, ViewModel> =
-    Messenger.createMessenger
-        ( new Environment<_>() )
+    Messenger.buildMessenger
+        {
+            seed = 0
+            updater = None
+        }
         {
             init = init
             update = update
