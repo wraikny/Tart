@@ -50,6 +50,12 @@ module VectorClass =
             (Unchecked.defaultof<VectorClass< ^a, ^Vec >>)
         ).Zero()
 
+    [<CompiledName "FromScalar">]
+    let inline fromScalar(a : ^a) : ^Vec =
+        ( getImpl VectorBuiltin
+            (Unchecked.defaultof<VectorClass< ^a, ^Vec >>)
+        ).FromScalar a
+
     [<CompiledName "Dot">]
     let inline dot (a : ^Vec) (b : ^Vec) : ^a =
         ( getImpl VectorBuiltin
@@ -68,4 +74,4 @@ module VectorClass =
     let inline normalize (v : ^Vec) : ^Vec =
         let len : ^a = (length v)
         let one : ^a = LanguagePrimitives.GenericOne
-        v * (len ** -one)
+        v * fromScalar (len ** -one)
