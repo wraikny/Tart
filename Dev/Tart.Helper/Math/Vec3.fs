@@ -49,12 +49,25 @@ type ^a Vec3 =
             z = a * b.z
         }
 
+    static member inline (/) (a, b) =
+        {
+            x = a.x / b.x
+            y = a.y / b.y
+            z = a.z / b.z
+        }
 
     static member inline (/) (a, b) =
         {
             x = a.x / b
             y = a.y / b
             z = a.z / b
+        }
+
+    static member inline (/) (a, b) =
+        {
+            x = a / b.x
+            y = a / b.y
+            z = a / b.z
         }
 
 

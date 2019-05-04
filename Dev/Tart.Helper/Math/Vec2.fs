@@ -42,11 +42,22 @@ type ^a Vec2 =
             y = a * b.y
         }
 
+    static member inline (/) (a, b) =
+        {
+            x = a.x / b.x
+            y = a.y / b.y
+        }
 
     static member inline (/) (a, b) =
         {
             x = a.x / b
             y = a.y / b
+        }
+
+    static member inline (/) (a, b) =
+        {
+            x = a / b.x
+            y = a / b.y
         }
 
 

@@ -56,6 +56,13 @@ type ^a Vec4 =
             w = a * b.w
         }
 
+    static member inline (/) (a, b) =
+        {
+            x = a.x / b.x
+            y = a.y / b.y
+            z = a.z / b.z
+            w = a.w / b.w
+        }
 
     static member inline (/) (a, b) =
         {
@@ -63,6 +70,14 @@ type ^a Vec4 =
             y = a.y / b
             z = a.z / b
             w = a.w / b
+        }
+
+    static member inline (/) (a, b) =
+        {
+            x = a / b.x
+            y = a / b.y
+            z = a / b.z
+            w = a / b.w
         }
 
 
