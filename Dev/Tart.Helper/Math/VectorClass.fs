@@ -2,7 +2,12 @@
 
 
 type VectorClass< ^a, ^Vec
-    when ^Vec : (static member (~-) : ^Vec -> ^Vec)
+    when ^a   : (static member (~-) : ^a -> ^a)
+    and  ^a   : (static member (+) : ^a * ^a -> ^a)
+    and  ^a   : (static member (-) : ^a * ^a -> ^a)
+    and  ^a   : (static member (*) : ^a * ^a -> ^a)
+    and  ^a   : (static member (/) : ^a * ^a -> ^a)
+    and  ^Vec : (static member (~-) : ^Vec -> ^Vec)
     and  ^Vec : (static member (+) : ^Vec * ^Vec -> ^Vec)
     and  ^Vec : (static member (-) : ^Vec * ^Vec -> ^Vec)
     and  ^Vec : (static member (*) : ^Vec * ^Vec -> ^Vec)
