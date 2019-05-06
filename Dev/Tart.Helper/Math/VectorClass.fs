@@ -78,6 +78,4 @@ module VectorClass =
 
     [<CompiledName "Normalize">]
     let inline normalize (v : ^Vec) : ^Vec =
-        let len : ^a = (length v)
-        let one : ^a = LanguagePrimitives.GenericOne
-        v * fromScalar (len ** -one)
+        v / fromScalar (length v)
