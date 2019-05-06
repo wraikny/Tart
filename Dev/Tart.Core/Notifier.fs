@@ -8,7 +8,7 @@ type Notifier<'Msg, 'ViewMsg, 'ViewModel>(messenger) =
     member val Messenger : IMessenger<'Msg, 'ViewModel> = messenger with get
 
     member this.Update() =
-        messenger.TryViewModel |> function
+        this.Messenger.TryViewModel |> function
         | Some viewModel ->
             this.NotifyObservers(viewModel)
         | None -> ()
