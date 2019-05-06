@@ -1,7 +1,5 @@
-﻿namespace wraikny.Tart.Helper
+﻿module wraikny.Tart.Helper.Basic
 
 
-module Basic =
-    
-    [<Struct>]
-    type Never = | Never
+[<Struct>]
+type Never = | Never
