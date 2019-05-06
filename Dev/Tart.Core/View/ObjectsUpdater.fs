@@ -44,10 +44,13 @@ type ObjectsUpdater<'ViewModel, 'Object, 'ObjectViewModel
 
 
     /// ビューモデルを元にオブジェクトの更新を行う。
-    member this.Update(viewModel : UpdaterViewModel<_>) =
-        this.AddObjects(&viewModel)
-        if (this :> IObjectsUpdater).UpdatingEnabled then
-            this.UpdateActors(&viewModel)
+    member this.Update(viewModel : UpdaterViewModel<_> option) =
+        viewModel |> function
+        | Some viewModel ->
+            this.AddObjects(&viewModel)
+            if (this :> IObjectsUpdater).UpdatingEnabled then
+                this.UpdateActors(&viewModel)
+        | None -> ()
 
 
     /// ビューモデルを元にidを照合してオブジェクトの追加を行う。
