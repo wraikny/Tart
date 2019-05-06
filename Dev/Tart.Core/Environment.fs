@@ -31,6 +31,7 @@ type public Environment<'ViewMsg>() =
             with get() = random
 
 
+[<Struct>]
 type EnvironmentBuilder<'ViewMsg> =
     {
         seed : int
