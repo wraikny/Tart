@@ -1,5 +1,6 @@
 ﻿namespace wraikny.Tart.Helper.Math
 
+[<Struct>]
 type ^a Vec4 =
     {
         x : ^a

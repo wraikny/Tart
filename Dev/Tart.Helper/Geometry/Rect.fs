@@ -2,6 +2,7 @@
 
 open wraikny.Tart.Helper.Math
 
+[<Struct>]
 type ^a Rect =
     {
         position : ^a Vec2

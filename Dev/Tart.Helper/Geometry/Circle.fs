@@ -2,7 +2,7 @@
 
 open wraikny.Tart.Helper.Math
 
-
+[<Struct>]
 type Circle< ^a, ^Vec
         when (VectorBuiltin or ^Vec) :
             (static member VectorImpl : ^Vec -> VectorClass< ^a, ^Vec >)

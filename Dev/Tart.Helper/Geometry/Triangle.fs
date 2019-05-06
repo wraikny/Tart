@@ -2,7 +2,7 @@
 
 open wraikny.Tart.Helper.Math
 
-
+[<Struct>]
 type Triangle< ^a> =
     {
         p1 : ^a

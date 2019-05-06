@@ -1,6 +1,6 @@
 ﻿namespace wraikny.Tart.Helper.Math
 
-
+[<Struct>]
 type VectorClass< ^a, ^Vec
     when ^a   : (static member (~-) : ^a -> ^a)
     and  ^a   : (static member (+) : ^a * ^a -> ^a)

@@ -1,5 +1,6 @@
 ﻿namespace wraikny.Tart.Helper.Graph
 
+[<Struct>]
 type Node<'V> = {
     label : int
     value : 'V
@@ -22,7 +23,7 @@ module Node =
         }
 
 
-
+[<Struct>]
 type Edge< 'V, 'W
     when 'W : comparison
     > =
