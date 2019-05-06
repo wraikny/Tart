@@ -10,7 +10,7 @@ type IObjectUpdatee<'ViewModel> =
     abstract Update : 'ViewModel -> unit
 
 
-/// 追加削除の発生するオブジェクトの更新を行うクラスが実装するインターフェース。
+/// 追加削除の発生するオブジェクトの更新を行うクラスが実装するインターフェース。 
 [<Interface>]
 type IObjectsUpdater =
     abstract UpdatingEnabled : bool with get, set

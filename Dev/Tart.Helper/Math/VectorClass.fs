@@ -1,34 +1,38 @@
 ﻿namespace wraikny.Tart.Helper.Math
 
 
-type VectorClass< ^a, ^Vec > = {
+type VectorClass< ^a, ^Vec
+    when ^Vec : (static member (~-) : ^Vec -> ^Vec)
+    and  ^Vec : (static member (+) : ^Vec * ^Vec -> ^Vec)
+    and  ^Vec : (static member (-) : ^Vec * ^Vec -> ^Vec)
+    and  ^Vec : (static member (*) : ^Vec * ^Vec -> ^Vec)
+    and  ^Vec : (static member (/) : ^Vec * ^Vec -> ^Vec)
+    > = {
     Zero : unit -> ^Vec
+    FromScalar : ^a -> ^Vec
     Dot : ^Vec -> ^Vec -> ^a
 }
 
 
 type VectorBuiltin = VectorBuiltin with
-    static member inline VectorImpl(_ : ^a Vec2) : VectorClass< ^a, ^a Vec2 >
-        when (^a or ^a Vec2) : (static member (*) : ^a Vec2 * ^a -> ^a Vec2)
-        =
+    static member inline VectorImpl(_ : ^a Vec2) : VectorClass< ^a, ^a Vec2 > =
         {
             Zero = Vec2.zero
+            FromScalar = Vec2.fromScalar
             Dot = Vec2.dot
         }
     
-    static member inline VectorImpl(_ : ^a Vec3): VectorClass< ^a, ^a Vec3 >
-        when (^a or ^a Vec3) : (static member (*) : ^a Vec3 * ^a -> ^a Vec3)
-        =
+    static member inline VectorImpl(_ : ^a Vec3): VectorClass< ^a, ^a Vec3 > =
         {
             Zero = Vec3.zero
+            FromScalar = Vec3.fromScalar
             Dot = Vec3.dot
         }
 
-    static member inline VectorImpl(_ : ^a Vec4): VectorClass< ^a, ^a Vec4 >
-        when (^a or ^a Vec4) : (static member (*) : ^a Vec4 * ^a -> ^a Vec4)
-        =
+    static member inline VectorImpl(_ : ^a Vec4): VectorClass< ^a, ^a Vec4 > =
         {
             Zero = Vec4.zero
+            FromScalar = Vec4.fromScalar
             Dot = Vec4.dot
         }
 
@@ -52,6 +56,12 @@ module VectorClass =
             (Unchecked.defaultof<VectorClass< ^a, ^Vec >>)
         ).Zero()
 
+    [<CompiledName "FromScalar">]
+    let inline fromScalar(a : ^a) : ^Vec =
+        ( getImpl VectorBuiltin
+            (Unchecked.defaultof<VectorClass< ^a, ^Vec >>)
+        ).FromScalar a
+
     [<CompiledName "Dot">]
     let inline dot (a : ^Vec) (b : ^Vec) : ^a =
         ( getImpl VectorBuiltin
@@ -70,4 +80,4 @@ module VectorClass =
     let inline normalize (v : ^Vec) : ^Vec =
         let len : ^a = (length v)
         let one : ^a = LanguagePrimitives.GenericOne
-        v * (len ** -one)
+        v * fromScalar (len ** -one)
