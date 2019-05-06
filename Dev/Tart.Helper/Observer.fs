@@ -18,3 +18,7 @@ type Observable<'T>() =
 
     member this.NotifyObservers(input) =
         observers.ForEach(fun o -> o.UpdateFromNotify(input))
+
+
+    member this.ClearObservers() =
+        observers.Clear()
