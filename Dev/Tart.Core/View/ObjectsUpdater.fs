@@ -4,20 +4,20 @@
 open System.Collections.Generic;
 
 
-/// 追加削除の発生するオブジェクトのクラスが実装するインターフェース。
+/// Interface of updated object with add / remove
 [<Interface>]
 type IObjectUpdatee<'ViewModel> =
     abstract Update : 'ViewModel -> unit
 
 
-/// 追加削除の発生するオブジェクトの更新を行うクラスが実装するインターフェース。 
+/// Interface of adding, removing and updating objects
 [<Interface>]
 type IObjectsUpdater =
     abstract UpdatingEnabled : bool with get, set
 
 
 
-/// 追加削除の発生するオブジェクトの更新を行うためのビューモデル。
+/// ViewModel record to updatin objects
 type UpdaterViewModel<'ActorViewModel> =
     {
         nextID : uint32
@@ -25,7 +25,7 @@ type UpdaterViewModel<'ActorViewModel> =
     }
 
 
-/// 追加削除の発生するオブジェクトの更新を行うクラス。
+/// Class of adding, removing and updating objects
 [<Class>]
 type ObjectsUpdater<'ViewModel, 'Object, 'ObjectViewModel
     when 'Object :> obj
@@ -44,6 +44,7 @@ type ObjectsUpdater<'ViewModel, 'Object, 'ObjectViewModel
 
 
     /// ビューモデルを元にオブジェクトの更新を行う。
+    /// Update objects on ViewModel
     member this.Update(viewModel : UpdaterViewModel<_> option) =
         viewModel |> function
         | Some viewModel ->
@@ -53,7 +54,7 @@ type ObjectsUpdater<'ViewModel, 'Object, 'ObjectViewModel
         | None -> ()
 
 
-    /// ビューモデルを元にidを照合してオブジェクトの追加を行う。
+    /// Add objects on difference of id in ViewModel
     member this.AddObjects (viewModel : _ inref) =
         let newNextID = viewModel.nextID
         if nextID <> newNextID then
@@ -73,7 +74,7 @@ type ObjectsUpdater<'ViewModel, 'Object, 'ObjectViewModel
             nextID <- newNextID
 
 
-    /// ビューモデルを元にオブジェクトの更新と破棄を行う。
+    /// Update and remove objects on ViewModel
     member this.UpdateActors (viewModel : _ inref) =
         let objects' =
             objects
