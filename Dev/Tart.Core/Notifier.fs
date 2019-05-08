@@ -1,4 +1,4 @@
-﻿namespace wraikny.Tart.Core
+namespace wraikny.Tart.Core
 
 open wraikny.Tart.Helper
 
@@ -11,4 +11,6 @@ type Notifier<'Msg, 'ViewMsg, 'ViewModel>(messenger) =
         this.Messenger.TryViewModel |> function
         | Some viewModel ->
             this.NotifyObservers(viewModel)
-        | None -> ()
+            true
+        | None ->
+            false
