@@ -1,6 +1,6 @@
 ﻿namespace wraikny.Tart.Core
 
-open wraikny.Tart.Helper
+open wraikny.Tart.Helper.Utils
 
 type Notifier<'Msg, 'ViewMsg, 'ViewModel>(messenger) =
     inherit Observable<'ViewModel>()

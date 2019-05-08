@@ -1,4 +1,4 @@
-﻿namespace wraikny.Tart.Helper
+﻿namespace wraikny.Tart.Helper.Utils
 
 [<Interface>]
 type IObserver<'T> =

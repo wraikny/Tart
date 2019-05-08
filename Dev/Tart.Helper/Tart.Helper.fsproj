@@ -44,7 +44,6 @@
   <ItemGroup>
     <Compile Include="AssemblyInfo.fs" />
     <Content Include="packages.config" />
-    <Compile Include="Observer.fs" />
     <Compile Include="Basic.fs" />
     <Compile Include="Coroutine.fs" />
     <Compile Include="Monad\Maybe.fs" />
@@ -67,6 +66,7 @@
     <Compile Include="Extension\Seq.fs" />
     <Compile Include="Utils\FixedSizeQueue.fs" />
     <Compile Include="Utils\LockObject.fs" />
+    <Compile Include="Utils\Observer.fs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="FSharp.Core">

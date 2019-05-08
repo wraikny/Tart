@@ -18,11 +18,14 @@ type IObjectsUpdater =
 
 
 /// ViewModel record to updatin objects
-type UpdaterViewModel<'ActorViewModel> =
+type UpdaterViewModel<'ObjectViewModel> =
     {
         nextID : uint32
-        objects : Map<uint32, 'ActorViewModel>
+        objects : Map<uint32, 'ObjectViewModel>
     }
+
+
+open wraikny.Tart.Helper.Utils
 
 
 /// Class of adding, removing and updating objects
@@ -38,7 +41,6 @@ type ObjectsUpdater<'ViewModel, 'Object, 'ObjectViewModel
     let add = add
     let remove = remove
 
-
     interface IObjectsUpdater with
         member val UpdatingEnabled = true with get, set
 
@@ -50,7 +52,7 @@ type ObjectsUpdater<'ViewModel, 'Object, 'ObjectViewModel
         | Some viewModel ->
             this.AddObjects(&viewModel)
             if (this :> IObjectsUpdater).UpdatingEnabled then
-                this.UpdateActors(&viewModel)
+                this.UpdateObjects(&viewModel)
         | None -> ()
 
 
@@ -75,7 +77,7 @@ type ObjectsUpdater<'ViewModel, 'Object, 'ObjectViewModel
 
 
     /// Update and remove objects on ViewModel
-    member this.UpdateActors (viewModel : _ inref) =
+    member this.UpdateObjects (viewModel : _ inref) =
         let objects' =
             objects
             |> Seq.map(fun x -> (x.Key, x.Value))
