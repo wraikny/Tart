@@ -288,17 +288,18 @@ module DungeonBuilder =
             let getCells (spaces : Space list) =
                 spaces
                 |> Seq.map(fun space ->
-                    let lu, rd = space.rect |> Rect.get_LU_RD
+                    let lu = space.rect.position
+                    let size = space.rect.size
                     seq {
-                        for x in (lu.x)..(rd.x) do
-                        for y in (lu.y)..(rd.y) do
-                            yield ( (x, y), space.id )
+                        for dx in 0..(size.x - 1) do
+                        for dy in 0..(size.y - 1) do
+                            yield ( lu + Vec2.init(dx, dy), space.id )
                     }
                 )
                 |> Seq.concat
 
             seq {
-                let cellsDict = new Dictionary<int * int, SpaceID>()
+                let cellsDict = new Dictionary<int Vec2, SpaceID>()
 
                 for (cdn, id) in (getCells largeRooms) do
                     cellsDict.[cdn] <- id
@@ -312,7 +313,7 @@ module DungeonBuilder =
                         cellsDict.[cdn] <- id
 
                 for item in cellsDict ->
-                    (Vec2.init item.Key, item.Value)
+                    (item.Key, item.Value)
             }
             |> Map.ofSeq
 
