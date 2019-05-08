@@ -6,12 +6,12 @@ open System.Collections.Concurrent
 
 
 [<AbstractClass>]
-type Updater<'ViewMsg>() =
+type Port<'ViewMsg>() =
     let coreMessenger = new CoreMessenger<'ViewMsg>()
 
     abstract OnUpdate : 'ViewMsg -> unit
     
-    member public this.Update() =
+    member public this.Pop() =
         let rec update() =
             coreMessenger.TryPopMsg() |> function
             | Some(msg) ->

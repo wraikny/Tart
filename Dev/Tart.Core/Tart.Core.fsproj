@@ -51,7 +51,7 @@
     <Compile Include="Messenger.fs" />
     <Compile Include="Libraries\Random.fs" />
     <Compile Include="Libraries\Task.fs" />
-    <Compile Include="Updater.fs" />
+    <Compile Include="Port.fs" />
     <Compile Include="Notifier.fs" />
     <Compile Include="View\ObjectsUpdater.fs" />
   </ItemGroup>
