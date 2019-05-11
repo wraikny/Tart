@@ -71,13 +71,13 @@ module Vec3 =
     let inline axes() : (^a Vec3 -> ^a) list = [x; y; z]
 
     [<CompiledName "XY">]
-    let inline xy (v : ^a Vec3) = v.x, v.y
+    let inline xy (v : ^a Vec3) = Vec2.init(v.x, v.y)
 
     [<CompiledName "YZ">]
-    let inline yz (v : ^a Vec3) = v.y, v.z
+    let inline yz (v : ^a Vec3) = Vec2.init(v.y, v.z)
 
     [<CompiledName "ZX">]
-    let inline zx (v : ^a Vec3) = v.z, v.x
+    let inline zx (v : ^a Vec3) = Vec2.init(v.z, v.x)
 
     [<CompiledName "XYZ">]
     let inline xyz (v : ^a Vec3) = v.x, v.y, v.z
