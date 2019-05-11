@@ -3,22 +3,25 @@
 open wraikny.Tart.Helper.Math
 
 [<Struct>]
-type ^a Rect =
+type Rect< ^a, ^Vec
+        when (VectorBuiltin or ^Vec) :
+            (static member VectorImpl : ^Vec -> VectorClass< ^a, ^Vec >)
+    > =
     {
-        position : ^a Vec2
-        size : ^a Vec2
+        position : ^Vec
+        size : ^Vec
     }
 
 
 [<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
 module Rect =
     [<CompiledName "Init">]
-    let inline init position size : _ Rect =
+    let inline init position size =
         { position = position; size = size }
 
     [<CompiledName "Zero">]
-    let inline zero() : ^a Rect =
-        let zero = Vec2.zero()
+    let inline zero() =
+        let zero = VectorClass.zero()
         init zero zero
 
     [<CompiledName "Position">]
@@ -50,28 +53,22 @@ module Rect =
     let inline map1 f = (Vec2.map f) |> map
 
     [<CompiledName "DiagonalPosition">]
-    let inline diagonalPosition (r : ^a Rect) : ^a Vec2 =
-        Vec2.init(
-            r.position.x + r.size.x
-            , r.position.y + r.size.y
-        )
+    let inline diagonalPosition (r : Rect< ^a, ^Vec >) : ^Vec =
+        r.position + r.size
 
     [<CompiledName "CenterPosition">]
-    let inline centerPosition (r : ^a Rect) : ^a Vec2 =
+    let inline centerPosition (r : Rect< ^a, ^Vec >) : ^Vec =
         let one = LanguagePrimitives.GenericOne
         let two = one + one
-        Vec2.init(
-            r.position.x + r.size.x / two
-            , r.position.y + r.size.y / two
-        )
+        r.position + r.size / (VectorClass.fromScalar two)
 
     [<CompiledName "Get_LU_RD">]
-    let inline get_LU_RD (r : ^a Rect) : (^a Vec2 * ^a Vec2) =
+    let inline get_LU_RD (r : Rect< ^a, ^Vec >) : (^Vec * ^Vec) =
         r.position, diagonalPosition r
 
 
     [<CompiledName "IsCollidedAxis">]
-    let inline isCollidedAxis(axis : ^a Vec2 -> ^a) (aLU, aRD) (bLU, bRD) : bool =
+    let inline isCollidedAxis(axis : ^Vec -> ^a) (aLU, aRD) (bLU, bRD) : bool =
         not (axis aRD < axis bLU || axis bRD < axis aLU)
 
     [<CompiledName "IsInside">]
@@ -85,13 +82,14 @@ module Rect =
         |> List.fold (&&) true
 
     [<CompiledName "IsCollided">]
-    let inline isCollided (a : ^a Rect) (b : ^a Rect) : bool =
+    let inline isCollided (a : Rect< ^a, ^Vec >) (b : Rect< ^a, ^Vec >) : bool =
         let aLURD = get_LU_RD a
         let bLURD = get_LU_RD b
 
         let isCollided =
-            (isCollidedAxis Vec2.x aLURD bLURD)
-            && (isCollidedAxis Vec2.y aLURD bLURD)
+            VectorClass.axes()
+            |> List.map(fun axis -> isCollidedAxis axis aLURD bLURD)
+            |> List.fold (&&) true
 
         isCollided
 

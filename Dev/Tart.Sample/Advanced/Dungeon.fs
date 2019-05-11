@@ -35,7 +35,7 @@ let createScene builder =
 
     let n = 2.0f
 
-    let create (r : int Rect) =
+    let create (r : Rect<int, int Vec2>) =
         let r = r |> Rect.map1 (float32 >> (*) n)
         let rect =
             new asd.RectangleShape(

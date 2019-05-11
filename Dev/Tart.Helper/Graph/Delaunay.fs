@@ -8,7 +8,7 @@ open wraikny.Tart.Helper.Geometry
 module Delaunay2 =
     /// 全体を包含する正三角形を求める
     [<CompiledName "GetHugeTriangle">]
-    let getHugeTriangle (range : float32 Rect) : Triangle<Vec2<float32>> =
+    let getHugeTriangle (range : Rect<float32, float32 Vec2>) : Triangle<Vec2<float32>> =
 
         // 与えられた矩形を包含する円を求める  
         let center = range |> Rect.centerPosition

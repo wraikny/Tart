@@ -91,7 +91,7 @@ module private WithRandom =
     open wraikny.Tart.Helper.Graph
         
         
-    let getLargeRoomEdges (largeRooms : (int * int Rect) list) (withRandom : WithRandom) : Edge<unit, float32> list =
+    let getLargeRoomEdges (largeRooms : (int * Rect<int, int Vec2>) list) (withRandom : WithRandom) : Edge<unit, float32> list =
         let largeRoomsCount = largeRooms |> List.length
         
         let largeRoomEdges =
@@ -137,7 +137,7 @@ module private WithRandom =
 
 [<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
 module DungeonBuilder =
-    let private distributeRooms (rooms : int Rect list) (rate : float32) =
+    let private distributeRooms (rooms : Rect<int, int Vec2> list) (rate : float32) =
         let threshold =
             let len = rooms |> List.length |> float32
             let sum =
@@ -156,7 +156,7 @@ module DungeonBuilder =
     // open System.Linq
 
 
-    let private moveRooms (rooms : int Rect list) movingRate : int Rect list =
+    let private moveRooms (rooms : Rect<int, int Vec2> list) movingRate : Rect<int, int Vec2> list =
         let roomsList = new List<MovingRoom>()
 
         for r in rooms do
@@ -174,7 +174,7 @@ module DungeonBuilder =
         [ for r in roomsList -> r.RectI ]
 
 
-    let private generateCorridors (width) (rect1 : int Rect, rect2 : int Rect) : int Rect list =
+    let private generateCorridors (width) (rect1 : Rect<int, int Vec2>, rect2 : Rect<int, int Vec2>) : Rect<int, int Vec2> list =
         
         let center1, center2 = Rect.centerPosition rect1, Rect.centerPosition rect2
         let middle = (center1 + center2) / Vec2.fromScalar 2
