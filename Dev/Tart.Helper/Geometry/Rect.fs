@@ -86,7 +86,7 @@ module Rect =
             (static member VectorImpl : ^Vec -> VectorClass< ^a, ^Vec >)
         =
         let lu, rd = get_LU_RD r
-        [Vec2.x; Vec2.y]
+        VectorClass.axes()
         |> List.map(fun axis ->
             (axis lu) <= (axis p)
             && (axis p) <= (axis rd)
