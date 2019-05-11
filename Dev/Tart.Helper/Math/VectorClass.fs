@@ -16,6 +16,7 @@ type VectorClass< ^a, ^Vec
     Zero : unit -> ^Vec
     FromScalar : ^a -> ^Vec
     Dot : ^Vec -> ^Vec -> ^a
+    Axes : unit -> (^Vec -> ^a) list
 }
 
 
@@ -25,6 +26,7 @@ type VectorBuiltin = VectorBuiltin with
             Zero = Vec2.zero
             FromScalar = Vec2.fromScalar
             Dot = Vec2.dot
+            Axes = Vec2.axes
         }
     
     static member inline VectorImpl(_ : ^a Vec3): VectorClass< ^a, ^a Vec3 > =
@@ -32,6 +34,7 @@ type VectorBuiltin = VectorBuiltin with
             Zero = Vec3.zero
             FromScalar = Vec3.fromScalar
             Dot = Vec3.dot
+            Axes = Vec3.axes
         }
 
     static member inline VectorImpl(_ : ^a Vec4): VectorClass< ^a, ^a Vec4 > =
@@ -39,6 +42,7 @@ type VectorBuiltin = VectorBuiltin with
             Zero = Vec4.zero
             FromScalar = Vec4.fromScalar
             Dot = Vec4.dot
+            Axes = Vec4.axes
         }
 
 

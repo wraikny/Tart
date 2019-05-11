@@ -67,6 +67,9 @@ module Vec3 =
     [<CompiledName "Z">]
     let inline z v = v.z
 
+    [<CompiledName "Axes">]
+    let inline axes() : (^a Vec3 -> ^a) list = [x; y; z]
+
     [<CompiledName "XY">]
     let inline xy (v : ^a Vec3) = v.x, v.y
 
