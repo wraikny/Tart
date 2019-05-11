@@ -57,7 +57,7 @@ type ObjectsUpdater<'ViewModel, 'Object, 'ObjectViewModel
 
 
     /// Add objects from ViewModel
-    member this.AddObjects (viewModel) =
+    member private this.AddObjects (viewModel) =
         for (id, objectViewModel) in viewModel.objects do
             if not <| objects.ContainsKey(id) then
                 let object : 'Object = init()
@@ -67,7 +67,7 @@ type ObjectsUpdater<'ViewModel, 'Object, 'ObjectViewModel
 
 
     /// Add, Update, Remove objects from ViewModel
-    member this.UpdateObjects (viewModel) =
+    member private this.UpdateObjects (viewModel) =
         for (id, objectViewModel) in viewModel.objects do
             let (isSuccess, result) = objects.TryGetValue(id)
             if isSuccess then
