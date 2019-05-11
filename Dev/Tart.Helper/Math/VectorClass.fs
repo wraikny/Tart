@@ -77,6 +77,12 @@ module VectorClass =
             (Unchecked.defaultof<VectorClass< ^a, ^Vec >>)
         ).Dot a b
 
+    [<CompiledName "Axes">]
+    let inline axes() : (^Vec -> ^a) list =
+        ( getImpl VectorBuiltin
+            (Unchecked.defaultof<VectorClass< ^a, ^Vec >>)
+        ).Axes()
+
     [<CompiledName "SquaredLength">]
     let inline squaredLength (v : ^Vec) : ^a =
         dot v v
