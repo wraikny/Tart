@@ -55,7 +55,7 @@ module Triangle =
 
 
     [<CompiledName "CircumscribedCircle">]
-    let inline circumscribedCircle (t : Triangle< float32 Vec2 >) : Circle< float32, float32 Vec2 > =
+    let inline circumscribedCircle (t : Triangle< float32 Vec2 >) : Sphere< float32, float32 Vec2 > =
         let x1, y1 = t.p1.x, t.p1.y
         let x2, y2 = t.p2.x, t.p2.y
         let x3, y3 = t.p3.x, t.p3.y
@@ -73,4 +73,4 @@ module Triangle =
 
         let r = VectorClass.length <| Vec2.init(center.x - x1, center.y - y1)
 
-        Circle.init(center, r)
+        Sphere.init(center, r)

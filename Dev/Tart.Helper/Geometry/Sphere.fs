@@ -3,7 +3,7 @@
 open wraikny.Tart.Helper.Math
 
 [<Struct>]
-type Circle< ^a, ^Vec
+type Sphere< ^a, ^Vec
         when (VectorBuiltin or ^Vec) :
             (static member VectorImpl : ^Vec -> VectorClass< ^a, ^Vec >)
     > =
@@ -14,13 +14,13 @@ type Circle< ^a, ^Vec
 
 
 [<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
-module Circle =
+module Sphere =
     [<CompiledName "Init">]
-    let inline init(c, r) : Circle<_, _> =
+    let inline init(c, r) : Sphere<_, _> =
         { center = c; radius = r; }
 
     [<CompiledName "Zero">]
-    let inline zero() : Circle<_, _> =
+    let inline zero() : Sphere<_, _> =
         let zero : ^a = LanguagePrimitives.GenericZero
         init(Vec2.zero(), zero)
 
@@ -36,7 +36,7 @@ module Circle =
         distance < (c.radius * c.radius)
 
     [<CompiledName "IsCollided">]
-    let inline isCollided (a : Circle< ^a, ^Vec >) (b : Circle< ^a, ^Vec >) : bool =
+    let inline isCollided (a : Sphere< ^a, ^Vec >) (b : Sphere< ^a, ^Vec >) : bool =
         let distance = (a.center - b.center) |> VectorClass.squaredLength
         let radiusSum =
             let x = (a.radius + b.radius)

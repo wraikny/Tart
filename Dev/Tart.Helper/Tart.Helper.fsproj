@@ -57,7 +57,7 @@
     <Compile Include="Math\Easing.fs" />
     <Compile Include="Geometry\Line.fs" />
     <Compile Include="Geometry\Rect.fs" />
-    <Compile Include="Geometry\Circle.fs" />
+    <Compile Include="Geometry\Sphere.fs" />
     <Compile Include="Geometry\Triangle.fs" />
     <Compile Include="Graph\Graph.fs" />
     <Compile Include="Graph\UnionFold.fs" />
