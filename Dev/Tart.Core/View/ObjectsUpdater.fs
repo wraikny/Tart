@@ -20,8 +20,7 @@ type IObjectsUpdater =
 /// ViewModel record to updatin objects
 type UpdaterViewModel<'ObjectViewModel> =
     {
-        nextID : uint32
-        objects : Map<uint32, 'ObjectViewModel>
+        objects : (uint32 * 'ObjectViewModel) list
     }
 
 
@@ -34,8 +33,8 @@ type ObjectsUpdater<'ViewModel, 'Object, 'ObjectViewModel
     when 'Object :> obj
     and 'Object :> IObjectUpdatee<'ObjectViewModel>
     >(init, add, remove) =
-    let mutable nextID = 0u
     let objects = new Dictionary<uint32, 'Object>()
+    let existFlags = new HashSet<uint32>()
 
     let init = init
     let add = add
@@ -50,45 +49,45 @@ type ObjectsUpdater<'ViewModel, 'Object, 'ObjectViewModel
     member this.Update(viewModel : UpdaterViewModel<_> option) =
         viewModel |> function
         | Some viewModel ->
-            this.AddObjects(&viewModel)
             if (this :> IObjectsUpdater).UpdatingEnabled then
-                this.UpdateObjects(&viewModel)
+                this.UpdateObjects(viewModel)
+            else
+                this.AddObjects(viewModel)
         | None -> ()
 
 
-    /// Add objects on difference of id in ViewModel
-    member this.AddObjects (viewModel : _ inref) =
-        let newNextID = viewModel.nextID
-        if nextID <> newNextID then
-            
-            for id in nextID..(newNextID - 1u) do
-                viewModel.objects
-                |> Map.tryFind id
-                |> function
-                | None -> ()
-                | Some objectViewModel ->
-                    let object : 'Object = init()
-                    object.Update(objectViewModel)
-
-                    objects.Add(id, object)
-                    add(object)
-
-            nextID <- newNextID
+    /// Add objects from ViewModel
+    member this.AddObjects (viewModel) =
+        for (id, objectViewModel) in viewModel.objects do
+            if not <| objects.ContainsKey(id) then
+                let object : 'Object = init()
+                object.Update(objectViewModel)
+                objects.Add(id, object)
+                add(object)
 
 
-    /// Update and remove objects on ViewModel
-    member this.UpdateObjects (viewModel : _ inref) =
+    /// Add, Update, Remove objects from ViewModel
+    member this.UpdateObjects (viewModel) =
+        for (id, objectViewModel) in viewModel.objects do
+            let (isSuccess, result) = objects.TryGetValue(id)
+            if isSuccess then
+                result.Update(objectViewModel)
+            else
+                let object : 'Object = init()
+                object.Update(objectViewModel)
+                objects.Add(id, object)
+                add(object)
+
+            if not <| existFlags.Contains(id) then
+                existFlags.Add(id) |> ignore
+
         let objects' =
             objects
             |> Seq.map(fun x -> (x.Key, x.Value))
+            |> Seq.filter(fst >> existFlags.Contains >> not)
 
         for (id, object) in objects' do
-            viewModel.objects
-            |> Map.tryFind id
-            |> function
-            | Some objectViewModel ->
-                object.Update(objectViewModel)
+            remove(object)
+            objects.Remove(id) |> ignore
 
-            | None ->
-                remove(object)
-                objects.Remove(id) |> ignore
+        existFlags.Clear()
