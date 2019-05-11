@@ -36,7 +36,7 @@ let createScene builder =
     let n = 2.0f
 
     let create (r : int Vec2 Rect) =
-        let r = r |> Rect.map1 (float32 >> (*) n)
+        let r = r |> Rect.mapVec (float32 >> (*) n)
         let rect =
             new asd.RectangleShape(
                 DrawingArea =
@@ -67,8 +67,8 @@ let createScene builder =
             dungeonModel.largeRooms |> Map.find n1
             , dungeonModel.largeRooms |> Map.find n2
         let p1, p2 =
-            s1.rect |> Rect.map1 (float32 >> (*) n) |> Rect.centerPosition
-            , s2.rect |> Rect.map1 (float32 >> (*) n) |> Rect.centerPosition
+            s1.rect |> Rect.mapVec (float32 >> (*) n) |> Rect.centerPosition
+            , s2.rect |> Rect.mapVec (float32 >> (*) n) |> Rect.centerPosition
 
         let line =
             new asd.LineShape(

@@ -160,7 +160,7 @@ module DungeonBuilder =
         let roomsList = new List<MovingRoom>()
 
         for r in rooms do
-            let movingRoom = new MovingRoom(r |> Rect.map1 float32, movingRate, roomsList)
+            let movingRoom = new MovingRoom(r |> Rect.mapVec float32, movingRate, roomsList)
             roomsList.Add(movingRoom)
 
 

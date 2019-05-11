@@ -30,7 +30,7 @@ module Sphere =
     [<CompiledName "IsInside">]
     let inline isInside p c : bool
         when (VectorBuiltin or ^Vec) :
-            (static member VectorImpl : ^Vec -> VectorClass< ^a, ^Vec >)
+            (static member VectorImpl : ^Vec -> VectorClass< ^a, ^Vec, ^Ma, ^MVec >)
         =
         let distance = VectorClass.squaredLength(p - c.center)
         distance < (c.radius * c.radius)
@@ -38,7 +38,7 @@ module Sphere =
     [<CompiledName "IsCollided">]
     let inline isCollided a b : bool
         when (VectorBuiltin or ^Vec) :
-            (static member VectorImpl : ^Vec -> VectorClass< ^a, ^Vec >)
+            (static member VectorImpl : ^Vec -> VectorClass< ^a, ^Vec, ^Ma, ^MVec >)
         =
         let distance = (a.center - b.center) |> VectorClass.squaredLength
         let radiusSum =
