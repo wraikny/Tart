@@ -79,30 +79,6 @@ module Vec4 =
     [<CompiledName "Axes">]
     let inline axes() : (^a Vec4 -> ^a) list = [x; y; z; w]
 
-    [<CompiledName "XY">]
-    let inline xy (v : ^a Vec4) = Vec2.init(v.x, v.y)
-
-    [<CompiledName "YZ">]
-    let inline yz (v : ^a Vec4) = Vec2.init(v.y, v.z)
-
-    [<CompiledName "ZW">]
-    let inline zw (v : ^a Vec4) = Vec2.init(v.z, v.w)
-
-    [<CompiledName "WX">]
-    let inline wx (v : ^a Vec4) = Vec2.init(v.w, v.x)
-
-    [<CompiledName "XYZ">]
-    let inline xyz (v : ^a Vec4) = Vec3.init(v.x, v.y, v.z)
-
-    [<CompiledName "YZW">]
-    let inline yzw (v : ^a Vec4) = Vec3.init(v.y, v.z, v.w)
-
-    [<CompiledName "ZWX">]
-    let inline zwx (v : ^a Vec4) = Vec3.init(v.z, v.w, v.x)
-
-    [<CompiledName "WXY">]
-    let inline wxy (v : ^a Vec4) = Vec3.init(v.w, v.x, v.y)
-
     [<CompiledName "XYZW">]
     let inline xyzw (v : ^a Vec4) = v.x, v.y, v.z, v.w
 
