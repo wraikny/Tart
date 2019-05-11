@@ -30,7 +30,15 @@ module Line =
     [<CompiledName "EndPoint">]
     let inline endPoint l = l.endPoint
 
+    [<CompiledName "Equal">]
+    let inline equal a b =
+        (a.startPoint = b.startPoint && a.endPoint = b.endPoint)
+        || (a.endPoint = b.startPoint && a.startPoint = b.endPoint)
 
     [<CompiledName "Length">]
     let inline length l =
         VectorClass.length(l.startPoint - l.endPoint)
+
+    [<CompiledName "SquaredLength">]
+    let inline squaredLength l =
+        VectorClass.squaredLength(l.startPoint - l.endPoint)

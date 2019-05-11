@@ -65,6 +65,7 @@ module Rect =
             , r.position.y + r.size.y / two
         )
 
+    [<CompiledName "Get_LU_RD">]
     let inline get_LU_RD (r : ^a Rect) : (^a Vec2 * ^a Vec2) =
         r.position, diagonalPosition r
 
@@ -73,6 +74,15 @@ module Rect =
     let inline isCollidedAxis(axis : ^a Vec2 -> ^a) (aLU, aRD) (bLU, bRD) : bool =
         not (axis aRD < axis bLU || axis bRD < axis aLU)
 
+    [<CompiledName "IsInside">]
+    let inline isInside p r =
+        let lu, rd = get_LU_RD r
+        [Vec2.x; Vec2.y]
+        |> List.map(fun axis ->
+            (axis lu) <= (axis p)
+            && (axis p) <= (axis rd)
+        )
+        |> List.fold (&&) true
 
     [<CompiledName "IsCollided">]
     let inline isCollided (a : ^a Rect) (b : ^a Rect) : bool =

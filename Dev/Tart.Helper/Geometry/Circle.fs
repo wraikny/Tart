@@ -29,3 +29,17 @@ module Circle =
 
     [<CompiledName "Radius">]
     let inline radius c = c.radius
+
+    [<CompiledName "IsInside">]
+    let inline isInside p c =
+        let distance = VectorClass.squaredLength(p - c.center)
+        distance < (c.radius * c.radius)
+
+    [<CompiledName "IsCollided">]
+    let inline isCollided (a : Circle< ^a, ^Vec >) (b : Circle< ^a, ^Vec >) : bool =
+        let distance = (a.center - b.center) |> VectorClass.squaredLength
+        let radiusSum =
+            let x = (a.radius + b.radius)
+            x * x
+
+        distance <= radiusSum
