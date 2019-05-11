@@ -3,10 +3,7 @@
 open wraikny.Tart.Helper.Math
 
 [<Struct>]
-type Rect< ^a, ^Vec
-        when (VectorBuiltin or ^Vec) :
-            (static member VectorImpl : ^Vec -> VectorClass< ^a, ^Vec >)
-    > =
+type ^Vec Rect =
     {
         position : ^Vec
         size : ^Vec
@@ -53,26 +50,41 @@ module Rect =
     let inline map1 f = (Vec2.map f) |> map
 
     [<CompiledName "DiagonalPosition">]
-    let inline diagonalPosition (r : Rect< ^a, ^Vec >) : ^Vec =
+    let inline diagonalPosition r : ^Vec
+        when (VectorBuiltin or ^Vec) :
+            (static member VectorImpl : ^Vec -> VectorClass< ^a, ^Vec >)
+        =
         r.position + r.size
 
     [<CompiledName "CenterPosition">]
-    let inline centerPosition (r : Rect< ^a, ^Vec >) : ^Vec =
+    let inline centerPosition r : ^Vec
+        when (VectorBuiltin or ^Vec) :
+            (static member VectorImpl : ^Vec -> VectorClass< ^a, ^Vec >)
+        =
         let one = LanguagePrimitives.GenericOne
         let two = one + one
         r.position + r.size / (VectorClass.fromScalar two)
 
     [<CompiledName "Get_LU_RD">]
-    let inline get_LU_RD (r : Rect< ^a, ^Vec >) : (^Vec * ^Vec) =
+    let inline get_LU_RD r : (^Vec * ^Vec)
+        when (VectorBuiltin or ^Vec) :
+            (static member VectorImpl : ^Vec -> VectorClass< ^a, ^Vec >)
+        =
         r.position, diagonalPosition r
 
 
     [<CompiledName "IsCollidedAxis">]
-    let inline isCollidedAxis(axis : ^Vec -> ^a) (aLU, aRD) (bLU, bRD) : bool =
+    let inline isCollidedAxis(axis : ^Vec -> ^a) (aLU, aRD) (bLU, bRD) : bool
+        when (VectorBuiltin or ^Vec) :
+            (static member VectorImpl : ^Vec -> VectorClass< ^a, ^Vec >)
+        =
         not (axis aRD < axis bLU || axis bRD < axis aLU)
 
     [<CompiledName "IsInside">]
-    let inline isInside p r =
+    let inline isInside p r : bool
+        when (VectorBuiltin or ^Vec) :
+            (static member VectorImpl : ^Vec -> VectorClass< ^a, ^Vec >)
+        =
         let lu, rd = get_LU_RD r
         [Vec2.x; Vec2.y]
         |> List.map(fun axis ->
@@ -82,7 +94,10 @@ module Rect =
         |> List.fold (&&) true
 
     [<CompiledName "IsCollided">]
-    let inline isCollided (a : Rect< ^a, ^Vec >) (b : Rect< ^a, ^Vec >) : bool =
+    let inline isCollided a b : bool
+        when (VectorBuiltin or ^Vec) :
+            (static member VectorImpl : ^Vec -> VectorClass< ^a, ^Vec >)
+        =
         let aLURD = get_LU_RD a
         let bLURD = get_LU_RD b
 

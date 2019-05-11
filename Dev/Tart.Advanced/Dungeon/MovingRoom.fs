@@ -8,7 +8,7 @@ open wraikny.Tart.Helper.Geometry
 
 
 [<Class>]
-type internal MovingRoom(rect : Rect<float32, float32 Vec2>, movingRate, rooms) =
+type internal MovingRoom(rect : float32 Vec2 Rect, movingRate, rooms) =
     let rooms : IReadOnlyList<MovingRoom> = rooms
 
     let movingRate : float32 = movingRate
@@ -50,13 +50,13 @@ type internal MovingRoom(rect : Rect<float32, float32 Vec2>, movingRate, rooms) 
 
 
     member this.RectF
-        with get() : Rect<float32, float32 Vec2> = {
+        with get() : float32 Vec2 Rect = {
             position = this.Position
             size = size
         }
 
     member this.RectI
-        with get() : Rect<int, int Vec2> = this.RectF |> Rect.map1 int
+        with get() : int Vec2 Rect = this.RectF |> Rect.map1 int
 
 
     member private this.IsCollidedWith(other : MovingRoom) =

@@ -3,10 +3,7 @@
 open wraikny.Tart.Helper.Math
 
 [<Struct>]
-type Line< ^a, ^Vec
-        when (VectorBuiltin or ^Vec) :
-            (static member VectorImpl : ^Vec -> VectorClass< ^a, ^Vec >)
-    > =
+type ^Vec Line=
     {
         startPoint : ^Vec
         endPoint : ^Vec
@@ -16,11 +13,11 @@ type Line< ^a, ^Vec
 [<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
 module Line =
     [<CompiledName "Init">]
-    let inline init(s, e) : Line<_, _> =
+    let inline init(s, e) =
         { startPoint = s; endPoint = e; }
 
     [<CompiledName "Zero">]
-    let inline zero() : Line<_, _> =
+    let inline zero() =
         let zero = VectorClass.zero()
         init(zero, zero)
 
