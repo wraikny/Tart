@@ -157,3 +157,11 @@ module Easing =
                 else
                     1.0f - 8.0f * (pow(2.0f, -8.0f * t)) * abs(sin(t * Angle.pi * 7.0f))
 
+
+    [<CompiledName "InterpolateVector">]
+    let inline interpolateVector easing (frame) (current) (startPoint : ^Vec) (endPoint : ^Vec) : ^Vec
+        when (VectorBuiltin or ^Vec) :
+            (static member VectorImpl : ^Vec -> VectorClass< ^a, ^Vec, ^Ma, ^MVec >)
+        =
+        let v = calculate easing frame current
+        startPoint + (endPoint - startPoint) * VectorClass.fromScalar(v)
