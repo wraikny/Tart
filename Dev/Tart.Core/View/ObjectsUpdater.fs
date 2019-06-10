@@ -38,9 +38,26 @@ type ObjectsUpdater<'ViewModel, 'Object, 'ObjectViewModel>(parent) =
 
     let objectPooling = new Stack<'Object>()
 
+    let mutable enabledUpdating = true
+    let mutable enabledPooling = true
+
     interface IObjectsUpdater with
-        member val EnabledUpdating = true with get, set
-        member val EnabledPooling = false with get, set
+        member this.EnabledUpdating
+            with get() = enabledUpdating
+            and set(value) =
+                if not value then
+                    objectPooling.Clear()
+                    enabledPooling <- false
+
+                enabledUpdating <- value
+
+        member __.EnabledPooling
+            with get() = enabledPooling
+            and set(value) =
+                if not value then
+                    objectPooling.Clear()
+
+                enabledPooling <- value
 
 
     /// Update objects on ViewModel
