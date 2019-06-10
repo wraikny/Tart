@@ -4,15 +4,8 @@ open System.Linq
 
 [<Class>]
 type UnionFold(num) =
-    let par =
-        (seq {
-            for i in 0..num -> i
-        }).ToList()
-
-    let rank =
-        (seq {
-            for _ in 0..num -> 0
-        }).ToList()
+    let par = (seq { for i in 0..num -> i }).ToList()
+    let rank = (seq { for _ in 0..num -> 0 }).ToList()
 
     member private this.Root (node : int) =
         if par.[node] = node then

@@ -23,7 +23,7 @@ module Maybe =
 
         member __.Zero() = None
 
-        member __.For(inp,f) =
+        member __.For(inp, f) =
             seq {for a in inp -> f a}
 
         member __.Yield(x) = mreturn(x)

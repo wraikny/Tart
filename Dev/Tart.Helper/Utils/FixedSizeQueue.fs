@@ -14,8 +14,7 @@ type FixedSizeQueue<'T> private (p) =
         | Limit limit ->
             new Queue<'T>(), limit
         | Collection collection ->
-            let queue =
-                new Queue<'T>(collection)
+            let queue = new Queue<'T>(collection)
             queue, queue.Count
 
     /// puseudo for lock
@@ -74,9 +73,10 @@ type FixedSizeQueue<'T> private (p) =
 
 
     interface IReadOnlyCollection<'T> with
-        member this.Count
-            with get() = this.Count 
+        member this.Count with get() = this.Count 
+
         member this.GetEnumerator() = this.GetEnumerator()
+
         member this.GetEnumerator() =
             this.GetEnumerator()
             :> System.Collections.IEnumerator
