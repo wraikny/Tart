@@ -24,21 +24,22 @@ type UpdaterViewModel<'ObjectViewModel> =
     }
 
 
-open wraikny.Tart.Helper.Utils
+[<Interface>]
+type IObjectsUpdaterParent<'Object> =
+    abstract Create : unit -> 'Object
+    abstract Add : 'Object -> unit
+    abstract Remove : 'Object -> unit
 
 
 /// Class of adding, removing and updating objects
 [<Class>]
 type ObjectsUpdater<'ViewModel, 'Object, 'ObjectViewModel
-    when 'Object :> obj
-    and 'Object :> IObjectUpdatee<'ObjectViewModel>
-    >(init, add, remove) =
+    when 'Object :> IObjectUpdatee<'ObjectViewModel>
+    >(parent) =
     let objects = new Dictionary<uint32, 'Object>()
     let existFlags = new HashSet<uint32>()
 
-    let init = init
-    let add = add
-    let remove = remove
+    let parent : IObjectsUpdaterParent<'Object> = parent
 
     interface IObjectsUpdater with
         member val UpdatingEnabled = true with get, set
@@ -60,10 +61,10 @@ type ObjectsUpdater<'ViewModel, 'Object, 'ObjectViewModel
     member private this.AddObjects (viewModel) =
         for (id, objectViewModel) in viewModel.objects do
             if not <| objects.ContainsKey(id) then
-                let object : 'Object = init()
+                let object : 'Object = parent.Create()
                 object.Update(objectViewModel)
                 objects.Add(id, object)
-                add(object)
+                parent.Add(object)
 
 
     /// Add, Update, Remove objects from ViewModel
@@ -73,10 +74,10 @@ type ObjectsUpdater<'ViewModel, 'Object, 'ObjectViewModel
             if isSuccess then
                 result.Update(objectViewModel)
             else
-                let object : 'Object = init()
+                let object : 'Object = parent.Create()
                 object.Update(objectViewModel)
                 objects.Add(id, object)
-                add(object)
+                parent.Add(object)
 
             if not <| existFlags.Contains(id) then
                 existFlags.Add(id) |> ignore
@@ -87,7 +88,7 @@ type ObjectsUpdater<'ViewModel, 'Object, 'ObjectViewModel
             |> Seq.filter(fst >> existFlags.Contains >> not)
 
         for (id, object) in objects' do
-            remove(object)
+            parent.Remove(object)
             objects.Remove(id) |> ignore
 
         existFlags.Clear()
