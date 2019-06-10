@@ -8,7 +8,7 @@ type Notifier<'Msg, 'ViewMsg, 'ViewModel>(messenger) =
     member val Messenger : IMessenger<'Msg, 'ViewModel> = messenger with get
 
     member this.Pull() =
-        this.Messenger.TryViewModel |> function
+        this.Messenger.TryPopViewModel |> function
         | Some viewModel ->
             this.NotifyObservers(viewModel)
             true

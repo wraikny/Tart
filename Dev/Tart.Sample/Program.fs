@@ -58,7 +58,7 @@ module Program =
             if input <> "q" then
                 Thread.Sleep(10)
 
-                messenger.TryViewModel |> function
+                messenger.TryPopViewModel |> function
                 | Some view -> loop view
                 | None ->
                     printfn "Failed to get viewModel. Display old one."
@@ -67,7 +67,7 @@ module Program =
 
         messenger.StartAsync() |> ignore
 
-        messenger.TryViewModel |> function
+        messenger.TryPopViewModel |> function
         | Some view -> loop view
         | None -> ()
 

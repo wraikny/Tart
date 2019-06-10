@@ -90,7 +90,7 @@ type private Messenger<'Msg, 'ViewMsg, 'Model, 'ViewModel>
             with get() = sleepTime
             and  set(value) = sleepTime <- value
 
-        member this.TryViewModel
+        member this.TryPopViewModel
             with get() =
                 modelQueue.TryDequeue()
                 |> Option.map corePrograms.view
