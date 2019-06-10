@@ -45,7 +45,6 @@ type ObjectsUpdater<'ViewModel, 'Object, 'ObjectViewModel
         member val UpdatingEnabled = true with get, set
 
 
-    /// ビューモデルを元にオブジェクトの更新を行う。
     /// Update objects on ViewModel
     member this.Update(viewModel : UpdaterViewModel<_> option) =
         viewModel |> function
@@ -57,7 +56,7 @@ type ObjectsUpdater<'ViewModel, 'Object, 'ObjectViewModel
         | None -> ()
 
 
-    /// Add objects from ViewModel
+    /// Add objects on ViewModel
     member private this.AddObjects (viewModel) =
         for (id, objectViewModel) in viewModel.objects do
             if not <| objects.ContainsKey(id) then
@@ -67,7 +66,7 @@ type ObjectsUpdater<'ViewModel, 'Object, 'ObjectViewModel
                 parent.Add(object)
 
 
-    /// Add, Update, Remove objects from ViewModel
+    /// Add, Update, Remove objects on ViewModel
     member private this.UpdateObjects (viewModel) =
         for (id, objectViewModel) in viewModel.objects do
             let (isSuccess, result) = objects.TryGetValue(id)
