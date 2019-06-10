@@ -30,18 +30,19 @@ module Cmd =
 
 
     let internal execute
-        (sender : IMsgSender<'Msg>)
-        (env : Environment<'ViewMsg>)
+        (messenger : #IMsgSender<'Msg>)
+        (port : #IMsgSender<'ViewMsg> option)
+        (env : #IEnvironmentCore)
         (cmd : Cmd<'Msg, 'ViewMsg>) =
         for c in cmd.commands do
-            c (env :> IEnvironmentCore) (fun msg -> sender.PushMsg msg)
+            c env <| fun msg -> messenger.PushMsg msg
 
         
-        env.Updater |> function
+        port |> function
         | None -> ()
-        | Some(sender) ->
+        | Some(port) ->
             for msg in cmd.viewMsgs do
-                sender.PushMsg(msg)
+                port.PushMsg(msg)
 
 
     /// Empty command

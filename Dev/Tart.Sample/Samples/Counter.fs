@@ -49,7 +49,6 @@ let messengerBuilder() : IMessenger<Msg, ViewModel> =
     Messenger.buildMessenger
         {
             seed = 0
-            updater = None
         }
         {
             init = init

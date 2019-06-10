@@ -1,26 +1,23 @@
 ﻿namespace wraikny.Tart.Core
 
-open wraikny.Tart.Helper.Utils
-open wraikny.Tart.Helper.Monad
-open System.Collections.Concurrent
-
 
 [<AbstractClass>]
-type Port<'ViewMsg>() =
-    let coreMessenger = new CoreMessenger<'ViewMsg>()
+type Port<'Msg, 'ViewMsg>(messenger) =
+    inherit MsgQueue<'ViewMsg>()
+
+    let messenger : IMsgSender<'Msg> = messenger
 
     abstract OnUpdate : 'ViewMsg -> unit
+
+    member __.PushToMessenger(msg : 'Msg) =
+        messenger.PushMsg(msg)
     
-    member public this.Pop() =
+    member public this.Update() =
         let rec update() =
-            coreMessenger.TryPopMsg() |> function
+            this.TryPopMsg() |> function
             | Some(msg) ->
                 this.OnUpdate(msg)
                 update()
             | None -> ()
 
         update()
-
-
-    interface IMsgSender<'ViewMsg> with
-        member this.PushMsg(msg) = coreMessenger.PushMsg(msg)

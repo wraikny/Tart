@@ -2,36 +2,17 @@
 
 open System.Threading
 open wraikny.Tart.Helper.Utils
-open System.Collections.Concurrent
-
-
-
-[<Class>]
-type private CoreMessenger<'Msg>() =
-    let msgQueue = new ConcurrentQueue<'Msg>()
-
-    member __.PushMsg(msg) =
-        msgQueue.Enqueue(msg)
-
-
-    member __.TryPopMsg() : 'Msg option =
-        let success, result = msgQueue.TryDequeue()
-        if success then
-            Some result
-        else
-            None
 
 
 
 [<Class>]
 type private Messenger<'Msg, 'ViewMsg, 'Model, 'ViewModel>
     (environment, corePrograms) =
+    inherit MsgQueue<'Msg>()
 
     let corePrograms : CoreProgram<_, _, _, _> = corePrograms
 
-    let environment : Environment<'ViewMsg> = environment
-
-    let coreMessenger = new CoreMessenger<'Msg>()
+    let environment : Environment = environment
 
     let mutable lastModel :'Model option = None
 
@@ -40,6 +21,11 @@ type private Messenger<'Msg, 'ViewMsg, 'Model, 'ViewModel>
     let isRunning = new LockObject<bool>(false)
 
     let mutable sleepTime = 5
+
+    let mutable port : IMsgSender<'ViewMsg> option = None
+
+    member public __.SetPort(port_ : #Port<'Msg, 'ViewMsg>) =
+        port <- Some (port_ :> IMsgSender<'ViewMsg>)
 
 
     member private __.IsRunning
@@ -55,15 +41,13 @@ type private Messenger<'Msg, 'ViewMsg, 'Model, 'ViewModel>
             this.IsRunning <- true
 
             let update model =
-                coreMessenger.TryPopMsg() |> function
+                this.TryPopMsg() |> function
                 | None -> model
 
                 | Some(msg) ->
                     let newModel, cmd = corePrograms.update msg model
 
-                    cmd |> Cmd.execute
-                        (this :> IMsgSender<_>)
-                        environment
+                    cmd |> Cmd.execute this port environment
 
                     modelQueue.Enqueue(newModel)
                     Thread.Sleep(sleepTime)
@@ -94,17 +78,11 @@ type private Messenger<'Msg, 'ViewMsg, 'Model, 'ViewModel>
     member private this.InitializeModel() =
         let model, cmd = corePrograms.init
         
-        cmd |> Cmd.execute
-            (this :> IMsgSender<_>)
-            environment
+        cmd |> Cmd.execute this port environment
         
         modelQueue.Enqueue(model)
 
         model
-
-
-    interface IMsgSender<'Msg> with
-        member this.PushMsg(msg) = coreMessenger.PushMsg(msg)
     
 
     interface IMessenger<'Msg, 'ViewModel> with
