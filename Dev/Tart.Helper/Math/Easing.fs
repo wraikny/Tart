@@ -164,4 +164,4 @@ module Easing =
             (static member VectorImpl : ^Vec -> VectorClass< ^a, ^Vec, ^Ma, ^MVec >)
         =
         let v = calculate easing frame current
-        startPoint + (endPoint - startPoint) * VectorClass.fromScalar(v)
+        startPoint + (endPoint - startPoint) * VectorClass.init1(v)

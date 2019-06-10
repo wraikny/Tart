@@ -49,8 +49,8 @@ module Vec2 =
         let zero = LanguagePrimitives.GenericZero
         init(zero, zero)
 
-    [<CompiledName "FromScalar">]
-    let inline fromScalar a = init(a, a)
+    [<CompiledName "Init1">]
+    let inline init1 a = init(a, a)
 
     [<CompiledName "X">]
     let inline x v = v.x

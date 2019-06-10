@@ -12,20 +12,21 @@ type VectorClass< ^a, ^Vec, ^Ma, ^MVec
     and  ^Vec : (static member (-) : ^Vec * ^Vec -> ^Vec)
     and  ^Vec : (static member (*) : ^Vec * ^Vec -> ^Vec)
     and  ^Vec : (static member (/) : ^Vec * ^Vec -> ^Vec)
-    > = {
-    Zero : unit -> ^Vec
-    FromScalar : ^a -> ^Vec
-    Dot : ^Vec -> ^Vec -> ^a
-    Axes : unit -> (^Vec -> ^a) list
-    Map : (^a -> ^Ma) -> ^Vec -> ^MVec
-}
+    > =
+    {
+        Zero : unit -> ^Vec
+        Init1 : ^a -> ^Vec
+        Dot : ^Vec -> ^Vec -> ^a
+        Axes : unit -> (^Vec -> ^a) list
+        Map : (^a -> ^Ma) -> ^Vec -> ^MVec
+    }
 
 
 type VectorBuiltin = VectorBuiltin with
     static member inline VectorImpl(_ : ^a Vec2) : VectorClass< ^a, ^a Vec2, ^Ma, ^Ma Vec2 > =
         {
             Zero = Vec2.zero
-            FromScalar = Vec2.fromScalar
+            Init1 = Vec2.init1
             Dot = Vec2.dot
             Axes = Vec2.axes
             Map = Vec2.map
@@ -34,7 +35,7 @@ type VectorBuiltin = VectorBuiltin with
     static member inline VectorImpl(_ : ^a Vec3): VectorClass< ^a, ^a Vec3, ^Ma, ^Ma Vec3 > =
         {
             Zero = Vec3.zero
-            FromScalar = Vec3.fromScalar
+            Init1 = Vec3.init1
             Dot = Vec3.dot
             Axes = Vec3.axes
             Map = Vec3.map
@@ -43,7 +44,7 @@ type VectorBuiltin = VectorBuiltin with
     static member inline VectorImpl(_ : ^a Vec4): VectorClass< ^a, ^a Vec4, ^Ma, ^Ma Vec4 > =
         {
             Zero = Vec4.zero
-            FromScalar = Vec4.fromScalar
+            Init1 = Vec4.init1
             Dot = Vec4.dot
             Axes = Vec4.axes
             Map = Vec4.map
@@ -69,11 +70,11 @@ module VectorClass =
             (Unchecked.defaultof<VectorClass< ^a, ^Vec, ^Ma, ^MVec >>)
         ).Zero()
 
-    [<CompiledName "FromScalar">]
-    let inline fromScalar(a : ^a) : ^Vec =
+    [<CompiledName "Init1">]
+    let inline init1(a : ^a) : ^Vec =
         ( getImpl VectorBuiltin
             (Unchecked.defaultof<VectorClass< ^a, ^Vec, ^Ma, ^MVec >>)
-        ).FromScalar a
+        ).Init1 a
 
     [<CompiledName "Dot">]
     let inline dot (a : ^Vec) (b : ^Vec) : ^a =
@@ -103,4 +104,4 @@ module VectorClass =
 
     [<CompiledName "Normalize">]
     let inline normalize (v : ^Vec) : ^Vec =
-        v / fromScalar (length v)
+        v / init1 (length v)

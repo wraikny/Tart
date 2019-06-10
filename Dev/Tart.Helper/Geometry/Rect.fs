@@ -67,7 +67,7 @@ module Rect =
         =
         let one = LanguagePrimitives.GenericOne
         let two = one + one
-        r.position + r.size / (VectorClass.fromScalar two)
+        r.position + r.size / (VectorClass.init1 two)
 
     [<CompiledName "Get_LU_RD">]
     let inline get_LU_RD r : (^Vec * ^Vec)
