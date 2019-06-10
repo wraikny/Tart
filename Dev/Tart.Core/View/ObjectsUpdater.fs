@@ -73,19 +73,17 @@ type ObjectsUpdater<'ViewModel, 'Object, 'ObjectViewModel>(parent) =
 
     member private this.Create() =
         if (this :> IObjectsUpdater).EnabledPooling then
-            if objectPooling.Count > 0 then
-                objectPooling.Pop()
-            else
-                parent.Create()
+            try objectPooling.Pop()
+            with | :? System.InvalidOperationException -> parent.Create()
         else
             parent.Create()
 
 
     member private this.Remove(id : uint32) =
         let object = objects.Item(id)
-        parent.Remove(object)
         objects.Remove(id) |> ignore
         if (this :> IObjectsUpdater).EnabledPooling then
+            parent.Remove(object)
             objectPooling.Push(object)
         else
             parent.Dispose(object)
