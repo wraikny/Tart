@@ -12,8 +12,8 @@ open System.Collections.Generic
 type Observable<'T>() =
     let observers = new List<IObserver<'T>>()
 
-    member this.AddObserver(observer) =
-        observers.Add(observer)
+    member this.AddObserver(observer : #IObserver<'T>) =
+        observers.Add(observer :> IObserver<'T>)
 
 
     member this.NotifyObservers(input) =
