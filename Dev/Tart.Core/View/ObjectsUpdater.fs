@@ -4,6 +4,11 @@
 open System.Collections.Generic;
 
 
+[<Interface>]
+type IUpdatee<'ObjectViewModel> =
+    abstract Update : 'ObjectViewModel -> unit
+
+
 /// Interface of adding, removing and updating objects
 [<Interface>]
 type IObjectsUpdater =
@@ -19,22 +24,26 @@ type UpdaterViewModel<'ObjectViewModel> =
     }
 
 
-[<Interface>]
-type IObjectsUpdaterParent<'Object, 'ObjectViewModel> =
-    abstract Create : unit -> 'Object
-    abstract Add : 'Object -> unit
-    abstract Update : 'Object * 'ObjectViewModel -> unit
-    abstract Remove : 'Object -> unit
-    abstract Dispose : 'Object -> unit
+[<Struct>]
+type ObjectsParent<'Object, 'ObjectViewModel
+    when 'Object :> IUpdatee<'ObjectViewModel>
+    > = {
+    create : unit -> 'Object
+    add : 'Object -> unit
+    remove : 'Object -> unit
+    dispose : 'Object -> unit
+}
 
 
 /// Class of adding, removing and updating objects
 [<Class>]
-type ObjectsUpdater<'ViewModel, 'Object, 'ObjectViewModel>(parent) =
+type ObjectsUpdater<'ViewModel, 'Object, 'ObjectViewModel
+    when 'Object :> IUpdatee<'ObjectViewModel>
+    >(parent) =
     let objects = new Dictionary<uint32, 'Object>()
     let existFlags = new HashSet<uint32>()
 
-    let parent : IObjectsUpdaterParent<'Object, 'ObjectViewModel> = parent
+    let parent : ObjectsParent<'Object, 'ObjectViewModel> = parent
 
     let objectPooling = new Stack<'Object>()
 
@@ -74,19 +83,19 @@ type ObjectsUpdater<'ViewModel, 'Object, 'ObjectViewModel>(parent) =
     member private this.Create() =
         if (this :> IObjectsUpdater).EnabledPooling then
             try objectPooling.Pop()
-            with | :? System.InvalidOperationException -> parent.Create()
+            with | :? System.InvalidOperationException -> parent.create()
         else
-            parent.Create()
+            parent.create()
 
 
     member private this.Remove(id : uint32) =
         let object = objects.Item(id)
         objects.Remove(id) |> ignore
         if (this :> IObjectsUpdater).EnabledPooling then
-            parent.Remove(object)
+            parent.remove(object)
             objectPooling.Push(object)
         else
-            parent.Dispose(object)
+            parent.dispose(object)
 
 
     /// Add objects on ViewModel
@@ -94,9 +103,9 @@ type ObjectsUpdater<'ViewModel, 'Object, 'ObjectViewModel>(parent) =
         for (id, objectViewModel) in viewModel.objects do
             if not <| objects.ContainsKey(id) then
                 let object : 'Object = this.Create()
-                parent.Update(object, objectViewModel)
+                object.Update(objectViewModel)
                 objects.Add(id, object)
-                parent.Add(object)
+                parent.add(object)
 
 
     /// Add, Update, Remove objects on ViewModel
@@ -104,12 +113,12 @@ type ObjectsUpdater<'ViewModel, 'Object, 'ObjectViewModel>(parent) =
         for (id, objectViewModel) in viewModel.objects do
             objects.TryGetValue(id) |> function
             | true, result ->
-                parent.Update(result, objectViewModel)
+                result.Update(objectViewModel)
             | false, _ ->
-                let object : 'Object = parent.Create()
-                parent.Update(object, objectViewModel)
+                let object : 'Object = parent.create()
+                object.Update(objectViewModel)
                 objects.Add(id, object)
-                parent.Add(object)
+                parent.add(object)
 
             if not <| existFlags.Contains(id) then
                 existFlags.Add(id) |> ignore
