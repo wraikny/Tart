@@ -1,7 +1,7 @@
 ﻿namespace wraikny.Tart.Core
 
 type internal PushMessage<'Msg> = 'Msg -> unit
-type internal Command<'Msg> = IEnvironmentCore -> PushMessage<'Msg> -> unit
+type internal Command<'Msg> = IEnvironment -> PushMessage<'Msg> -> unit
 
 type Cmd<'Msg, 'ViewMsg> =
     {
@@ -32,7 +32,7 @@ module Cmd =
     let internal execute
         (messenger : #IMsgSender<'Msg>)
         (port : #IMsgSender<'ViewMsg> option)
-        (env : #IEnvironmentCore)
+        (env : #IEnvironment)
         (cmd : Cmd<'Msg, 'ViewMsg>) =
         for c in cmd.commands do
             c env <| fun msg -> messenger.PushMsg msg

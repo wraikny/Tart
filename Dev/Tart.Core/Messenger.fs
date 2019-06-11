@@ -12,7 +12,7 @@ type private Messenger<'Msg, 'ViewMsg, 'Model, 'ViewModel>
 
     let corePrograms : CoreProgram<_, _, _, _> = corePrograms
 
-    let environment : Environment = environment
+    let environment : IEnvironment = environment
 
     let mutable lastModel :'Model option = None
 
@@ -23,10 +23,6 @@ type private Messenger<'Msg, 'ViewMsg, 'Model, 'ViewModel>
     let mutable sleepTime = 5
 
     let mutable port : IMsgSender<'ViewMsg> option = None
-
-    member public __.SetPort(port_ : #Port<'Msg, 'ViewMsg>) =
-        port <- Some (port_ :> IMsgSender<'ViewMsg>)
-
 
     member private __.IsRunning
         with get() : bool =
@@ -85,10 +81,13 @@ type private Messenger<'Msg, 'ViewMsg, 'Model, 'ViewModel>
         model
     
 
-    interface IMessenger<'Msg, 'ViewModel> with
+    interface IMessenger<'Msg, 'ViewMsg, 'ViewModel> with
         member this.SleepTime
             with get() = sleepTime
             and  set(value) = sleepTime <- value
+
+        member __.SetPort(port_) =
+            port <- Some (port_ :> IMsgSender<'ViewMsg>)
 
         member this.TryPopViewModel
             with get() =
@@ -106,7 +105,7 @@ type private Messenger<'Msg, 'ViewMsg, 'Model, 'ViewModel>
             lastModel |> function
             | Some model -> this.MainLoop(model)
             | None ->
-                (this :> IMessenger<'Msg, 'ViewModel>).StartAsync()
+                (this :> IMessenger<'Msg, 'ViewMsg, 'ViewModel>).StartAsync()
 
         member this.Stop() =
             this.IsRunning <- false
@@ -115,12 +114,12 @@ type private Messenger<'Msg, 'ViewMsg, 'Model, 'ViewModel>
 [<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
 module Messenger =
     [<CompiledName "CreateMessenger">]
-    let createMessenger (environment) (corePrograms) =
-        (new Messenger<_, _, _, _>(environment, corePrograms))
-        :> IMessenger<_, _>
+    let createMessenger (environment : Environment) (corePrograms) =
+        (new Messenger<_, _, _, _>(environment :> IEnvironment, corePrograms))
+        :> IMessenger<_, _, _>
 
 
     [<CompiledName "BuildMessenger">]
     let buildMessenger (envBuilder) (corePrograms) =
         (new Messenger<_, _, _, _>(envBuilder |> EnvironmentBuilder.build, corePrograms))
-        :> IMessenger<_, _>
+        :> IMessenger<_, _, _>

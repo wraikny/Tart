@@ -1,18 +1,15 @@
 ﻿namespace wraikny.Tart.Core
 
 
-/// Telling msg and viewModel, to modelLoop(async).
-type IMsgSender<'Msg> =
-    /// Add Msg to ConcurrentQueue
-    abstract PushMsg : 'Msg -> unit
-
-
 /// Telling msg and viewModel, between modelLoop(async) and view(mainThread).
 [<Interface>]
-type IMessenger<'Msg, 'ViewModel> =
+type IMessenger<'Msg, 'ViewMsg, 'ViewModel> =
     inherit IMsgSender<'Msg>
     /// Sleeping time in every updating
     abstract SleepTime : int with get, set
+
+    /// Set Port to Messenger
+    abstract SetPort : #Port<'Msg, 'ViewMsg> -> unit
 
     /// Thread safe getter of ViewModel
     abstract TryPopViewModel : 'ViewModel option
