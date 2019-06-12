@@ -5,7 +5,7 @@
 type Port<'Msg, 'ViewMsg>(messenger) =
     inherit MsgQueue<'ViewMsg>()
 
-    let messenger : IMsgSender<'Msg> = messenger
+    member val Messenger : IMsgSender<'Msg> = messenger with get
 
     abstract OnUpdate : 'ViewMsg -> unit
 
