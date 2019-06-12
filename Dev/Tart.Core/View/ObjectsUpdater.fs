@@ -70,14 +70,11 @@ type ObjectsUpdater<'ViewModel, 'Object, 'ObjectViewModel
 
 
     /// Update objects on ViewModel
-    member this.Update(viewModel : UpdaterViewModel<_> option) =
-        viewModel |> function
-        | Some viewModel ->
-            if (this :> IObjectsUpdater).EnabledUpdating then
-                this.UpdateObjects(viewModel)
-            else
-                this.AddObjects(viewModel)
-        | None -> ()
+    member this.Update(viewModel : UpdaterViewModel<_>) =
+        if (this :> IObjectsUpdater).EnabledUpdating then
+            this.UpdateObjects(viewModel)
+        else
+            this.AddObjects(viewModel)
 
 
     member private this.Create() =
