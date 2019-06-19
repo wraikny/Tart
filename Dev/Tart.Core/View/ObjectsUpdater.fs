@@ -117,13 +117,13 @@ type ObjectsUpdater<'ViewModel, 'Object, 'ObjectViewModel
                 objects.Add(id, object)
                 parent.add(object)
 
-            if not <| existFlags.Contains(id) then
-                existFlags.Add(id) |> ignore
+            existFlags.Add(id) |> ignore
 
         let removedObjectIDs =
             objects
             |> Seq.map(fun x -> x.Key)
             |> Seq.filter(existFlags.Contains >> not)
+            |> Seq.toList
 
         for id in removedObjectIDs do
             this.Remove(id)
