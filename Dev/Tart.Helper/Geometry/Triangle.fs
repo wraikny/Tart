@@ -3,13 +3,17 @@
 open wraikny.Tart.Helper.Math
 
 [<Struct>]
-type Triangle< ^a> =
+type Triangle< 'a > =
     {
-        p1 : ^a
-        p2 : ^a
-        p3 : ^a
+        p1 : 'a
+        p2 : 'a
+        p3 : 'a
     }
 
+
+type ^a Triangle2 = ^a Vec2 Triangle
+type ^a Triangle3 = ^a Vec3 Triangle
+type ^a Triangle4 = ^a Vec4 Triangle
 
 
 [<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]

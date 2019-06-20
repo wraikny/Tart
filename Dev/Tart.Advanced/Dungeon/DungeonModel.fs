@@ -21,7 +21,7 @@ module SpaceID =
 
 type Space = {
     id : SpaceID
-    rect : int Vec2 Rect
+    rect : int Rect2
 }
 
 

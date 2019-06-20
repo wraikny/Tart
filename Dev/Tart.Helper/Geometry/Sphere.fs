@@ -10,6 +10,11 @@ type Sphere< ^a, ^Vec> =
     }
 
 
+type ^a Sphere2 = Sphere< ^a, ^a Vec2 >
+type ^a Sphere3 = Sphere< ^a, ^a Vec3 >
+type ^a Sphere4 = Sphere< ^a, ^a Vec4 >
+
+
 [<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
 module Sphere =
     [<CompiledName "Init">]

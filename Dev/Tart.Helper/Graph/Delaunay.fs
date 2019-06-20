@@ -8,7 +8,7 @@ open wraikny.Tart.Helper.Geometry
 module Delaunay2 =
     /// 全体を包含する正三角形を求める
     [<CompiledName "GetHugeTriangle">]
-    let getHugeTriangle (range : float32 Vec2 Rect) : Triangle<Vec2<float32>> =
+    let getHugeTriangle (range : float32 Rect2) : float32 Triangle2 =
 
         // 与えられた矩形を包含する円を求める  
         let center = range |> Rect.centerPosition
@@ -127,7 +127,7 @@ module Delaunay2 =
 
 
     [<CompiledName "GetNodesList">]
-    let getNodesList points : Edge<Vec2<float32>, float32> list =
+    let getNodesList points : Edge<float32 Vec2, float32> list =
         let triangles = getTrianglesList points
 
         let edges = new List<Edge<float32 Vec2, float32>>()

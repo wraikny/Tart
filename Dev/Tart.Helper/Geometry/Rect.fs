@@ -10,6 +10,11 @@ type ^Vec Rect =
     }
 
 
+type ^a Rect2 = ^a Vec2 Rect
+type ^a Rect3 = ^a Vec3 Rect
+type ^a Rect4 = ^a Vec4 Rect
+
+
 [<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
 module Rect =
     [<CompiledName "Init">]
@@ -111,4 +116,3 @@ module Rect =
             |> List.fold (&&) true
 
         isCollided
-
