@@ -75,6 +75,6 @@ module Triangle =
 
         let center = Vec2.init(x, y)
 
-        let r = VectorClass.length <| Vec2.init(center.x - x1, center.y - y1)
+        let r = Vector.length <| Vec2.init(center.x - x1, center.y - y1)
 
         Sphere.init(center, r)

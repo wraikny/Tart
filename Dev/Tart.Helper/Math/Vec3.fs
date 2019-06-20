@@ -78,13 +78,7 @@ module Vec3 =
     let inline init(x, y, z) : ^a Vec3 =
         { x = x; y = y; z = z }
 
-    [<CompiledName "Zero">]
-    let inline zero() : ^a Vec3 =
-        let zero = LanguagePrimitives.GenericZero
-        init(zero, zero, zero)
-
-    [<CompiledName "Init1">]
-    let inline init1 a = init(a, a, a)
+    let inline internal init1 x = init(x, x, x)
 
     [<CompiledName "X">]
     let inline x v = v.x

@@ -23,7 +23,7 @@ module Rect =
 
     [<CompiledName "Zero">]
     let inline zero() =
-        let zero = VectorClass.zero()
+        let zero = Vector.zero()
         init zero zero
 
     [<CompiledName "Position">]
@@ -53,7 +53,7 @@ module Rect =
 
     [<CompiledName "MapVec">]
     let inline mapVec f =
-        (VectorClass.map f) |> map 
+        (Vector.map f) |> map 
 
     [<CompiledName "DiagonalPosition">]
     let inline diagonalPosition r : ^Vec
@@ -92,7 +92,7 @@ module Rect =
             (static member VectorImpl : ^Vec -> Vector< ^a, ^Vec, ^Ma, ^MVec >)
         =
         let lu, rd = get_LU_RD r
-        VectorClass.axes()
+        Vector.axes()
         |> List.map(fun axis ->
             (axis lu) <= (axis p)
             && (axis p) <= (axis rd)
@@ -108,7 +108,7 @@ module Rect =
         let bLURD = get_LU_RD b
 
         let isCollided =
-            VectorClass.axes()
+            Vector.axes()
             |> List.map(fun axis -> isCollidedAxis axis aLURD bLURD)
             |> List.fold (&&) true
 

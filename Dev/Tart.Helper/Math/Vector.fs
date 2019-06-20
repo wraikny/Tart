@@ -18,7 +18,7 @@ type Vector< ^a, ^Vec, ^Ma, ^MVec
     and  ^Vec : (static member (/.) : ^Vec * ^a -> ^Vec)
     > =
     {
-        Zero : unit -> ^Vec
+        Init1 : ^a -> ^Vec
         Dot : ^Vec -> ^Vec -> ^a
         Axes : unit -> (^Vec -> ^a) list
         Map : (^a -> ^Ma) -> ^Vec -> ^MVec
@@ -28,7 +28,7 @@ type Vector< ^a, ^Vec, ^Ma, ^MVec
 type VectorBuiltin = VectorBuiltin with
     static member inline VectorImpl(_ : ^a Vec2) : Vector< ^a, ^a Vec2, ^Ma, ^Ma Vec2 > =
         {
-            Zero = Vec2.zero
+            Init1 = Vec2.init1
             Dot = Vec2.dot
             Axes = Vec2.axes
             Map = Vec2.map
@@ -36,7 +36,7 @@ type VectorBuiltin = VectorBuiltin with
     
     static member inline VectorImpl(_ : ^a Vec3): Vector< ^a, ^a Vec3, ^Ma, ^Ma Vec3 > =
         {
-            Zero = Vec3.zero
+            Init1 = Vec3.init1
             Dot = Vec3.dot
             Axes = Vec3.axes
             Map = Vec3.map
@@ -44,7 +44,7 @@ type VectorBuiltin = VectorBuiltin with
 
     static member inline VectorImpl(_ : ^a Vec4): Vector< ^a, ^a Vec4, ^Ma, ^Ma Vec4 > =
         {
-            Zero = Vec4.zero
+            Init1 = Vec4.init1
             Dot = Vec4.dot
             Axes = Vec4.axes
             Map = Vec4.map
@@ -52,7 +52,7 @@ type VectorBuiltin = VectorBuiltin with
 
 
 [<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
-module VectorClass =
+module Vector =
     [<CompiledName "GetImpl">]
     let inline getImpl
         (builtin : ^Builtin)
@@ -64,22 +64,33 @@ module VectorClass =
                 (Unchecked.defaultof< ^Vec >)
         )
 
+
+    let inline private init1(a : ^a) : ^Vec =
+        ( getImpl VectorBuiltin
+            (Unchecked.defaultof<Vector< ^a, ^Vec, _, _ >>)
+        ).Init1 a
+
+
     [<CompiledName "Zero">]
     let inline zero() : ^Vec =
-        ( getImpl VectorBuiltin
-            (Unchecked.defaultof<Vector< ^a, ^Vec, ^Ma, ^MVec >>)
-        ).Zero()
+        let zero = LanguagePrimitives.GenericZero
+        init1(zero)
+
+    [<CompiledName "One">]
+    let inline one() : ^Vec =
+        let one = LanguagePrimitives.GenericOne
+        init1(one)
 
     [<CompiledName "Dot">]
     let inline dot (a : ^Vec) (b : ^Vec) : ^a =
         ( getImpl VectorBuiltin
-            (Unchecked.defaultof<Vector< ^a, ^Vec, ^Ma, ^MVec >>)
+            (Unchecked.defaultof<Vector< ^a, ^Vec, _, _ >>)
         ).Dot a b
 
     [<CompiledName "Axes">]
     let inline axes() : (^Vec -> ^a) list =
         ( getImpl VectorBuiltin
-            (Unchecked.defaultof<Vector< ^a, ^Vec, ^Ma, ^MVec >>)
+            (Unchecked.defaultof<Vector< ^a, ^Vec, _, _ >>)
         ).Axes()
 
     [<CompiledName "Map">]
@@ -94,8 +105,8 @@ module VectorClass =
 
     [<CompiledName "Length">]
     let inline length (v : ^Vec) : ^b =
-        sqrt (squaredLength v)
+        sqrt <| squaredLength v
 
     [<CompiledName "Normalize">]
     let inline normalize (v : ^Vec) : ^Vec =
-        v /. (length v)
+        v /. length v

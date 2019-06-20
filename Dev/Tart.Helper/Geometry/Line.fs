@@ -23,7 +23,7 @@ module Line =
 
     [<CompiledName "Zero">]
     let inline zero() =
-        let zero = VectorClass.zero()
+        let zero = Vector.zero()
         init(zero, zero)
 
     [<CompiledName "StartPoint">]
@@ -39,8 +39,8 @@ module Line =
 
     [<CompiledName "Length">]
     let inline length l =
-        VectorClass.length(l.startPoint - l.endPoint)
+        Vector.length(l.startPoint - l.endPoint)
 
     [<CompiledName "SquaredLength">]
     let inline squaredLength l =
-        VectorClass.squaredLength(l.startPoint - l.endPoint)
+        Vector.squaredLength(l.startPoint - l.endPoint)

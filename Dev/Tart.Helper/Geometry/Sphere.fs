@@ -24,7 +24,7 @@ module Sphere =
     [<CompiledName "Zero">]
     let inline zero() =
         let zero : ^a = LanguagePrimitives.GenericZero
-        init(VectorClass.zero(), zero)
+        init(Vector.zero(), zero)
 
     [<CompiledName "Center">]
     let inline center c = c.center
@@ -34,12 +34,12 @@ module Sphere =
 
     [<CompiledName "IsInside">]
     let inline isInside p c : bool =
-        let distance = VectorClass.squaredLength(p - c.center)
+        let distance = Vector.squaredLength(p - c.center)
         distance < (c.radius * c.radius)
 
     [<CompiledName "IsCollided">]
     let inline isCollided a b : bool =
-        let distance = (a.center - b.center) |> VectorClass.squaredLength
+        let distance = (a.center - b.center) |> Vector.squaredLength
         let radiusSum =
             let x = (a.radius + b.radius)
             x * x

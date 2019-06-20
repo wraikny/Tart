@@ -143,7 +143,7 @@ module DungeonBuilder =
             let sum =
                 rooms
                 |> List.map ( Rect.size >> (Vec2.map float32) )
-                |> List.fold (+) (Vec2.zero())
+                |> List.fold (+) (Vector.zero())
             sum *. (rate / len)
 
         rooms

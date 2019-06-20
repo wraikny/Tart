@@ -34,7 +34,7 @@ type internal MovingRoom(rect : float32 Rect2, movingRate, rooms) =
         lastPosition <- position
 
         for other in targets do
-            let len (o : MovingRoom) = o.Center |> VectorClass.squaredLength
+            let len (o : MovingRoom) = o.Center |> Vector.squaredLength
             if (len this) > (len other) then
                 this.Move(other)
                 other.Move(this)
@@ -45,7 +45,7 @@ type internal MovingRoom(rect : float32 Rect2, movingRate, rooms) =
 
 
         let d = 0.5f * movingRate * movingRate * count
-        this.IsMoving <- VectorClass.squaredLength (lastPosition - position) > d * d
+        this.IsMoving <- Vector.squaredLength (lastPosition - position) > d * d
     
 
 

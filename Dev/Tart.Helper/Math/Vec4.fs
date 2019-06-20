@@ -88,13 +88,7 @@ module Vec4 =
     let inline init(x, y, z, w) : ^a Vec4 =
         { x = x; y = y; z = z; w = w }
 
-    [<CompiledName "Zero">]
-    let inline zero() : ^a Vec4 =
-        let zero = LanguagePrimitives.GenericZero
-        init(zero, zero, zero, zero)
-
-    [<CompiledName "Init1">]
-    let inline init1 a = init(a, a, a, a)
+    let inline internal init1 x = init(x, x, x, x)
 
     [<CompiledName "X">]
     let inline x v = v.x
