@@ -55,6 +55,7 @@
     <Compile Include="Math\Vector.fs" />
     <Compile Include="Math\Color.fs" />
     <Compile Include="Math\Easing.fs" />
+    <Compile Include="Math\Utils.fs" />
     <Compile Include="Geometry\Line.fs" />
     <Compile Include="Geometry\Rect.fs" />
     <Compile Include="Geometry\Sphere.fs" />
