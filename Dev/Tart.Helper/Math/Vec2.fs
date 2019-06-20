@@ -31,10 +31,34 @@ type ^a Vec2 =
             y = a.y * b.y
         }
 
+    static member inline ( .* ) (a : ^b, b : ^b Vec2) : ^b Vec2 =
+        {
+            x = a * b.x
+            y = a * b.y
+        }
+
+    static member inline ( *. ) (a : ^b Vec2, b : ^b) : ^b Vec2 =
+        {
+            x = a.x * b
+            y = a.y * b
+        }
+
     static member inline (/) (a : ^b Vec2, b : ^b Vec2) : ^b Vec2 =
         {
             x = a.x / b.x
             y = a.y / b.y
+        }
+
+    static member inline (./) (a : ^b, b : ^b Vec2) : ^b Vec2 =
+        {
+            x = a / b.x
+            y = a / b.y
+        }
+
+    static member inline (/.) (a : ^b Vec2, b : ^b) : ^b Vec2 =
+        {
+            x = a.x / b
+            y = a.y / b
         }
 
 
@@ -48,9 +72,6 @@ module Vec2 =
     let inline zero() : ^a Vec2 =
         let zero = LanguagePrimitives.GenericZero
         init(zero, zero)
-
-    [<CompiledName "Init1">]
-    let inline init1 a = init(a, a)
 
     [<CompiledName "X">]
     let inline x v = v.x

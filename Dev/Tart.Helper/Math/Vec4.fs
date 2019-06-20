@@ -41,12 +41,44 @@ type ^a Vec4 =
             w = a.w * b.w
         }
 
+    static member inline ( .* ) (a : ^b, b : ^b Vec4) : ^b Vec4 =
+        {
+            x = a * b.x
+            y = a * b.y
+            z = a * b.z
+            w = a * b.w
+        }
+
+    static member inline ( *. ) (a : ^b Vec4, b : ^b) : ^b Vec4 =
+        {
+            x = a.x * b
+            y = a.y * b
+            z = a.z * b
+            w = a.w * b
+        }
+
     static member inline (/) (a : ^b Vec4, b : ^b Vec4) : ^b Vec4 =
         {
             x = a.x / b.x
             y = a.y / b.y
             z = a.z / b.z
             w = a.w / b.w
+        }
+
+    static member inline (./) (a : ^b, b : ^b Vec4) : ^b Vec4 =
+        {
+            x = a / b.x
+            y = a / b.y
+            z = a / b.z
+            w = a / b.w
+        }
+
+    static member inline (/.) (a : ^b Vec4, b : ^b) : ^b Vec4 =
+        {
+            x = a.x / b
+            y = a.y / b
+            z = a.z / b
+            w = a.w / b
         }
 
 

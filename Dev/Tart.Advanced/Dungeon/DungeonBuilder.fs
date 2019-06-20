@@ -81,10 +81,10 @@ module private WithRandom =
 
                 let rand = builder |> getRandomValue
 
-                (min + (max - min) * Vec2.init1 rand)
+                (min + (max - min) *. rand)
                 |> Vec2.map int
 
-            Rect.init (pos - size / Vec2.init1 2) size
+            Rect.init (pos - size /. 2) size
         )
 
 
@@ -99,7 +99,7 @@ module private WithRandom =
             |> List.map(fun (id, rect) ->
                 let pos = rect.position |> Vec2.map float32
                 let size = rect.size |> Vec2.map float32
-                Node.init (id, pos + size / Vec2.init1 2.0f)
+                Node.init (id, pos + size /. 2.0f)
             )
             |> Delaunay2.getNodesList
         
@@ -144,7 +144,7 @@ module DungeonBuilder =
                 rooms
                 |> List.map ( Rect.size >> (Vec2.map float32) )
                 |> List.fold (+) (Vec2.zero())
-            sum * Vec2.init1(rate / len)
+            sum *. (rate / len)
 
         rooms
         |> List.partition(fun rect ->
@@ -177,7 +177,7 @@ module DungeonBuilder =
     let private generateCorridors (width) (rect1 : int Rect2, rect2 : int Rect2) : int Rect2 list =
         
         let center1, center2 = Rect.centerPosition rect1, Rect.centerPosition rect2
-        let middle = (center1 + center2) / Vec2.init1 2
+        let middle = (center1 + center2) /. 2
 
         let lurd1 = rect1 |> Rect.get_LU_RD
         let lurd2 = rect2 |> Rect.get_LU_RD
@@ -194,7 +194,7 @@ module DungeonBuilder =
             )
 
         let createCorridorAt size pos =
-            Rect.init (pos - size / Vec2.init1 2) size
+            Rect.init (pos - size /. 2) size
 
 
         if isCollidedX && isCollidedY then

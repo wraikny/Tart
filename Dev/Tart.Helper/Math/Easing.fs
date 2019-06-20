@@ -161,7 +161,7 @@ module Easing =
     [<CompiledName "InterpolateVector">]
     let inline interpolateVector easing (frame) (current) (startPoint : ^Vec) (endPoint : ^Vec) : ^Vec
         when (VectorBuiltin or ^Vec) :
-            (static member VectorImpl : ^Vec -> VectorClass< ^a, ^Vec, ^Ma, ^MVec >)
+            (static member VectorImpl : ^Vec -> Vector< ^a, ^Vec, ^Ma, ^MVec >)
         =
         let v = calculate easing frame current
-        startPoint + (endPoint - startPoint) * VectorClass.init1(v)
+        startPoint + (endPoint - startPoint) *. v

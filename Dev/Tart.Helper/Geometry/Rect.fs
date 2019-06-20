@@ -52,32 +52,29 @@ module Rect =
         }
 
     [<CompiledName "MapVec">]
-    let inline mapVec (f : ^a -> ^Ma) : ^Vec Rect -> ^MVec Rect
-        when (VectorBuiltin or ^Vec) :
-            (static member VectorImpl : ^Vec -> VectorClass< ^a, ^Vec, ^Ma, ^MVec >)
-        =
+    let inline mapVec f =
         (VectorClass.map f) |> map 
 
     [<CompiledName "DiagonalPosition">]
     let inline diagonalPosition r : ^Vec
         when (VectorBuiltin or ^Vec) :
-            (static member VectorImpl : ^Vec -> VectorClass< ^a, ^Vec, ^Ma, ^MVec >)
+            (static member VectorImpl : ^Vec -> Vector< ^a, ^Vec, ^Ma, ^MVec >)
         =
         r.position + r.size
 
     [<CompiledName "CenterPosition">]
     let inline centerPosition r : ^Vec
         when (VectorBuiltin or ^Vec) :
-            (static member VectorImpl : ^Vec -> VectorClass< ^a, ^Vec, ^Ma, ^MVec >)
+            (static member VectorImpl : ^Vec -> Vector< ^a, ^Vec, ^Ma, ^MVec >)
         =
         let one = LanguagePrimitives.GenericOne
         let two = one + one
-        r.position + r.size / (VectorClass.init1 two)
+        r.position + r.size /. two
 
     [<CompiledName "Get_LU_RD">]
     let inline get_LU_RD r : (^Vec * ^Vec)
         when (VectorBuiltin or ^Vec) :
-            (static member VectorImpl : ^Vec -> VectorClass< ^a, ^Vec, ^Ma, ^MVec >)
+            (static member VectorImpl : ^Vec -> Vector< ^a, ^Vec, ^Ma, ^MVec >)
         =
         r.position, diagonalPosition r
 
@@ -85,14 +82,14 @@ module Rect =
     [<CompiledName "IsCollidedAxis">]
     let inline isCollidedAxis(axis : ^Vec -> ^a) (aLU, aRD) (bLU, bRD) : bool
         when (VectorBuiltin or ^Vec) :
-            (static member VectorImpl : ^Vec -> VectorClass< ^a, ^Vec, ^Ma, ^MVec >)
+            (static member VectorImpl : ^Vec -> Vector< ^a, ^Vec, ^Ma, ^MVec >)
         =
         not (axis aRD < axis bLU || axis bRD < axis aLU)
 
     [<CompiledName "IsInside">]
     let inline isInside p r : bool
         when (VectorBuiltin or ^Vec) :
-            (static member VectorImpl : ^Vec -> VectorClass< ^a, ^Vec, ^Ma, ^MVec >)
+            (static member VectorImpl : ^Vec -> Vector< ^a, ^Vec, ^Ma, ^MVec >)
         =
         let lu, rd = get_LU_RD r
         VectorClass.axes()
@@ -105,7 +102,7 @@ module Rect =
     [<CompiledName "IsCollided">]
     let inline isCollided a b : bool
         when (VectorBuiltin or ^Vec) :
-            (static member VectorImpl : ^Vec -> VectorClass< ^a, ^Vec, ^Ma, ^MVec >)
+            (static member VectorImpl : ^Vec -> Vector< ^a, ^Vec, ^Ma, ^MVec >)
         =
         let aLURD = get_LU_RD a
         let bLURD = get_LU_RD b

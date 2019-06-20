@@ -36,11 +36,39 @@ type ^a Vec3 =
             z = a.z * b.z
         }
 
+    static member inline ( .* ) (a : ^b, b : ^b Vec3) : ^b Vec3 =
+        {
+            x = a * b.x
+            y = a * b.y
+            z = a * b.z
+        }
+
+    static member inline ( *. ) (a : ^b Vec3, b : ^b) : ^b Vec3 =
+        {
+            x = a.x * b
+            y = a.y * b
+            z = a.z * b
+        }
+
     static member inline (/) (a : ^b Vec3, b : ^b Vec3) : ^b Vec3 =
         {
             x = a.x / b.x
             y = a.y / b.y
             z = a.z / b.z
+        }
+
+    static member inline (./) (a : ^b, b : ^b Vec3) : ^b Vec3 =
+        {
+            x = a / b.x
+            y = a / b.y
+            z = a / b.z
+        }
+
+    static member inline (/.) (a : ^b Vec3, b : ^b) : ^b Vec3 =
+        {
+            x = a.x / b
+            y = a.y / b
+            z = a.z / b
         }
 
 

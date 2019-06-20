@@ -82,7 +82,7 @@ let createScene builder =
 
     let camera() =
         let ws = asd.Engine.WindowSize
-        let posList = largeRooms |> List.map(fun (_, s) -> Vec2.init1 n * Vec2.map float32 s.rect.position)
+        let posList = largeRooms |> List.map(fun (_, s) -> n .* Vec2.map float32 s.rect.position)
         let minX = posList |> List.map Vec2.x |> List.min
         let maxX = posList |> List.map Vec2.x |> List.max
         let minY = posList |> List.map Vec2.y |> List.min
