@@ -13,14 +13,15 @@ type HashMap<'Key, 'T> = class
     member private this.GetEnumerator() =
         this.ToSeq().GetEnumerator()
 
-    interface IEnumerable with
-        member this.GetEnumerator() = this.GetEnumerator() :> IEnumerator
-
-    interface IEnumerable<'Key * 'T> with
-        member this.GetEnumerator() = this.GetEnumerator()
-
     interface IReadOnlyCollection<'Key * 'T> with
-        member this.Count with get() = this.Dict.Count
+        member this.GetEnumerator() =
+            this.GetEnumerator() :> IEnumerator
+
+        member this.GetEnumerator() =
+            this.GetEnumerator()
+
+        member this.Count
+            with get() = this.Dict.Count
 end
 
 [<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]

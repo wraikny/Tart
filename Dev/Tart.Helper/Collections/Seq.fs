@@ -1,6 +1,5 @@
 ﻿namespace wraikny.Tart.Helper.Collections
 
-[<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
 module Seq =
     [<CompiledName "FilterMap">]
     let filterMap f : #seq<'a> -> seq<'b> =

@@ -3,64 +3,62 @@
 open System.Collections.Generic
 
 /// Fixed Size (automatically dequeue) and Thread Safe (with lock)
-type FixedSizeQueue<'T> = class
-    val private Queue : Queue<'T>
-    val Limit : int
-    val private _Lock : System.Object
+type FixedSizeQueue<'T> private(queue, limit) = class
+    let queue : Queue<'T> = queue
+    let limit : int = limit
+    let _lock = System.Object()
 
     /// Constructer with limit
     public new(limit : int) =
-        {
-            Queue = new Queue<'T>()
-            Limit = limit
-            _Lock = new System.Object()
-        }
+        new FixedSizeQueue<'T>(new Queue<'T>(), limit)
 
 
     /// Constructer from collection
     public new(collection : IEnumerable<'T>) =
         let queue = new Queue<'T>(collection)
-        {
-            Queue = queue
-            Limit = queue.Count
-            _Lock = new System.Object()
-        }
+        new FixedSizeQueue<'T>(queue, queue.Count)
+
+    member private this.Lock(f) =
+        lock _lock <| fun _ -> f()
+
+
+    member __.Limit with get() = limit
 
 
     /// Get queue count with lock
     member public this.Count
         with get() =
-            lock this._Lock <| fun _ ->
-                this.Queue.Count
+            this.Lock <| fun _ ->
+                queue.Count
 
     
     /// Enqueue and dequeue while count > limit with lock
     member public this.Enqueue(o : 'T) =
-        lock this._Lock <| fun _ ->
-            this.Queue.Enqueue(o)
-            while this.Queue.Count > this.Limit do
-                this.Queue.Dequeue() |> ignore
+        this.Lock <| fun _ ->
+            queue.Enqueue(o)
+            while queue.Count > this.Limit do
+                queue.Dequeue() |> ignore
 
 
     /// Dequeue with lock
     member public this.TryDequeue() =
-        lock this._Lock <| fun _ ->
-            if this.Queue.Count > 0 then
-                Some <| this.Queue.Dequeue()
+        this.Lock <| fun _ ->
+            if queue.Count > 0 then
+                Some <| queue.Dequeue()
             else
                 None
 
   
     /// Clear queue with lock
     member public this.Clear() =
-        lock this._Lock <| fun _ ->
-            this.Queue.Clear()
+        this.Lock <| fun _ ->
+            queue.Clear()
 
 
     /// Get Enumeartor with lock
     member this.GetEnumerator() =
-        lock this._Lock <| fun _ ->
-            (new List<'T>(this.Queue)).GetEnumerator()
+        this.Lock <| fun _ ->
+            (new List<'T>(queue)).GetEnumerator()
             :> IEnumerator<'T>
 
 
