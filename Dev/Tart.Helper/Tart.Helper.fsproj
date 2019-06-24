@@ -64,11 +64,11 @@
     <Compile Include="Graph\UnionFold.fs" />
     <Compile Include="Graph\SpanningTree.fs" />
     <Compile Include="Graph\Delaunay.fs" />
-    <Compile Include="Extension\Seq.fs" />
+    <Compile Include="Collections\Seq.fs" />
+    <Compile Include="Collections\HashMap.fs" />
     <Compile Include="Utils\FixedSizeQueue.fs" />
     <Compile Include="Utils\LockObject.fs" />
     <Compile Include="Utils\Observer.fs" />
-    <Compile Include="Utils\HashMap.fs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="FSharp.Core">

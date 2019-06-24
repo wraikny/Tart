@@ -3,7 +3,7 @@
 open wraikny.Tart.Advanced.Dungeon
 open wraikny.Tart.Helper.Geometry
 open wraikny.Tart.Helper.Math
-open wraikny.Tart.Helper.Utils
+open wraikny.Tart.Helper.Collections
 
 let createScene builder =
     let dungeonModel =

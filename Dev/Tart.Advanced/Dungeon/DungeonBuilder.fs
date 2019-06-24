@@ -4,7 +4,7 @@ open System
 
 open wraikny.Tart.Helper.Math
 open wraikny.Tart.Helper.Geometry
-open wraikny.Tart.Helper.Utils
+open wraikny.Tart.Helper.Collections
 
 type DungeonBuilder = {
     /// 乱数生成に用いるシード値

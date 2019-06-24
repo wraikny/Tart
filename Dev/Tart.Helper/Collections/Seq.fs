@@ -1,4 +1,4 @@
-﻿namespace wraikny.Tart.Helper.Extension
+﻿namespace wraikny.Tart.Helper.Collections
 
 [<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
 module Seq =

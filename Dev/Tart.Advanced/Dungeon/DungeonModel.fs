@@ -3,12 +3,13 @@
 open wraikny.Tart.Helper.Math
 open wraikny.Tart.Helper.Geometry
 open wraikny.Tart.Helper.Graph
-open wraikny.Tart.Helper.Utils
+open wraikny.Tart.Helper.Collections
 
+[<Struct>]
 type SpaceID =
-    | Large of int
-    | Small of int
-    | Corridor of int
+    | Large of large:int
+    | Small of small:int
+    | Corridor of corridor:int
 
 
 [<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
@@ -20,6 +21,7 @@ module SpaceID =
         | Corridor id -> id
 
 
+[<Struct>]
 type Space = {
     id : SpaceID
     rect : int Rect2
@@ -76,3 +78,15 @@ module DungeonModel =
         |> Option.bind(fun id ->
             tryFindSpace id dungeon
         )
+
+
+    [<CompiledName "CellToCoordinate">]
+    let cellToCoordinate (cellSize : float32 Vec2) (cell : int Vec2) : float32 Vec2 =
+        let cellf = cell |> Vec2.map float32
+        cellf * cellSize
+
+
+    [<CompiledName "CoordinateToCell">]
+    let coordinateToCell (cellSize : float32 Vec2) (coordinate : float32 Vec2) : int Vec2 =
+        coordinate / cellSize
+        |> Vec2.map (floor >> int)
