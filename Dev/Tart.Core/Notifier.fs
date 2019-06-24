@@ -10,7 +10,7 @@ type Notifier<'Msg, 'ViewMsg, 'ViewModel>(messenger) =
     member this.Pull() =
         this.Messenger.TryPopViewModel |> function
         | Some viewModel ->
-            this.NotifyObservers(viewModel)
+            this.Notify(viewModel)
             true
         | None ->
             false

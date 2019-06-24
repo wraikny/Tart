@@ -2,7 +2,7 @@
 
 [<Interface>]
 type IObserver<'T> =
-    abstract UpdateFromNotify : 'T -> unit
+    abstract Update : 'T -> unit
 
 
 open System.Collections.Generic
@@ -12,13 +12,13 @@ open System.Collections.Generic
 type Observable<'T>() =
     let observers = new List<IObserver<'T>>()
 
-    member this.AddObserver(observer : #IObserver<'T>) =
+    member this.Add(observer : #IObserver<'T>) =
         observers.Add(observer :> IObserver<'T>)
 
 
-    member this.NotifyObservers(input) =
-        observers.ForEach(fun o -> o.UpdateFromNotify(input))
+    member this.Notify(input) =
+        observers.ForEach(fun o -> o.Update(input))
 
 
-    member this.ClearObservers() =
+    member this.Clear() =
         observers.Clear()
