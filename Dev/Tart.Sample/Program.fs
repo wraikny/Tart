@@ -31,7 +31,7 @@ module Program =
                     printfn "Input correctly!"
 
                 | Some n ->
-                    messenger.PushMsg(nextMsg n)
+                    messenger.Enqueue(nextMsg n)
 
             input |> function
             | "q" -> ()
@@ -49,7 +49,7 @@ module Program =
                 inputNumMsg (fun n -> Counter.Msg.Random(0, n))
 
             | "c" ->
-                messenger.PushMsg(Counter.Msg.Clear)
+                messenger.Enqueue(Counter.Msg.Clear)
 
             | _ ->
                 printfn "Input correctly!"

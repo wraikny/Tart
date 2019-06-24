@@ -23,7 +23,7 @@ type private Messenger<'Msg, 'ViewMsg, 'Model, 'ViewModel>
 
     let mutable sleepTime = 5
 
-    let mutable port : IMsgSender<'ViewMsg> option = None
+    let mutable port : IMsgQueue<'ViewMsg> option = None
 
     member private __.IsRunning
         with get() : bool =
@@ -88,7 +88,7 @@ type private Messenger<'Msg, 'ViewMsg, 'Model, 'ViewModel>
             and  set(value) = sleepTime <- value
 
         member __.SetPort(port_) =
-            port <- Some (port_ :> IMsgSender<'ViewMsg>)
+            port <- Some (port_ :> IMsgQueue<'ViewMsg>)
 
         member this.TryPopViewModel
             with get() =

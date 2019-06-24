@@ -18,7 +18,7 @@ type FixedSizeQueue<'T> private(queue, limit) = class
         let queue = new Queue<'T>(collection)
         new FixedSizeQueue<'T>(queue, queue.Count)
 
-    member private this.Lock(f) =
+    member private __.Lock(f) =
         lock _lock <| fun _ -> f()
 
 

@@ -44,14 +44,13 @@
   <ItemGroup>
     <Compile Include="AssemblyInfo.fs" />
     <Content Include="packages.config" />
-    <Compile Include="MsgQueue.fs" />
     <Compile Include="Environment.fs" />
     <Compile Include="Cmd.fs" />
     <Compile Include="CoreProgram.fs" />
     <Compile Include="Port.fs" />
     <Compile Include="IMessenger.fs" />
-    <Compile Include="Messenger.fs" />
     <Compile Include="Notifier.fs" />
+    <Compile Include="Messenger.fs" />
     <Compile Include="Libraries\Random.fs" />
     <Compile Include="Libraries\Task.fs" />
     <Compile Include="View\ObjectsUpdater.fs" />

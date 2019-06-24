@@ -1,5 +1,7 @@
 ﻿namespace wraikny.Tart.Core
 
+open wraikny.Tart.Helper.Utils
+
 type internal PushMessage<'Msg> = 'Msg -> unit
 type internal Command<'Msg> = IEnvironment -> PushMessage<'Msg> -> unit
 
@@ -30,19 +32,19 @@ module Cmd =
 
 
     let internal execute
-        (messenger : #IMsgSender<'Msg>)
-        (port : #IMsgSender<'ViewMsg> option)
+        (messenger : #IMsgQueue<'Msg>)
+        (port : #IMsgQueue<'ViewMsg> option)
         (env : #IEnvironment)
         (cmd : Cmd<'Msg, 'ViewMsg>) =
         for c in cmd.commands do
-            c env <| fun msg -> messenger.PushMsg msg
+            c env <| fun msg -> messenger.Enqueue msg
 
         
         port |> function
         | None -> ()
         | Some(port) ->
             for msg in cmd.viewMsgs do
-                port.PushMsg(msg)
+                port.Enqueue(msg)
 
 
     /// Empty command
