@@ -4,6 +4,7 @@ open System
 
 open wraikny.Tart.Helper.Math
 open wraikny.Tart.Helper.Geometry
+open wraikny.Tart.Helper.Utils
 
 type DungeonBuilder = {
     /// 乱数生成に用いるシード値
@@ -213,11 +214,11 @@ module DungeonBuilder =
             |> Seq.toList
 
 
-    let private spacesToMap =
+    let private spacesToHashMap =
         List.map(fun (r : Space) ->
             r.id |> SpaceID.id, r
         )
-        >> Map.ofList
+        >> HashMap.ofList
 
 
     [<CompiledName "Generate">]
@@ -242,7 +243,7 @@ module DungeonBuilder =
             , smallRoomRects |> List.indexed |> toRoom SpaceID.Small
 
 
-        let largeRoomsMap = spacesToMap largeRooms
+        let largeRoomsHashMap = spacesToHashMap largeRooms
 
 
         let largeRoomsEdges =
@@ -254,12 +255,12 @@ module DungeonBuilder =
             seq {
                 for e in largeRoomsEdges do
                     let room1 =
-                        largeRoomsMap
-                        |> Map.find e.node1.label
+                        largeRoomsHashMap
+                        |> HashMap.find e.node1.label
 
                     let room2 =
-                        largeRoomsMap
-                        |> Map.find e.node2.label
+                        largeRoomsHashMap
+                        |> HashMap.find e.node2.label
 
                     yield!
                         generateCorridors builder.corridorWidth (room1.rect, room2.rect)
@@ -315,13 +316,13 @@ module DungeonBuilder =
                 for item in cellsDict ->
                     (item.Key, item.Value)
             }
-            |> Map.ofSeq
+            |> HashMap.ofSeq
 
 
         {
-            largeRooms = largeRoomsMap
-            smallRooms = collidedSmallRooms |> spacesToMap
-            corridors = corridors |> spacesToMap
+            largeRooms = largeRoomsHashMap
+            smallRooms = collidedSmallRooms |> spacesToHashMap
+            corridors = corridors |> spacesToHashMap
 
             largeRoomEdges = largeRoomsEdges
 

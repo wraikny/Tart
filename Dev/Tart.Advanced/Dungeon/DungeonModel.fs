@@ -3,6 +3,7 @@
 open wraikny.Tart.Helper.Math
 open wraikny.Tart.Helper.Geometry
 open wraikny.Tart.Helper.Graph
+open wraikny.Tart.Helper.Utils
 
 type SpaceID =
     | Large of int
@@ -41,17 +42,17 @@ module Space =
 
 type DungeonModel = {
     /// IDと大部屋の対応
-    largeRooms : Map<int, Space>
+    largeRooms : HashMap<int, Space>
     /// IDと小さい部屋の対応
-    smallRooms : Map<int, Space>
+    smallRooms : HashMap<int, Space>
     /// IDと廊下の対応
-    corridors : Map<int, Space>
+    corridors : HashMap<int, Space>
 
     /// 大部屋のIDをノードのラベルに、距離を重みにもつノードのリスト
     largeRoomEdges : Edge<unit, float32> list
 
     /// マスの座標と空間IDの対応
-    cells : Map<int Vec2, SpaceID>
+    cells : HashMap<int Vec2, SpaceID>
 }
 
 
@@ -65,13 +66,13 @@ module DungeonModel =
             | Corridor id -> dungeon.corridors, id
 
         target
-        |> Map.tryFind id
+        |> HashMap.tryFind id
 
         
     [<CompiledName "GetSpaceAt">]
     let getSpaceAt coordinate dungeon =
         dungeon.cells
-        |> Map.tryFind coordinate
+        |> HashMap.tryFind coordinate
         |> Option.bind(fun id ->
             tryFindSpace id dungeon
         )
