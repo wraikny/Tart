@@ -14,8 +14,8 @@ type Cmd<'Msg, 'ViewMsg> =
 
 [<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
 module Cmd =
-    let internal commands (cmd : Cmd<_, _>) = cmd.commands
-    let internal viewMsgs (cmd : Cmd<_, _>) = cmd.viewMsgs
+    let inline internal commands (cmd : Cmd<_, _>) = cmd.commands
+    let inline internal viewMsgs (cmd : Cmd<_, _>) = cmd.viewMsgs
 
     let internal init (commands) (viewCommands) : Cmd<'Msg, 'ViewMsg> =
         {
@@ -31,7 +31,7 @@ module Cmd =
         init [] m
 
 
-    let internal execute
+    let inline internal execute
         (messenger : #IMsgQueue<'Msg>)
         (port : #IMsgQueue<'ViewMsg> option)
         (env : #IEnvironment)
@@ -81,7 +81,7 @@ module Cmd =
         }
 
     [<CompiledName "MapViewMsgs">]
-    let mapViewMsgs (f : 'a -> 'ViewMsg) (cmd : Cmd<'Msg, 'a>) : Cmd<'Msg, 'ViewMsg> =
+    let inline mapViewMsgs (f : 'a -> 'ViewMsg) (cmd : Cmd<'Msg, 'a>) : Cmd<'Msg, 'ViewMsg> =
         {
             commands = cmd.commands
             viewMsgs = cmd.viewMsgs |> List.map f

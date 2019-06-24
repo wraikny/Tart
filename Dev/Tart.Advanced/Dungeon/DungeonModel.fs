@@ -15,7 +15,7 @@ type SpaceID =
 [<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
 module SpaceID =
     [<CompiledName "ID">]
-    let id id = id |> function
+    let inline value id = id |> function
         | Large id
         | Small id
         | Corridor id -> id
@@ -36,10 +36,10 @@ module Space =
     }
 
     [<CompiledName "ID">]
-    let id s = s.id
+    let inline id s = s.id
 
     [<CompiledName "Rect">]
-    let rect s = s.rect
+    let inline rect s = s.rect
 
 
 type DungeonModel = {
@@ -81,12 +81,12 @@ module DungeonModel =
 
 
     [<CompiledName "CellToCoordinate">]
-    let cellToCoordinate (cellSize : float32 Vec2) (cell : int Vec2) : float32 Vec2 =
+    let inline cellToCoordinate (cellSize : float32 Vec2) (cell : int Vec2) : float32 Vec2 =
         let cellf = cell |> Vec2.map float32
         cellf * cellSize
 
 
     [<CompiledName "CoordinateToCell">]
-    let coordinateToCell (cellSize : float32 Vec2) (coordinate : float32 Vec2) : int Vec2 =
+    let inline coordinateToCell (cellSize : float32 Vec2) (coordinate : float32 Vec2) : int Vec2 =
         coordinate / cellSize
         |> Vec2.map (floor >> int)

@@ -216,7 +216,7 @@ module DungeonBuilder =
 
     let private spacesToHashMap =
         List.map(fun (r : Space) ->
-            r.id |> SpaceID.id, r
+            r.id |> SpaceID.value, r
         )
         >> HashMap.ofList
 

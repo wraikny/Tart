@@ -35,15 +35,15 @@ module HashMap =
     open System.Linq
 
     [<CompiledName "ContainsKey">]
-    let containsKey key (hashMap : HashMap<_, _>) =
+    let inline containsKey key (hashMap : HashMap<_, _>) =
         hashMap.Dict.ContainsKey(key)
 
     [<CompiledName "Exists">]
-    let exists predicate (hashMap : HashMap<_, _>) =
+    let inline exists predicate (hashMap : HashMap<_, _>) =
         hashMap.Dict.Any(fun item -> predicate item.Key item.Value )
 
     [<CompiledName "OfSeq">]
-    let ofSeq seq =
+    let inline ofSeq seq =
         let dict = new Dictionary<'Key, 'T>()
         for (key, value) in seq do
 
@@ -55,32 +55,32 @@ module HashMap =
         HashMap.CreateWithoutNew(dict)
 
     [<CompiledName "OfList">]
-    let ofList list = list |> Seq.ofList |> ofSeq
+    let inline ofList list = list |> Seq.ofList |> ofSeq
 
     [<CompiledName "OfArray">]
-    let ofArray array = array |> Seq.ofArray |> ofSeq
+    let inline ofArray array = array |> Seq.ofArray |> ofSeq
 
     [<CompiledName "ToSeq">]
-    let toSeq (hashMap : HashMap<'Key, 'T>) : seq<'Key * 'T> =
+    let inline toSeq (hashMap : HashMap<'Key, 'T>) : seq<'Key * 'T> =
         hashMap.ToSeq()
 
     [<CompiledName "ToList">]
-    let toList (hashMap : HashMap<'Key, 'T>) =
+    let inline toList (hashMap : HashMap<'Key, 'T>) =
         hashMap |> toSeq |> Seq.toList
 
     [<CompiledName "ToArray">]
-    let toArray (hashMap : HashMap<'Key, 'T>) =
+    let inline toArray (hashMap : HashMap<'Key, 'T>) =
         hashMap |> toSeq |> Seq.toArray
 
     [<CompiledName "TryFind">]
-    let tryFind key (hashMap : HashMap<_, _>) =
+    let inline tryFind key (hashMap : HashMap<_, _>) =
         hashMap.Dict.TryGetValue(key) |> function
         | true, result -> Some result
         | false, _ -> None
 
     [<CompiledName "Find">]
-    let find key (hashMap : HashMap<_, _>) =
+    let inline find key (hashMap : HashMap<_, _>) =
         hashMap.Dict.[key]
 
     [<CompiledName "Count">]
-    let count (hashMap : HashMap<_, _>) = hashMap.Dict.Count
+    let inline count (hashMap : HashMap<_, _>) = hashMap.Dict.Count

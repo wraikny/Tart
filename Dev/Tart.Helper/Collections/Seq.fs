@@ -2,12 +2,12 @@
 
 module Seq =
     [<CompiledName "FilterMap">]
-    let filterMap f : #seq<'a> -> seq<'b> =
+    let inline filterMap f : #seq<'a> -> seq<'b> =
         Seq.map f
         >> Seq.filter Option.isSome
         >> Seq.map Option.get
 
     [<CompiledName "TryAssoc">]
-    let tryAssoc key : #seq<'a * 'b> -> 'b option =
+    let inline tryAssoc key : #seq<'a * 'b> -> 'b option =
         Seq.tryFind (fst >> (=) key)
         >> Option.map snd
