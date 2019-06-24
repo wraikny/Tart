@@ -68,6 +68,7 @@
     <Compile Include="Utils\FixedSizeQueue.fs" />
     <Compile Include="Utils\LockObject.fs" />
     <Compile Include="Utils\Observer.fs" />
+    <Compile Include="Utils\HashMap.fs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="FSharp.Core">
