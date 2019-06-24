@@ -3,10 +3,16 @@
 open System.Collections
 open System.Collections.Generic
 
-type HashMap<'Key, 'T> = class
+type HashMap<'Key, 'T when 'Key : equality> = class
     val Dict : IReadOnlyDictionary<'Key, 'T>
 
-    new(dict) = { Dict = dict }
+    private new(dict) = { Dict = dict }
+
+    static member Create(dict : #IDictionary<_, _>) =
+        new HashMap<'Key, 'T>(new Dictionary<_, _>(dict :> IDictionary<_, _>))
+
+    static member CreateWithoutNew(dict) =
+        new HashMap<'Key, 'T>(dict)
 
     member this.ToSeq() = seq { for x in this.Dict -> (x.Key, x.Value) }
 
@@ -46,7 +52,7 @@ module HashMap =
             else
                 dict.Add(key, value)
 
-        new HashMap<'Key, 'T>(dict)
+        HashMap.CreateWithoutNew(dict)
 
     [<CompiledName "OfList">]
     let ofList list = list |> Seq.ofList |> ofSeq
