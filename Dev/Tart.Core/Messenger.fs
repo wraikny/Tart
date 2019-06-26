@@ -9,83 +9,44 @@ open wraikny.Tart.Helper.Utils
 [<Class>]
 type private Messenger<'Msg, 'ViewMsg, 'Model, 'ViewModel>
     (environment, corePrograms) =
-    inherit MsgQueue<'Msg>()
+    inherit MsgQueueAsync<'Msg>()
 
     let corePrograms : CoreProgram<_, _, _, _> = corePrograms
 
     let environment : IEnvironment = environment
 
-    let mutable lastModel :'Model option = None
+    let mutable lastModel = Unchecked.defaultof<'Model>
+    let mutable lastModelExist = false
 
     let modelQueue = new FixedSizeQueue<'Model>(1)
 
-    let isRunning = new LockObject<bool>(false)
-
-    let mutable sleepTime = 5
-
     let mutable port : IMsgQueue<'ViewMsg> option = None
 
-    member private __.IsRunning
-        with get() : bool =
-            isRunning.Value
-        and set(value) =
-            isRunning.Value <- value
-
-
-    member private this.MainLoop initModel =
-        let running = this.IsRunning
-        if not running then
-            this.IsRunning <- true
-
-            let update model =
-                this.TryPopMsg() |> function
-                | None -> model
-
-                | Some(msg) ->
-                    let newModel, cmd = corePrograms.update msg model
-
-                    cmd |> Cmd.execute this port environment
-
-                    modelQueue.Enqueue(newModel)
-                    Thread.Sleep(sleepTime)
-                    newModel
+    override this.OnPopMsg(msg) =
+        let newModel, cmd = corePrograms.update msg lastModel
         
-            /// Main Loop
-            let rec loop model =
-                // stop with cache
-                if not this.IsRunning then
-                    lastModel <- Some model
-                    ()
+        cmd |> Cmd.execute this port environment
+        
+        modelQueue.Enqueue(newModel)
 
-                // update
-                else
-                    model
-                    |> update
-                    |> loop
-
-            async {
-                initModel
-                |> loop
-            } |> Async.Start
-
-        // Is started main loop in this call
-        not running
+        lastModel <- newModel
 
 
-    member private this.InitializeModel() =
+    member this.InitModel() =
         let model, cmd = corePrograms.init
         
         cmd |> Cmd.execute this port environment
         
         modelQueue.Enqueue(model)
 
-        model
+        lastModel <- model
+        lastModelExist <- true
     
 
     interface IMessenger<'Msg, 'ViewMsg, 'ViewModel> with
         member this.SleepTime
-            with get() = sleepTime
-            and  set(value) = sleepTime <- value
+            with get() = this.SleepTime
+            and  set(value) = this.SleepTime <- value
 
         member __.SetPort(port_) =
             port <- Some (port_ :> IMsgQueue<'ViewMsg>)
@@ -99,14 +60,14 @@ type private Messenger<'Msg, 'ViewMsg, 'Model, 'ViewModel>
             with get() = this.IsRunning
 
         member this.StartAsync() =
-            this.InitializeModel()
-            |> this.MainLoop
+            this.InitModel()
+            this.StartAsync()
 
         member this.ResumeAsync() =
-            lastModel |> function
-            | Some model -> this.MainLoop(model)
-            | None ->
-                (this :> IMessenger<'Msg, 'ViewMsg, 'ViewModel>).StartAsync()
+            if lastModelExist then
+                this.MainLoop()
+            else
+                this.StartAsync()
 
         member this.Stop() =
             this.IsRunning <- false
