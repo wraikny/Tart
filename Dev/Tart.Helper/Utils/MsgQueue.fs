@@ -1,16 +1,17 @@
 ﻿namespace wraikny.Tart.Helper.Utils
 
 /// Telling msg
-type IMsgQueue<'T> = interface
+[<Interface>]
+type IMsgQueue<'T> =
     /// Add Msg
     abstract Enqueue : 'T -> unit
-end
+
 
 
 open System.Collections.Concurrent
 
 
-type MsgQueue<'T>() = class
+type MsgQueue<'T>() =
     let queue = new ConcurrentQueue<'T>()
 
     member __.TryPopMsg() : 'T option =
@@ -20,7 +21,7 @@ type MsgQueue<'T>() = class
 
     interface IMsgQueue<'T> with
         member __.Enqueue(msg) = queue.Enqueue(msg)
-end
+
 
 
 [<AbstractClass>]
