@@ -79,11 +79,9 @@ type MsgQueueAsync<'Msg>() =
                     | Some msg ->
                         this.OnPopMsg(msg)
                     | None ->
-                        ()
-
-                    let sleepTime, doSleep = _sleepTime.Value
-                    if doSleep then
-                        Thread.Sleep(int sleepTime)
+                        let sleepTime, doSleep = _sleepTime.Value
+                        if doSleep then
+                            Thread.Sleep(int sleepTime)
             } |> Async.Start
         
         not running
