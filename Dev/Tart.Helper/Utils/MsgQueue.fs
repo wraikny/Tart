@@ -41,7 +41,7 @@ type MsgQueueSync<'Msg>() =
         update ()
 
 
-
+open System
 open System.Threading
 
 
@@ -70,7 +70,9 @@ type MsgQueueAsync<'Msg>() =
 
     member this.Start() =
         let running = this.IsRunning
-        if not running then
+        if running then
+            raise <| new InvalidOperationException()
+        else
             this.IsRunning <- true
 
             async {
@@ -87,4 +89,8 @@ type MsgQueueAsync<'Msg>() =
         not running
 
     member this.Stop() =
-        this.IsRunning <- false
+        let running = this.IsRunning
+        if running then
+            this.IsRunning <- false
+        else
+            raise <| new InvalidOperationException()
