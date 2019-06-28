@@ -90,7 +90,3 @@ type MsgQueueAsync<'Msg>() =
 
     member this.Stop() =
         this.IsRunning <- false
-
-    interface System.IDisposable with
-        member this.Dispose() =
-            this.Stop()
