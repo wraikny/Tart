@@ -1,7 +1,10 @@
 ﻿namespace wraikny.Tart.Core.Libraries
 
-open wraikny.Tart.Helper.Basic
 open wraikny.Tart.Helper.Monad
+
+
+[<Struct>]
+type Never = Never
 
 
 type Task<'Ok, 'Error> =
@@ -13,9 +16,7 @@ type Task<'Ok, 'Error> =
 [<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
 module Task =
     [<CompiledName "Init">]
-    let inline init (f) =
-        { f = f }
-
+    let inline init (f) = { f = f }
 
     let inline internal f (task) = task.f
 
@@ -31,6 +32,32 @@ module Task =
     let inline fail (x : 'x) : Task<'Ok, 'x> =
         (fun _ -> Result.Error x) |> init
 
+
+    [<CompiledName "Bind">]
+    let inline bind (f : 'a -> Task<'b, 'x>) (task : Task<'a, 'x>) : Task<'b, 'x> =
+        (fun _ ->
+            task.f() |> function
+            | Ok v -> (f v).f()
+            | Error e -> Result.Error e
+        )
+        |> init
+
+    type TaskBuilder() =
+        member __.Bind(x, k) = bind x k
+        member __.Return(x) = succeed x
+        member __.ReturnFrom(x) = x
+        member __.Delay(f) = f()
+        member __.Combine(a, b) =
+            a.f() |> function
+            | Ok _ -> a
+            | Error _ -> b()
+
+        member __.For(inp, f) =
+            seq {for a in inp -> f a}
+        member __.Yield(x) = succeed x
+        member __.YieldFrom(x) = x
+
+    let task = new TaskBuilder()
 
     [<CompiledName "Map">]
     let inline map (f : 'a -> 'b) (task : Task<'a, 'Error>) : Task<'b, 'Error> =
@@ -101,16 +128,7 @@ module Task =
         }
         |> init
 
-
-    [<CompiledName "AndThen">]
-    let inline andThen (f : 'a -> Task<'b, 'x>) (task : Task<'a, 'x>) : Task<'b, 'x> =
-        (fun _ ->
-            task.f() |> function
-            | Ok v -> (f v).f()
-            | Error e -> Result.Error e
-        )
-        |> init
-
+    open System.Collections.Generic
 
     [<CompiledName "Sequence">]
     let inline sequence (tasks : Task<'a, 'x> list) : Task<'a list, 'x> =

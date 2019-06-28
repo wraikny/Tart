@@ -44,7 +44,6 @@
   <ItemGroup>
     <Compile Include="AssemblyInfo.fs" />
     <Content Include="packages.config" />
-    <Compile Include="Basic.fs" />
     <Compile Include="Coroutine.fs" />
     <Compile Include="Monad\Maybe.fs" />
     <Compile Include="Monad\Either.fs" />
