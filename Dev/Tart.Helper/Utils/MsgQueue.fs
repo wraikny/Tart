@@ -51,11 +51,24 @@ type MsgQueueAsync<'Msg>() =
 
     let isRunning = new LockObject<_>(false)
 
-    let mutable _sleepTime = new LockObject<_>(5u)
+    let mutable _sleepTime = new LockObject<_>(5u, true)
+
+    member this.SleepTime
+        with get() =  fst _sleepTime.Value
+        and set(value) =
+            _sleepTime.Value <- value, value <> 0u
+
+
+    member __.IsRunning
+        with get() : bool =
+            isRunning.Value
+        and inline private set(value) =
+            isRunning.Value <- value
+
 
     abstract OnPopMsg : 'Msg -> unit
 
-    member this.MainLoop() =
+    member this.Start() =
         let running = this.IsRunning
         if not running then
             this.IsRunning <- true
@@ -68,27 +81,16 @@ type MsgQueueAsync<'Msg>() =
                     | None ->
                         ()
 
-                    let sleepTime = this.SleepTime
-                    if sleepTime <> 0u then
-                        Thread.Sleep(int this.SleepTime)
+                    let sleepTime, doSleep = _sleepTime.Value
+                    if doSleep then
+                        Thread.Sleep(int sleepTime)
             } |> Async.Start
         
         not running
 
-
-    member this.SleepTime
-        with get() = _sleepTime.Value
-        and  set(value) = _sleepTime.Value <- value
-
-
-    member __.IsRunning
-        with get() : bool =
-            isRunning.Value
-        and set(value) =
-            isRunning.Value <- value
-
-    member this.StartAsync() =
-        this.MainLoop()
-
     member this.Stop() =
         this.IsRunning <- false
+
+    interface System.IDisposable with
+        member this.Dispose() =
+            this.Stop()

@@ -17,13 +17,13 @@ module Cmd =
     let inline internal commands (cmd : Cmd<_, _>) = cmd.commands
     let inline internal viewMsgs (cmd : Cmd<_, _>) = cmd.viewMsgs
 
-    let internal init (commands) (viewCommands) : Cmd<'Msg, 'ViewMsg> =
+    let inline internal init (commands) (viewCommands) : Cmd<'Msg, 'ViewMsg> =
         {
             commands = commands
             viewMsgs = viewCommands
         }
 
-    let internal singleCommand ( command : Command<'Msg> ) : Cmd<'Msg, 'ViewMsg> =
+    let inline internal singleCommand ( command : Command<'Msg> ) : Cmd<'Msg, 'ViewMsg> =
         init [command] []
 
     [<CompiledName "ViewMsg">]
