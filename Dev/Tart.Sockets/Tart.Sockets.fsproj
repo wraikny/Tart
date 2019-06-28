@@ -44,6 +44,9 @@
   <ItemGroup>
     <Compile Include="AssemblyInfo.fs" />
     <Content Include="packages.config" />
+    <Compile Include="Extension.fs" />
+    <Compile Include="Interface.fs" />
+    <Compile Include="TCPServer.fs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="FSharp.Core">

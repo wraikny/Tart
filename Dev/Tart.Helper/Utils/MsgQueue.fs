@@ -1,10 +1,10 @@
 ﻿namespace wraikny.Tart.Helper.Utils
 
 /// Telling msg
-[<Interface>]
-type IMsgQueue<'T> =
+type IMsgQueue<'T> = interface
     /// Add Msg
     abstract Enqueue : 'T -> unit
+end
 
 
 
@@ -72,21 +72,19 @@ type MsgQueueAsync<'Msg>() =
         let running = this.IsRunning
         if running then
             raise <| new InvalidOperationException()
-        else
-            this.IsRunning <- true
-
-            async {
-                while this.IsRunning do
-                    this.TryPopMsg() |> function
-                    | Some msg ->
-                        this.OnPopMsg(msg)
-                    | None ->
-                        let sleepTime, doSleep = _sleepTime.Value
-                        if doSleep then
-                            Thread.Sleep(int sleepTime)
-            } |> Async.Start
         
-        not running
+        this.IsRunning <- true
+
+        async {
+            while this.IsRunning do
+                this.TryPopMsg() |> function
+                | Some msg ->
+                    this.OnPopMsg(msg)
+                | None ->
+                    let sleepTime, doSleep = _sleepTime.Value
+                    if doSleep then
+                        Thread.Sleep(int sleepTime)
+        } |> Async.Start
 
     member this.Stop() =
         let running = this.IsRunning
@@ -94,3 +92,7 @@ type MsgQueueAsync<'Msg>() =
             this.IsRunning <- false
         else
             raise <| new InvalidOperationException()
+
+    interface IDisposable with
+        member this.Dispose() =
+            this.IsRunning <- false

@@ -20,7 +20,7 @@ type IMessenger<'Msg, 'ViewMsg, 'ViewModel> =
     abstract IsRunning : bool with get
 
     /// Async.Start main loop
-    abstract StartAsync : unit -> bool
+    abstract StartAsync : unit -> unit
 
     /// Async.Start main loop from last model
     abstract ResumeAsync : unit -> bool
