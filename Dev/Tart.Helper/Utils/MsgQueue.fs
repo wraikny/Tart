@@ -71,7 +71,7 @@ type MsgQueueAsync<'Msg>() =
     member this.Start() =
         let running = this.IsRunning
         if running then
-            raise <| new InvalidOperationException()
+            raise <| InvalidOperationException()
         
         this.IsRunning <- true
 
