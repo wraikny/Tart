@@ -1,5 +1,7 @@
 ﻿namespace wraikny.Tart.Helper.Math
 
+// https://7colou.red/blog/2018/02-14-fsharp-typeclasses/index.html
+
 [<Struct>]
 type Vector< ^a, ^Vec, ^Ma, ^MVec
     when ^a   : (static member (~-) : ^a -> ^a)

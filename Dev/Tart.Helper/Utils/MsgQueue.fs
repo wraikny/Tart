@@ -6,8 +6,6 @@ type IMsgQueue<'T> = interface
     abstract Enqueue : 'T -> unit
 end
 
-
-
 open System.Collections.Concurrent
 
 
