@@ -10,13 +10,25 @@ open wraikny.Tart.Helper.Utils
 type ClientID = uint32
 
 
-type IServer = interface
+type SendMsg =
+    | ToEveryone
+    | ToOthers
+
+
+
+type IServer<'SendMsg> = interface
     inherit IDisposable
+    inherit IMsgQueue<'SendMsg>
 
-    abstract Start : unit -> unit
+    abstract IsAccepting : bool with get
+    abstract IsMessaging : bool with get
 
-    abstract IsRunning : bool with get
-    abstract SleepTime : uint32 with get, set
+    abstract StartAccepting : unit -> unit
+    abstract StopAccepting : unit -> unit
+
+    abstract StartMessaging : unit -> unit
+    abstract StopMessaging : unit -> unit
+
 end
 
 
