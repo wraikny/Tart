@@ -229,16 +229,19 @@
         interface IMsgQueue<'SendMsg> with
             member this.Enqueue(msg) =
                 (sendQueue :> IMsgQueue<_>).Enqueue(msg)
+
+        member this.Disconnect() =
+            for c in clients do
+                (c.Value :> IDisposable).Dispose()
+            clients.Clear()
+
+            if this.IServer.IsAccepting then
+                this.IServer.StopAccepting() |> ignore
+
+            if this.IServer.IsMessaging then
+                this.IServer.StopMessaging() |> ignore
     
 
         interface IDisposable with
             member this.Dispose() =
-                for c in clients do
-                    (c.Value :> IDisposable).Dispose()
-                clients.Clear()
-
-                if this.IServer.IsAccepting then
-                    this.IServer.StopAccepting() |> ignore
-
-                if this.IServer.IsMessaging then
-                    this.IServer.StopMessaging() |> ignore
+                this.Disconnect()

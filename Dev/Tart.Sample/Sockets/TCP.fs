@@ -95,7 +95,7 @@ let main _ =
 
     waiting()
 
-    (client :> IDisposable).Dispose()
+    client.Disconnect()
     // ここで死ぬ
 
     waiting()
@@ -106,7 +106,9 @@ let main _ =
     waiting()
 
     StaticLock.Printfn(sprintf "Connected Clients Count: %d" server.Clients.Count)
-    (server :> IDisposable).Dispose()
+
+    server.Disconnect()
+
     StaticLock.Printfn(sprintf "Connected Clients Count: %d" server.Clients.Count)
 
     waiting()
