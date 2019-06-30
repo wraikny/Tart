@@ -12,7 +12,7 @@ open System.Collections.Concurrent
 type MsgQueue<'T>() =
     let queue = new ConcurrentQueue<'T>()
 
-    member __.TryPopMsg() : 'T option =
+    member __.TryDequeue() : 'T option =
         queue.TryDequeue() |> function
         | true, result -> Some result
         | false, _ -> None
@@ -30,7 +30,7 @@ type MsgQueueSync<'Msg>() =
 
     member public this.Update() =
         let rec update () =
-            this.TryPopMsg() |> function
+            this.TryDequeue() |> function
             | Some(msg) ->
                 this.OnPopMsg(msg)
                 update ()
@@ -75,7 +75,7 @@ type MsgQueueAsync<'Msg>() =
 
         async {
             while this.IsRunning do
-                this.TryPopMsg() |> function
+                this.TryDequeue() |> function
                 | Some msg ->
                     this.OnPopMsg(msg)
                 | None ->
