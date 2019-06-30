@@ -51,6 +51,7 @@
     <Compile Include="AssemblyInfo.fs" />
     <Compile Include="Samples\Counter.fs" />
     <Compile Include="Advanced\Dungeon.fs" />
+    <Compile Include="Sockets\TCP.fs" />
     <Compile Include="Program.fs" />
     <None Include="App.config" />
     <Content Include="packages.config" />
@@ -85,6 +86,11 @@
     <ProjectReference Include="..\Tart.Helper\Tart.Helper.fsproj">
       <Name>Tart.Helper</Name>
       <Project>{bf0abcce-5659-43b8-a783-6dd55180aacc}</Project>
+      <Private>True</Private>
+    </ProjectReference>
+    <ProjectReference Include="..\Tart.Sockets\Tart.Sockets.fsproj">
+      <Name>Tart.Sockets</Name>
+      <Project>{8c31222f-fe5d-4bf9-ba2f-cca4f84210df}</Project>
       <Private>True</Private>
     </ProjectReference>
   </ItemGroup>

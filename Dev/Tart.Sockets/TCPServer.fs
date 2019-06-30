@@ -25,7 +25,7 @@
         
         let bufferSize : int = bufferSize
 
-        let createClient s = new Client<_, _>(encoder, decoder, s, bufferSize)
+        let createClient s = new Client<_, _>(encoder, decoder, s, bufferSize, DebugDisplay = false)
 
         let receiveQueue = new MsgQueue<ClientID * 'RecvMsg>()
         let sendQueue = new MsgQueue<'SendMsg>()
@@ -34,16 +34,29 @@
         let mutable cancelAccepting = null
         let mutable cancelMessaging = null
 
+        let mutable _debugDisplay = false
+
         new (encoder, decoder, bufferSize, port, ?ipAddress) =
             let ipAddress = defaultArg ipAddress IPAddress.Any
             new ServerBase<_, _>(encoder, decoder, bufferSize, IPEndPoint(ipAddress, port))
 
 
-        member internal this.Clients with get() = clients
+        member this.Clients with get() = lock _lockObj <| fun _ -> clients
 
-        abstract OnConnectedClientAsync : ClientID -> Async<unit>
+        abstract OnConnectedClientAsync : ClientID -> unit
+        default __.OnConnectedClientAsync _ = ()
+
         abstract OnPopReceiveMsgAsync : ClientID * 'RecvMsg -> Async<unit>
         abstract OnPopSendMsgAsync : 'SendMsg -> Async<unit>
+
+        member __.DebugDisplay
+            with get() = _debugDisplay
+            and  set(value) = _debugDisplay <- value
+
+        member inline private this.DebugPrint(s) =
+            if this.DebugDisplay then
+                StaticLock.Printfn <|
+                    sprintf "[wraikny.Tart.Sockets.TCP.ServerBase] %A" s
 
         member private this.AsyncClientsDispatch() =
             let removeIds = new List<ClientID>()
@@ -52,12 +65,17 @@
                 let clientsList = lock _lockObj <| fun _ -> clients.ToList()
                 for i in clientsList do
                     let client = i.Value
-                    do! client.Dispatch()
-                    if not client.IsConnected then
+                    try
+                        do! client.Dispatch()
+                        if not client.IsConnected then
+                            removeIds.Add(i.Key)
+                    with
+                    | :? SocketException ->
                         removeIds.Add(i.Key)
 
                 lock _lockObj <| fun _ ->
                     for id in removeIds do
+                        this.DebugPrint(sprintf "Remove client (id: %A)" id)
                         clients.Remove(id) |> ignore
 
                 removeIds.Clear()
@@ -70,7 +88,7 @@
 
         member private this.AsyncPopReceiveMsg() =
             let rec loop() = async {
-                match receiveQueue.TryPopMsg() with
+                match receiveQueue.TryDequeue() with
                 | Some(msg) ->
                     do! this.OnPopReceiveMsgAsync(msg)
                 | None -> ()
@@ -87,14 +105,16 @@
                 for i in clientsList do
                     let client = i.Value
                     for r in client.Receive() do
+                        this.DebugPrint(sprintf "Received message %A from %A" r i.Key)
                         (receiveQueue :> IMsgQueue<_>).Enqueue(i.Key,  r)
             }
 
 
         member private this.AsyncPopSendMsg() =
             let rec loop() = async {
-                match sendQueue.TryPopMsg() with
+                match sendQueue.TryDequeue() with
                 | Some(msg) ->
+                    this.DebugPrint(sprintf "Pop SendMsg: %A" msg)
                     do! this.OnPopSendMsgAsync(msg)
                     return! loop()
                 | None -> ()
@@ -106,12 +126,14 @@
         member private this.AsyncServerDispatch() =
             async {
                 while true do
-                do! this.AsyncPopSendMsg()
-                do! this.AsyncReceive()
+                    do! this.AsyncPopSendMsg()
+                    do! this.AsyncReceive()
+                    // this.DebugPrint("Dispathing")
+                    Thread.Sleep(5)
             }
 
 
-        member private this.IServer with get() = this :> IServer<_>
+        member this.IServer with get() = this :> IServer<_>
 
 
         interface IServer<'SendMsg> with
@@ -123,20 +145,27 @@
                 if this.IServer.IsAccepting then
                     raise <| InvalidOperationException()
 
+                this.DebugPrint("Start Accepting")
+
                 cancelAccepting <- new CancellationTokenSource()
 
-                listener <- new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp)
+                listener <- new Socket(AddressFamily.InterNetworkV6, SocketType.Stream, ProtocolType.Tcp)
                 
                 listener.Bind(endpoint)
                 listener.Listen(int SocketOptionName.MaxConnections)
-                
+
+                this.DebugPrint(sprintf "Start Listening at %A" endpoint)
+
                 let rec loop() = async {
                     let! socket = listener.AsyncAccept()
                 
-                    do! this.OnConnectedClientAsync(nextClientID)
+                    this.OnConnectedClientAsync(nextClientID)
                 
                     lock _lockObj <| fun _ ->
                         clients.Add(nextClientID, createClient socket )
+
+                        this.DebugPrint(sprintf "Accepted client (id: %A)" nextClientID)
+
                         nextClientID <- nextClientID + LanguagePrimitives.GenericOne
                 
                     return! loop()
@@ -145,10 +174,14 @@
                 loop()
                 |> fun a -> Async.Start(a, cancelAccepting.Token)
 
+                this.IServer
+
 
             member this.StopAccepting() =
                 if not this.IServer.IsAccepting then
                     raise <| InvalidOperationException()
+
+                this.DebugPrint("Stop Accepting")
 
                 cancelAccepting.Cancel()
 
@@ -157,10 +190,14 @@
                 
                 cancelAccepting <- null
 
+                this.IServer
+
 
             member this.StartMessaging() =
                 if this.IServer.IsMessaging then
                     raise <| InvalidOperationException()
+
+                this.DebugPrint("Start Messaging")
 
                 cancelMessaging <- new CancellationTokenSource()
 
@@ -173,14 +210,20 @@
                 |> Async.Ignore
                 |> fun a -> Async.Start(a, cancelMessaging.Token)
 
+                this.IServer
+
 
             member this.StopMessaging() =
                 if not this.IServer.IsMessaging then
                     raise <| InvalidOperationException()
 
+                this.DebugPrint("Stop Messaging")
+
                 cancelMessaging.Cancel()
 
                 cancelMessaging <- null
+
+                this.IServer
 
 
         interface IMsgQueue<'SendMsg> with
@@ -192,10 +235,10 @@
             member this.Dispose() =
                 for c in clients do
                     (c.Value :> IDisposable).Dispose()
+                clients.Clear()
 
                 if this.IServer.IsAccepting then
-                    this.IServer.StopAccepting()
+                    this.IServer.StopAccepting() |> ignore
 
                 if this.IServer.IsMessaging then
-                    this.IServer.StopMessaging()
-
+                    this.IServer.StopMessaging() |> ignore

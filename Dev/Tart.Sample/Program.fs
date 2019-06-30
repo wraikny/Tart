@@ -4,8 +4,6 @@ open System
 open System.Threading
 
 
-
-
 module Program =
     let readLine () = Console.ReadLine()
 
@@ -80,8 +78,14 @@ module Program =
 
     [<EntryPoint>]
     let main _ = 
-        // counter()
-        Advanced.Dungeon.generate()
+        Sockets.TCP.main()
+        //try
+        //    // counter()
+        //    // Advanced.Dungeon.generate()
+
+        //    Sockets.TCP.main()
+        //with e ->
+        //    printfn "\nError Occured:\n%A" e
 
         Console.ReadLine() |> ignore
         0

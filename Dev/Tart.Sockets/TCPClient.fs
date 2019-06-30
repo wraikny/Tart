@@ -27,9 +27,23 @@ type Client<'SendMsg, 'RecvMsg> (encoder, decoder, socket, bufferSize) =
 
     let mutable cancel : CancellationTokenSource = null
 
+    let mutable _debugDisplay = false
 
     new(encoder, decoder, bufferSize) =
         new Client<_, _>(encoder, decoder, null, bufferSize)
+
+
+    abstract OnPopRecvMsg : 'RecvMsg -> unit
+    default this.OnPopRecvMsg _ = ()
+
+    member __.DebugDisplay
+        with get() = _debugDisplay
+        and  set(value) = _debugDisplay <- value
+
+    member inline private this.DebugPrint(s) =
+        if this.DebugDisplay then
+            StaticLock.Printfn <|
+                sprintf "[wraikny.Tart.Sockets.TCP.Client] %A" s
 
 
     member this.IsConnected
@@ -37,13 +51,14 @@ type Client<'SendMsg, 'RecvMsg> (encoder, decoder, socket, bufferSize) =
         and private set(value) = lock _lockObj <| fun _ -> _isConnected <- value
 
 
-    member this.Send(bytes) =
-        (sendQueue :> IMsgQueue<_>).Enqueue(bytes)
+    interface IMsgQueue<'SendMsg> with
+        member this.Enqueue(msg) =
+            (sendQueue :> IMsgQueue<_>).Enqueue(msg)
 
 
-    member this.Receive() =
+    member internal this.Receive() =
         let rec loop xs =
-            recvQueue.TryPopMsg() |> function
+            recvQueue.TryDequeue() |> function
             | Some(x) -> loop (x::xs)
             | None -> xs
 
@@ -55,8 +70,9 @@ type Client<'SendMsg, 'RecvMsg> (encoder, decoder, socket, bufferSize) =
             raise <| InvalidOperationException()
 
         let rec loop() = async {
-            match sendQueue.TryPopMsg() with
+            match sendQueue.TryDequeue() with
             | Some msg ->
+                this.DebugPrint(sprintf "AsyncSend: %A" msg)
                 do! socket.AsyncSend(encoder msg) |> Async.Ignore
                 return! loop()
             | None -> ()
@@ -77,11 +93,14 @@ type Client<'SendMsg, 'RecvMsg> (encoder, decoder, socket, bufferSize) =
                     this.Disconnect()
                 elif recvSize > 0 then
                     decoder buffer
-                    |> Option.iter(fun msg -> (recvQueue :> IMsgQueue<_>).Enqueue(msg))
+                    |> Option.iter(fun msg ->
+                        this.DebugPrint(sprintf "AsyncReceive: %A" msg)
+                        (recvQueue :> IMsgQueue<_>).Enqueue(msg)
+                    )
         }
 
 
-    member this.Dispatch() =
+    member internal this.Dispatch() =
         if not this.IsConnected then
             raise <| InvalidOperationException()
 
@@ -93,27 +112,46 @@ type Client<'SendMsg, 'RecvMsg> (encoder, decoder, socket, bufferSize) =
         }
 
     
-    member this.Connect(ipEndpoint) =
+    member private this.Connect(ipEndpoint) =
         if this.IsConnected then
             raise <| InvalidOperationException()
     
-        socket <- new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp)
+        socket <- new Socket(AddressFamily.InterNetworkV6, SocketType.Stream, ProtocolType.Tcp)
         async {
+            this.DebugPrint(sprintf "Connecting to %A" ipEndpoint)
             do! socket.AsyncConnect(ipEndpoint)
+            this.DebugPrint(sprintf "Connected to server at %A" ipEndpoint)
             this.IsConnected <- true
         }
 
 
     member this.AsyncStart(ipEndpoint) =
+        this.DebugPrint("Start")
+
         cancel <- new CancellationTokenSource()
         async {
             do! this.Connect(ipEndpoint)
-            while true do do! this.Dispatch()
+            do! [|
+                    async {
+                        while true do
+                            do! this.Dispatch()
+                            Thread.Sleep(5)
+                    }
+                    async {
+                        for msg in this.Receive() do
+                            this.OnPopRecvMsg(msg)
+                        Thread.Sleep(5)
+                    }
+                |] |> Async.Parallel |> Async.Ignore
         }
         |> fun a -> Async.Start(a, cancel.Token)
 
+        this.DebugPrint("Started")
+
 
     member this.Disconnect() =
+        this.DebugPrint("Disconnecting!")
+
         lock _lockObj <| fun _ ->
             if _isConnected then
                 _isConnected <- false
@@ -130,7 +168,10 @@ type Client<'SendMsg, 'RecvMsg> (encoder, decoder, socket, bufferSize) =
             else
                 raise <| InvalidOperationException()
 
+        this.DebugPrint("Disconnected!")
+
 
     interface IDisposable with
         member this.Dispose() =
-            this.Disconnect()
+            if this.IsConnected then
+                this.Disconnect()
