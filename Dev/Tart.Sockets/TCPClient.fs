@@ -160,8 +160,9 @@ type Client<'SendMsg, 'RecvMsg> (encoder, decoder, socket, bufferSize) =
                     cancel.Cancel()
                     cancel <- null
 
-                socket.Shutdown(SocketShutdown.Both)
-                socket.Close()
+                socket.AsyncDisconnect(false)
+                |> Async.RunSynchronously
+
                 socket.Dispose()
                 socket <- null
 

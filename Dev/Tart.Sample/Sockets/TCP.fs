@@ -61,10 +61,10 @@ let main _ =
         let ipAdd = Dns.GetHostEntry("localhost").AddressList.[0]
         IPEndPoint(ipAdd, 8000)
 
-    let server = new TestServer(ipEndpoint)
+    use server = new TestServer(ipEndpoint)
     server.DebugDisplay <- true
 
-    let client = new Client<string, string>(encoder, decoder, 1024)
+    use client = new Client<string, string>(encoder, decoder, 1024)
     client.DebugDisplay <- true
 
     waiting()
@@ -93,9 +93,9 @@ let main _ =
 
     (client :> IMsgQueue<_>).Enqueue("!remove")
 
-    waiting()
-
+    //waiting()
     client.Disconnect()
+
     // ここで死ぬ
 
     waiting()
@@ -105,11 +105,9 @@ let main _ =
 
     waiting()
 
-    StaticLock.Printfn(sprintf "Connected Clients Count: %d" server.Clients.Count)
-
-    server.Disconnect()
-
-    StaticLock.Printfn(sprintf "Connected Clients Count: %d" server.Clients.Count)
+    //StaticLock.Printfn(sprintf "Connected Clients Count: %d" server.Clients.Count)
+    //server.Disconnect()
+    //StaticLock.Printfn(sprintf "Connected Clients Count: %d" server.Clients.Count)
 
     waiting()
 

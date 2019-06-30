@@ -235,6 +235,8 @@
                 (c.Value :> IDisposable).Dispose()
             clients.Clear()
 
+            this.DebugPrint("Clients Cleared")
+
             if this.IServer.IsAccepting then
                 this.IServer.StopAccepting() |> ignore
 

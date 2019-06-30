@@ -8,11 +8,17 @@ type Socket with
     member socket.AsyncAccept() =
         Async.FromBeginEnd(socket.BeginAccept, socket.EndAccept)
 
-    member socket.AsyncConnect(ep) =
+    member socket.AsyncConnect(remoteEndPoint) =
         let beginConnect(ep, cb, s) =
             socket.BeginConnect(ep, cb, s)
 
-        Async.FromBeginEnd(ep, beginConnect, socket.EndConnect)
+        Async.FromBeginEnd(remoteEndPoint, beginConnect, socket.EndConnect)
+
+    member socket.AsyncDisconnect(reuseSocket) =
+        let beginDisconnect(t, cb, s)=
+            socket.BeginDisconnect(t, cb, s)
+
+        Async.FromBeginEnd(reuseSocket, beginDisconnect, socket.EndDisconnect)
 
     member socket.AsyncReceive(buffer : byte[], ?offset, ?count) =
         let offset = defaultArg offset 0
