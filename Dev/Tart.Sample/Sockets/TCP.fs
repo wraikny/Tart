@@ -55,17 +55,44 @@ let waiting() =
     StaticLock.Printfn "Enter.."
     Console.ReadLine() |> ignore
 
-
 let main _ =
     let ipEndpoint =
         let ipAdd = Dns.GetHostEntry("localhost").AddressList.[0]
         IPEndPoint(ipAdd, 8000)
 
-    use server = new TestServer(ipEndpoint)
-    server.DebugDisplay <- true
+    let server = new TestServer(ipEndpoint, DebugDisplay = true)
 
-    use client = new Client<string, string>(encoder, decoder, 1024)
-    client.DebugDisplay <- true
+    let client = new TestClient(DebugDisplay = true)
+
+    (server :> IServer<_>)
+        .StartAccepting()
+        .StartMessaging()
+        |> ignore
+
+    client.AsyncStart(ipEndpoint)
+
+    //Thread.Sleep(100)
+    //StaticLock.Printfn("nyan")
+    //Console.ReadLine() |> ignore
+
+    while not client.IsConnected do
+        StaticLock.Printfn("waiting connection ...")
+        Thread.Sleep(5)
+
+    Thread.Sleep(100)
+
+    client.Disconnect()
+
+    
+
+let main' _ =
+    let ipEndpoint =
+        let ipAdd = Dns.GetHostEntry("localhost").AddressList.[0]
+        IPEndPoint(ipAdd, 8000)
+
+    let server = new TestServer(ipEndpoint, DebugDisplay = true)
+
+    let client = new TestClient(DebugDisplay = true)
 
     waiting()
 
@@ -93,7 +120,7 @@ let main _ =
 
     (client :> IMsgQueue<_>).Enqueue("!remove")
 
-    //waiting()
+    waiting()
     client.Disconnect()
 
     // ここで死ぬ
@@ -105,9 +132,11 @@ let main _ =
 
     waiting()
 
-    //StaticLock.Printfn(sprintf "Connected Clients Count: %d" server.Clients.Count)
-    //server.Disconnect()
-    //StaticLock.Printfn(sprintf "Connected Clients Count: %d" server.Clients.Count)
+    StaticLock.Printfn(sprintf "Connected Clients Count: %d" server.Clients.Count)
+
+    server.Disconnect()
+
+    StaticLock.Printfn(sprintf "Connected Clients Count: %d" server.Clients.Count)
 
     waiting()
 

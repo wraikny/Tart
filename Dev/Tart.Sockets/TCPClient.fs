@@ -23,7 +23,9 @@ type Client<'SendMsg, 'RecvMsg> (encoder, decoder, socket, bufferSize) =
     let recvQueue = new MsgQueue<'RecvMsg>()
 
     let _lockObj = new Object()
+
     let mutable _isConnected = socket <> null
+
 
     let mutable cancel : CancellationTokenSource = null
 
@@ -34,7 +36,16 @@ type Client<'SendMsg, 'RecvMsg> (encoder, decoder, socket, bufferSize) =
 
 
     abstract OnPopRecvMsg : 'RecvMsg -> unit
-    default this.OnPopRecvMsg _ = ()
+    default __.OnPopRecvMsg _ = ()
+
+    abstract OnConnecting : unit -> unit
+    default __.OnConnecting() = ()
+
+    abstract OnConnected : unit -> unit
+    default __.OnConnected() = ()
+
+    abstract OnDisconnected : unit -> unit
+    default __.OnDisconnected() = ()
 
     member __.DebugDisplay
         with get() = _debugDisplay
@@ -90,7 +101,7 @@ type Client<'SendMsg, 'RecvMsg> (encoder, decoder, socket, bufferSize) =
                 let buffer = Array.zeroCreate<byte> bufferSize
                 let! recvSize = socket.AsyncReceive(buffer)
                 if recvSize = 0 then
-                    this.Disconnect()
+                    this.Disconnect() |> ignore
                 elif recvSize > 0 then
                     decoder buffer
                     |> Option.iter(fun msg ->
@@ -130,7 +141,10 @@ type Client<'SendMsg, 'RecvMsg> (encoder, decoder, socket, bufferSize) =
 
         cancel <- new CancellationTokenSource()
         async {
+            this.OnConnecting()
             do! this.Connect(ipEndpoint)
+            this.OnConnected()
+
             do! [|
                     async {
                         while true do
@@ -149,30 +163,38 @@ type Client<'SendMsg, 'RecvMsg> (encoder, decoder, socket, bufferSize) =
         this.DebugPrint("Started")
 
 
-    member this.Disconnect() =
-        this.DebugPrint("Disconnecting!")
+    member this.Disconnect() : bool =
+        if this.IsConnected then
+            this.DebugPrint("Disconnecting")
 
-        lock _lockObj <| fun _ ->
-            if _isConnected then
-                _isConnected <- false
+            lock _lockObj <| fun _ ->
+                if _isConnected then
+                    _isConnected <- false
 
-                if cancel <> null then
-                    cancel.Cancel()
-                    cancel <- null
+                    if cancel <> null then
+                        cancel.Cancel()
+                        cancel <- null
 
-                socket.AsyncDisconnect(false)
-                |> Async.RunSynchronously
+                    socket.AsyncDisconnect(false)
+                    |> Async.RunSynchronously
 
-                socket.Dispose()
-                socket <- null
+                    socket.Dispose()
+                    socket <- null
 
-            else
-                raise <| InvalidOperationException()
+                    this.OnDisconnected()
 
-        this.DebugPrint("Disconnected!")
+                else
+                    raise <| InvalidOperationException()
+
+            this.DebugPrint("Disconnected")
+
+            true
+        else
+            this.DebugPrint("Already disconnected")
+            false
 
 
     interface IDisposable with
         member this.Dispose() =
-            if this.IsConnected then
-                this.Disconnect()
+            this.DebugPrint("Dispose")
+            this.Disconnect() |> ignore

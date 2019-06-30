@@ -246,4 +246,5 @@
 
         interface IDisposable with
             member this.Dispose() =
+                this.DebugPrint("Dispose")
                 this.Disconnect()
