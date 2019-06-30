@@ -66,7 +66,7 @@ type MsgQueueAsync<'Msg>() =
 
     abstract OnPopMsg : 'Msg -> unit
 
-    member this.Start() =
+    member this.StartAsync() =
         let running = this.IsRunning
         if running then
             raise <| InvalidOperationException()

@@ -61,11 +61,11 @@ type private Messenger<'Msg, 'ViewMsg, 'Model, 'ViewModel>
 
         member this.StartAsync() =
             this.InitModel()
-            this.Start()
+            this.StartAsync()
 
         member this.ResumeAsync() =
             if lastModelExist then
-                this.Start()
+                this.StartAsync()
                 true
             else
                 (this :> IMessenger<_, _, _>).StartAsync()
