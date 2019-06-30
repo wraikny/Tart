@@ -126,33 +126,27 @@ type ClientBase<'SendMsg, 'RecvMsg> internal (encoder, decoder, socket, bufferSi
 
 
     member internal this.Disconnect() : bool =
-        if this.IsConnected then
-            this.DebugPrint("Disconnecting")
+        lock _lockObj <| fun _ ->
+            if _isConnected then
+                this.DebugPrint("Disconnecting")
+                _isConnected <- false
 
-            lock _lockObj <| fun _ ->
-                if _isConnected then
-                    _isConnected <- false
+                if cancel <> null then
+                    cancel.Cancel()
+                    cancel <- null
 
-                    if cancel <> null then
-                        cancel.Cancel()
-                        cancel <- null
+                socket.AsyncDisconnect(false)
+                |> Async.RunSynchronously
 
-                    socket.AsyncDisconnect(false)
-                    |> Async.RunSynchronously
+                socket.Dispose()
+                socket <- null
 
-                    socket.Dispose()
-                    socket <- null
-
-                    this.OnDisconnected()
-                else
-                    raise <| InvalidOperationException()
-
-            this.DebugPrint("Disconnected")
-
-            true
-        else
-            this.DebugPrint("Already disconnected")
-            false
+                this.OnDisconnected()
+                this.DebugPrint("Disconnected")
+                true
+            else
+                this.DebugPrint("Already disconnected")
+                false
 
 
     interface IClientHandler<'SendMsg> with
