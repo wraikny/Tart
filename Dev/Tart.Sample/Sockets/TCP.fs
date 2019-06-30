@@ -16,43 +16,71 @@ let encoding = System.Text.Encoding.UTF8
 
 
 let encoder (s : string) = encoding.GetBytes(s)
-let decoder (bytes : byte[]) = Some <| encoding.GetString(bytes)
+let decoder (bytes : byte[]) = encoding.GetString(bytes)
 
 let bufferSize = 1024
 
-type SMsg = string
-type CMsg = string
+type SMsg = SMsg of string
+
+module SMsg =
+    let value = function SMsg s -> s
+
+    let encoder = value >> encoder
+
+    let decoder = decoder >> SMsg >> Some
+
+
+type SMsg with
+    member inline x.Value with get() = x |> SMsg.value
+
+type CMsg = CMsg of string
+
+module CMsg =
+    let value = function CMsg s -> s
+
+    let encoder = value >> encoder
+    
+    let decoder = decoder >> CMsg >> Some
+
+type CMsg with
+    member inline x.Value with get() = x |> CMsg.value
 
 type TestServer(ipEndpoint) =
-    inherit ServerBase<SMsg, CMsg>(encoder, decoder, bufferSize, ipEndpoint)
-
-    let print s = ()
+    inherit ServerBase<SMsg, CMsg>(SMsg.encoder, CMsg.decoder, bufferSize, ipEndpoint)
 
     override this.OnPopReceiveMsgAsync (clientId, recvMsg) =
         async {
-            if recvMsg = "!remove" then
-                this.Clients.Remove(clientId) |> ignore
-            print <| sprintf "received %A from (id: %A)" recvMsg clientId
+            if recvMsg.Value = "!remove" then
+                let client = this.TryGetClient(clientId).Value
+                client.SendSync(SMsg "!remove")
+                this.RemoveClient(clientId)
+            Console.WriteLine(sprintf "Received %s from (id: %A)" recvMsg.Value clientId)
         }
 
     override this.OnPopSendMsgAsync(sendMsg) =
         async {
-            for c in this.Clients do
-                let client = c.Value
-                (client :> IMsgQueue<_>).Enqueue(sendMsg)
-            print <| sprintf "send %A" sendMsg
+            for (_, client) in this.Clients do
+                client.Enqueue(sendMsg)
         }
 
 
 type TestClient() =
-    inherit Client<CMsg, SMsg>(encoder, decoder, bufferSize)
+    inherit Client<CMsg, SMsg>(CMsg.encoder, SMsg.decoder, bufferSize)
 
-    override this.OnPopRecvMsg(msg) = ()
+    override this.OnPopRecvMsg(msg) =
+        msg.Value |> function
+        | "!remove" -> (this :> IClient<_>).Dispose()
+        | _ -> ()
+        ()
+
+    override this.OnConnecting() = ()
+    override this.OnConnected() = ()
+    override this.OnDisconnected() = ()
 
 
 let waiting() =
     Thread.Sleep(100)
-    StaticLock.Printfn "Enter.."
+    Console.WriteLine("Enter..")
     Console.ReadLine() |> ignore
 
 let main _ =
@@ -60,84 +88,34 @@ let main _ =
         let ipAdd = Dns.GetHostEntry("localhost").AddressList.[0]
         IPEndPoint(ipAdd, 8000)
 
-    let server = new TestServer(ipEndpoint, DebugDisplay = true)
+    let server = new TestServer(ipEndpoint, DebugDisplay = true) :> IServer<_>
 
-    let client = new TestClient(DebugDisplay = true)
+    let client = new TestClient(DebugDisplay = true) :> IClient<_>
 
-    (server :> IServer<_>)
-        .StartAccepting()
-        .StartMessaging()
-        |> ignore
+    server.StartAcceptingAsync()
+    server.StartMessaging()
 
-    client.AsyncStart(ipEndpoint)
-
-    //Thread.Sleep(100)
-    //StaticLock.Printfn("nyan")
-    //Console.ReadLine() |> ignore
+    client.StartAsync(ipEndpoint)
 
     while not client.IsConnected do
-        StaticLock.Printfn("waiting connection ...")
+        Console.WriteLine("waiting connection ...")
         Thread.Sleep(5)
 
     Thread.Sleep(100)
 
-    client.Disconnect()
+    server.Enqueue(SMsg "Hello! from Server")
+    client.Enqueue(CMsg "Hello! from client")
 
-    
+    Thread.Sleep(100)
+    Console.WriteLine("Enter..")
+    Console.ReadLine() |> ignore
 
-let main' _ =
-    let ipEndpoint =
-        let ipAdd = Dns.GetHostEntry("localhost").AddressList.[0]
-        IPEndPoint(ipAdd, 8000)
+    client.Dispose()
 
-    let server = new TestServer(ipEndpoint, DebugDisplay = true)
+    Console.WriteLine("Enter..")
+    Console.ReadLine() |> ignore
 
-    let client = new TestClient(DebugDisplay = true)
+    server.Dispose()
 
-    waiting()
-
-    server.IServer
-        .StartAccepting()
-        .StartMessaging()
-        |> ignore
-
-    waiting()
-
-    client.AsyncStart(ipEndpoint)
-
-    waiting()
-
-
-    (server :> IMsgQueue<_>).Enqueue("Hello! from Server")
-    StaticLock.Printfn "Server Enqueued"
-
-    waiting()
-
-    (client :> IMsgQueue<_>).Enqueue("Hello! from client")
-    StaticLock.Printfn "Client Enqueued"
-
-    waiting()
-
-    (client :> IMsgQueue<_>).Enqueue("!remove")
-
-    waiting()
-    client.Disconnect()
-
-    // ここで死ぬ
-
-    waiting()
-
-    (server :> IMsgQueue<_>).Enqueue("Hello! from Server")
-    StaticLock.Printfn "Server Enqueued"
-
-    waiting()
-
-    StaticLock.Printfn(sprintf "Connected Clients Count: %d" server.Clients.Count)
-
-    server.Disconnect()
-
-    StaticLock.Printfn(sprintf "Connected Clients Count: %d" server.Clients.Count)
-
-    waiting()
-
-    ()
+    Console.WriteLine("Enter..")
+    Console.ReadLine() |> ignore

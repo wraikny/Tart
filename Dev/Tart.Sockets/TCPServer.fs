@@ -16,7 +16,7 @@
         let mutable nextClientID : ClientID = LanguagePrimitives.GenericZero
 
         let _lockObj = new Object()
-        let clients = new Dictionary<ClientID, Client<'SendMsg, 'RecvMsg>>()
+        let clients = new Dictionary<ClientID, ClientBase<'SendMsg, 'RecvMsg>>()
         let endpoint = endpoint
         let mutable listener : Socket = null
 
@@ -25,7 +25,7 @@
         
         let bufferSize : int = bufferSize
 
-        let createClient s = new Client<_, _>(encoder, decoder, s, bufferSize, DebugDisplay = false)
+        let createClient s = new ClientBase<_, _>(encoder, decoder, s, bufferSize, DebugDisplay = false)
 
         let receiveQueue = new MsgQueue<ClientID * 'RecvMsg>()
         let sendQueue = new MsgQueue<'SendMsg>()
@@ -41,8 +41,21 @@
             new ServerBase<_, _>(encoder, decoder, bufferSize, IPEndPoint(ipAddress, port))
 
 
-        member this.Clients with get() = lock _lockObj <| fun _ -> clients
+        member this.Clients
+            with get() =
+                lock _lockObj <| fun _ ->
+                    clients
+                        .Select(fun i -> (i.Key, i.Value :> IClientHandler<'SendMsg>))
+                        .ToList()
+                    :> IEnumerable<_>
 
+        member this.TryGetClient(clientId) =
+            lock _lockObj <| fun _ ->
+                clients.TryGetValue(clientId)
+                |> function
+                | true, client -> client :> IClientHandler<'SendMsg> |> Some
+                | _ -> None
+        
         abstract OnConnectedClientAsync : ClientID -> unit
         default __.OnConnectedClientAsync _ = ()
 
@@ -55,8 +68,15 @@
 
         member inline private this.DebugPrint(s) =
             if this.DebugDisplay then
-                StaticLock.Printfn <|
-                    sprintf "[wraikny.Tart.Sockets.TCP.ServerBase] %A" s
+                Console.WriteLine(sprintf "[wraikny.Tart.Sockets.TCP.ServerBase] %A" s)
+
+
+        member this.RemoveClient(clientId) =
+            lock _lockObj <| fun _ ->
+                if clients.ContainsKey(clientId) then
+                    clients.Remove(clientId) |> ignore
+                    this.DebugPrint(sprintf "Removed Client of %A" clientId)
+
 
         member private this.AsyncClientsDispatch() =
             let removeIds = new List<ClientID>()
@@ -141,7 +161,7 @@
 
             member this.IsMessaging with get() = cancelMessaging <> null
             
-            member this.StartAccepting() =
+            member this.StartAcceptingAsync() =
                 if this.IServer.IsAccepting then
                     raise <| InvalidOperationException()
 
@@ -174,10 +194,10 @@
                 loop()
                 |> fun a -> Async.Start(a, cancelAccepting.Token)
 
-                this.IServer
+                // this.IServer
 
 
-            member this.StopAccepting() =
+            member this.StopAcceptingAsync() =
                 if not this.IServer.IsAccepting then
                     raise <| InvalidOperationException()
 
@@ -190,7 +210,7 @@
                 
                 cancelAccepting <- null
 
-                this.IServer
+                // this.IServer
 
 
             member this.StartMessaging() =
@@ -210,7 +230,7 @@
                 |> Async.Ignore
                 |> fun a -> Async.Start(a, cancelMessaging.Token)
 
-                this.IServer
+                // this.IServer
 
 
             member this.StopMessaging() =
@@ -223,28 +243,24 @@
 
                 cancelMessaging <- null
 
-                this.IServer
+                // this.IServer
 
 
         interface IMsgQueue<'SendMsg> with
             member this.Enqueue(msg) =
                 (sendQueue :> IMsgQueue<_>).Enqueue(msg)
 
-        member this.Disconnect() =
-            for c in clients do
-                (c.Value :> IDisposable).Dispose()
-            clients.Clear()
-
-            this.DebugPrint("Clients Cleared")
-
-            if this.IServer.IsAccepting then
-                this.IServer.StopAccepting() |> ignore
-
-            if this.IServer.IsMessaging then
-                this.IServer.StopMessaging() |> ignore
-    
-
         interface IDisposable with
             member this.Dispose() =
                 this.DebugPrint("Dispose")
-                this.Disconnect()
+                for c in clients do
+                    (c.Value :> IDisposable).Dispose()
+                clients.Clear()
+
+                this.DebugPrint("Clients Cleared")
+
+                if this.IServer.IsAccepting then
+                    this.IServer.StopAcceptingAsync() |> ignore
+
+                if this.IServer.IsMessaging then
+                    this.IServer.StopMessaging() |> ignore
