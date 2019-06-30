@@ -8,6 +8,12 @@ type Socket with
     member socket.AsyncAccept() =
         Async.FromBeginEnd(socket.BeginAccept, socket.EndAccept)
 
+    member socket.AsyncConnect(ep) =
+        let beginConnect(ep, cb, s) =
+            socket.BeginConnect(ep, cb, s)
+
+        Async.FromBeginEnd(ep, beginConnect, socket.EndConnect)
+
     member socket.AsyncReceive(buffer : byte[], ?offset, ?count) =
         let offset = defaultArg offset 0
         let count = defaultArg count buffer.Length

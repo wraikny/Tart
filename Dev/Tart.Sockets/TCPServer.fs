@@ -11,86 +11,21 @@
     open wraikny.Tart.Sockets
 
 
-    type ClientHandler(socket, bufferSize) =
-        let socket : Socket = socket
-
-        let bufferSize = bufferSize
-
-        let sendQueue = new MsgQueue<byte []>()
-        let recvQueue = new MsgQueue<byte []>()
-
-        let mutable _isConnected = true
-        member this.IsConnected
-            with get() = _isConnected
-            and private set(value) = _isConnected <- value
-
-        member this.Send(bytes) =
-            (sendQueue :> IMsgQueue<_>).Enqueue(bytes)
-
-
-        member this.Receive() =
-            let rec loop xs =
-                recvQueue.TryPopMsg() |> function
-                | Some(x) -> loop (x::xs)
-                | None -> xs
-            loop []
-
-
-        member private this.DispatchSend() =
-            let rec loop() = async {
-                match sendQueue.TryPopMsg() with
-                | Some bytes ->
-                    do! socket.AsyncSend(bytes) |> Async.Ignore
-                    return! loop()
-                | None -> ()
-            }
-            loop()
-
-
-        member private this.DispatchRecv() =
-            async {
-                while socket.Poll(0, SelectMode.SelectRead) do
-                    let buffer = [|for _ in 1..bufferSize -> 0uy|]
-                    let! recvSize = socket.AsyncReceive(buffer)
-                    if recvSize = 0 then
-                        this.Disconnect()
-                    elif recvSize > 0 then
-                        (recvQueue :> IMsgQueue<_>).Enqueue(buffer)
-            }
-
-        member this.Dispatch() =
-            async {
-                if socket.Poll(0, SelectMode.SelectWrite) then
-                    do! this.DispatchSend() |> Async.Ignore
-
-                do! this.DispatchRecv()
-            }
-
-        member this.Disconnect() =
-            this.IsConnected <- false
-            socket.Shutdown(SocketShutdown.Both)
-            socket.Close()
-
-
-        interface IDisposable with
-            member this.Dispose() =
-                if this.IsConnected then
-                    this.Disconnect()
-
-
-
     [<AbstractClass>]
-    type ServerBase<'SendMsg, 'RecvMsg>(decoder, bufferSize, endpoint) =
+    type ServerBase<'SendMsg, 'RecvMsg>(encoder, decoder, bufferSize, endpoint) =
         let mutable nextClientID : ClientID = LanguagePrimitives.GenericZero
 
         let _lockObj = new Object()
-        let clients = new Dictionary<ClientID, ClientHandler>()
+        let clients = new Dictionary<ClientID, Client<'SendMsg, 'RecvMsg>>()
         let endpoint = endpoint
         let mutable listener : Socket = null
 
+        let encoder : 'SendMsg -> byte [] = encoder
         let decoder : byte[] -> 'RecvMsg option = decoder
         
         let bufferSize : int = bufferSize
+
+        let createClient s = new Client<_, _>(encoder, decoder, s, bufferSize)
 
         let receiveQueue = new MsgQueue<ClientID * 'RecvMsg>()
         let sendQueue = new MsgQueue<'SendMsg>()
@@ -99,9 +34,9 @@
         let mutable cancelAccepting = null
         let mutable cancelMessaging = null
 
-        new (decoder, bufferSize, port, ?ipAddress) =
+        new (encoder, decoder, bufferSize, port, ?ipAddress) =
             let ipAddress = defaultArg ipAddress IPAddress.Any
-            new ServerBase<_, _>(decoder, bufferSize, IPEndPoint(ipAddress, port))
+            new ServerBase<_, _>(encoder, decoder, bufferSize, IPEndPoint(ipAddress, port))
 
 
         member internal this.Clients with get() = clients
@@ -133,25 +68,6 @@
 
             loop()
 
-
-        member private this.AsyncReceive() =
-            let rec loop() = async {
-                let clientsList = lock _lockObj <| fun _ -> clients.ToList()
-
-                for i in clientsList do
-                    let client = i.Value
-                    for r in client.Receive() do
-                        decoder r |> function
-                        | Some(msg) ->
-                            (receiveQueue :> IMsgQueue<_>).Enqueue(i.Key,  msg)
-                        | None -> ()
-                
-                return! loop()
-            }
-        
-            loop()
-
-
         member private this.AsyncPopReceiveMsg() =
             let rec loop() = async {
                 match receiveQueue.TryPopMsg() with
@@ -160,18 +76,39 @@
                 | None -> ()
                 return! loop()
             }
+
             loop()
+
+
+        member private this.AsyncReceive() =
+            async {
+                let clientsList = lock _lockObj <| fun _ -> clients.ToList()
+
+                for i in clientsList do
+                    let client = i.Value
+                    for r in client.Receive() do
+                        (receiveQueue :> IMsgQueue<_>).Enqueue(i.Key,  r)
+            }
+
 
         member private this.AsyncPopSendMsg() =
             let rec loop() = async {
                 match sendQueue.TryPopMsg() with
                 | Some(msg) ->
                     do! this.OnPopSendMsgAsync(msg)
+                    return! loop()
                 | None -> ()
-                return! loop()
             }
 
             loop()
+
+
+        member private this.AsyncServerDispatch() =
+            async {
+                while true do
+                do! this.AsyncPopSendMsg()
+                do! this.AsyncReceive()
+            }
 
 
         member private this.IServer with get() = this :> IServer<_>
@@ -194,12 +131,12 @@
                 listener.Listen(int SocketOptionName.MaxConnections)
                 
                 let rec loop() = async {
-                    let! client = listener.AsyncAccept()
+                    let! socket = listener.AsyncAccept()
                 
                     do! this.OnConnectedClientAsync(nextClientID)
                 
                     lock _lockObj <| fun _ ->
-                        clients.Add(nextClientID, new ClientHandler(client, bufferSize) )
+                        clients.Add(nextClientID, createClient socket )
                         nextClientID <- nextClientID + LanguagePrimitives.GenericOne
                 
                     return! loop()
@@ -229,9 +166,8 @@
 
                 [|
                     this.AsyncClientsDispatch()
-                    this.AsyncReceive()
+                    this.AsyncServerDispatch()
                     this.AsyncPopReceiveMsg()
-                    this.AsyncPopSendMsg()
                 |]
                 |> Async.Parallel
                 |> Async.Ignore

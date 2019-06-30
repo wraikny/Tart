@@ -46,6 +46,7 @@
     <Content Include="packages.config" />
     <Compile Include="Extension.fs" />
     <Compile Include="Interface.fs" />
+    <Compile Include="TCPClient.fs" />
     <Compile Include="TCPServer.fs" />
   </ItemGroup>
   <ItemGroup>
