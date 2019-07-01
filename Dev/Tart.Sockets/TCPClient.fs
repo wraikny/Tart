@@ -11,14 +11,16 @@ open wraikny.Tart.Helper.Utils
 open wraikny.Tart.Sockets
 
 
-type ClientBase<'SendMsg, 'RecvMsg> internal (encoder, decoder, socket, bufferSize) =
+type ClientBase<'SendMsg, 'RecvMsg> internal (encoder, decoder, socket) =
     let mutable socket : Socket = socket
 
+    let encoder msg =
+        let bytes = encoder msg
+        let size = bytes |> Array.length |> BitConverter.GetBytes
+        Array.append size bytes
 
-    let bufferSize = bufferSize
-
-    let encoder = encoder
-    let decoder = decoder
+    let decoder msg =
+        decoder msg
 
     let sendQueue = new MsgQueue<'SendMsg>()
     let recvQueue = new MsgQueue<'RecvMsg>()
@@ -68,25 +70,15 @@ type ClientBase<'SendMsg, 'RecvMsg> internal (encoder, decoder, socket, bufferSi
 
         loop []
 
-
-    member internal this.Send(msg : 'SendMsg) =
-        this.DebugPrint(sprintf "Send: %A" msg)
-        async {
-            let! sendSize = this.Socket.AsyncSend(encoder msg)
-
-            if sendSize = 0 then
-                this.Disconnect() |> ignore
-        } |> Async.RunSynchronously
-
-
     member private this.DispatchSend() =
-        if not this.IsConnected then
-            raise <| InvalidOperationException()
-
         let rec loop() = async {
             match sendQueue.TryDequeue() with
             | Some msg ->
-                this.Send(msg)
+                this.DebugPrint(sprintf "Send: %A" msg)
+                let! sendSize = this.Socket.AsyncSend(encoder msg)
+                
+                if sendSize = 0 then
+                    this.Disconnect() |> ignore
                 return! loop()
             | None -> ()
         }
@@ -95,21 +87,26 @@ type ClientBase<'SendMsg, 'RecvMsg> internal (encoder, decoder, socket, bufferSi
 
 
     member private this.DispatchRecv() =
-        if not this.IsConnected then
-            raise <| InvalidOperationException()
+        let recv bufferSize f = async {
+            let buffer = Array.zeroCreate<byte> bufferSize
+            
+            let! recvSize = socket.AsyncReceive(buffer)
+            
+            if recvSize > 0 then do! f(buffer)
+        }
 
         async {
             while socket.Poll(0, SelectMode.SelectRead) do
-                let buffer = Array.zeroCreate<byte> bufferSize
-                let! recvSize = socket.AsyncReceive(buffer)
-                if recvSize = 0 then
-                    this.Disconnect() |> ignore
-                elif recvSize > 0 then
-                    decoder buffer
-                    |> Option.iter(fun msg ->
-                        this.DebugPrint(sprintf "Receive: %A" msg)
-                        (recvQueue :> IMsgQueue<_>).Enqueue(msg)
-                    )
+                do! recv 4 <| fun bytes -> async {
+                    let size = BitConverter.ToInt32(bytes, 0)
+                    do! recv size <| fun bytes -> async {
+                        decoder bytes
+                        |> Option.iter(fun msg ->
+                            this.DebugPrint(sprintf "Receive: %A" msg)
+                            (recvQueue :> IMsgQueue<_>).Enqueue(msg)
+                        )
+                    }
+                }
         }
 
 
@@ -124,7 +121,6 @@ type ClientBase<'SendMsg, 'RecvMsg> internal (encoder, decoder, socket, bufferSi
             do! this.DispatchRecv()
         }
 
-
     member internal this.Disconnect() : bool =
         lock _lockObj <| fun _ ->
             if _isConnected then
@@ -134,9 +130,6 @@ type ClientBase<'SendMsg, 'RecvMsg> internal (encoder, decoder, socket, bufferSi
                 if cancel <> null then
                     cancel.Cancel()
                     cancel <- null
-
-                socket.AsyncDisconnect(false)
-                |> Async.RunSynchronously
 
                 socket.Dispose()
                 socket <- null
@@ -152,7 +145,7 @@ type ClientBase<'SendMsg, 'RecvMsg> internal (encoder, decoder, socket, bufferSi
     interface IClientHandler<'SendMsg> with
         member this.IsConnected with get() = this.IsConnected
 
-        member this.SendSync(msg) = this.Send(msg)
+        // member this.SendSync(msg) = this.Send(msg)
 
     interface IMsgQueue<'SendMsg> with
         member this.Enqueue(msg) =
@@ -166,8 +159,8 @@ type ClientBase<'SendMsg, 'RecvMsg> internal (encoder, decoder, socket, bufferSi
 
 
 
-type Client<'SendMsg, 'RecvMsg>(encoder, decoder, bufferSize) =
-    inherit ClientBase<'SendMsg, 'RecvMsg>(encoder, decoder, null, bufferSize)
+type Client<'SendMsg, 'RecvMsg>(encoder, decoder) =
+    inherit ClientBase<'SendMsg, 'RecvMsg>(encoder, decoder, null)
 
     member inline private this.DebugPrint(s) =
         if this.DebugDisplay then
@@ -207,16 +200,18 @@ type Client<'SendMsg, 'RecvMsg>(encoder, decoder, bufferSize) =
                 do! this.Connect(ipEndpoint)
                 this.OnConnected()
 
-                do! [|
+                return! [|
                         async {
+                            let dispatch = this.Dispatch()
                             while true do
-                                do! this.Dispatch()
+                                do! dispatch
                                 Thread.Sleep(5)
                         }
                         async {
-                            for msg in this.Receive() do
-                                this.OnPopRecvMsg(msg)
-                            Thread.Sleep(5)
+                            while true do
+                                for msg in this.Receive() do
+                                    this.OnPopRecvMsg(msg)
+                                Thread.Sleep(5)
                         }
                     |] |> Async.Parallel |> Async.Ignore
             }

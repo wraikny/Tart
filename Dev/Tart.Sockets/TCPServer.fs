@@ -12,7 +12,7 @@
 
 
     [<AbstractClass>]
-    type ServerBase<'SendMsg, 'RecvMsg>(encoder, decoder, bufferSize, endpoint) =
+    type ServerBase<'SendMsg, 'RecvMsg>(encoder, decoder, endpoint) =
         let mutable nextClientID : ClientID = LanguagePrimitives.GenericZero
 
         let _lockObj = new Object()
@@ -22,10 +22,8 @@
 
         let encoder : 'SendMsg -> byte [] = encoder
         let decoder : byte[] -> 'RecvMsg option = decoder
-        
-        let bufferSize : int = bufferSize
 
-        let createClient s = new ClientBase<_, _>(encoder, decoder, s, bufferSize, DebugDisplay = false)
+        let createClient s = new ClientBase<_, _>(encoder, decoder, s, DebugDisplay = false)
 
         let receiveQueue = new MsgQueue<ClientID * 'RecvMsg>()
         let sendQueue = new MsgQueue<'SendMsg>()
@@ -36,9 +34,9 @@
 
         let mutable _debugDisplay = false
 
-        new (encoder, decoder, bufferSize, port, ?ipAddress) =
+        new (encoder, decoder, port, ?ipAddress) =
             let ipAddress = defaultArg ipAddress IPAddress.Any
-            new ServerBase<_, _>(encoder, decoder, bufferSize, IPEndPoint(ipAddress, port))
+            new ServerBase<_, _>(encoder, decoder, IPEndPoint(ipAddress, port))
 
 
         member this.Clients
@@ -213,7 +211,7 @@
                 // this.IServer
 
 
-            member this.StartMessaging() =
+            member this.StartMessagingAsync() =
                 if this.IServer.IsMessaging then
                     raise <| InvalidOperationException()
 
@@ -233,7 +231,7 @@
                 // this.IServer
 
 
-            member this.StopMessaging() =
+            member this.StopMessagingAsync() =
                 if not this.IServer.IsMessaging then
                     raise <| InvalidOperationException()
 
@@ -263,4 +261,4 @@
                     this.IServer.StopAcceptingAsync() |> ignore
 
                 if this.IServer.IsMessaging then
-                    this.IServer.StopMessaging() |> ignore
+                    this.IServer.StopMessagingAsync() |> ignore

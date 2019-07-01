@@ -26,8 +26,8 @@ type IServer<'Msg> = interface
     abstract StartAcceptingAsync : unit -> unit
     abstract StopAcceptingAsync : unit -> unit
 
-    abstract StartMessaging : unit -> unit
-    abstract StopMessaging : unit -> unit
+    abstract StartMessagingAsync : unit -> unit
+    abstract StopMessagingAsync : unit -> unit
 end
 
 type IClientHandler<'Msg> = interface
@@ -35,7 +35,7 @@ type IClientHandler<'Msg> = interface
     inherit IMsgQueue<'Msg>
 
     abstract IsConnected : bool with get
-    abstract SendSync : 'Msg -> unit
+    // abstract SendSync : 'Msg -> unit
 end
 
 

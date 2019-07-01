@@ -18,8 +18,6 @@ let encoding = System.Text.Encoding.UTF8
 let encoder (s : string) = encoding.GetBytes(s)
 let decoder (bytes : byte[]) = encoding.GetString(bytes)
 
-let bufferSize = 1024
-
 type SMsg = SMsg of string
 
 module SMsg =
@@ -46,13 +44,12 @@ type CMsg with
     member inline x.Value with get() = x |> CMsg.value
 
 type TestServer(ipEndpoint) =
-    inherit ServerBase<SMsg, CMsg>(SMsg.encoder, CMsg.decoder, bufferSize, ipEndpoint)
+    inherit ServerBase<SMsg, CMsg>(SMsg.encoder, CMsg.decoder, ipEndpoint)
 
     override this.OnPopReceiveMsgAsync (clientId, recvMsg) =
         async {
             if recvMsg.Value = "!remove" then
                 let client = this.TryGetClient(clientId).Value
-                client.SendSync(SMsg "!remove")
                 this.RemoveClient(clientId)
             Console.WriteLine(sprintf "Received %s from (id: %A)" recvMsg.Value clientId)
         }
@@ -65,7 +62,7 @@ type TestServer(ipEndpoint) =
 
 
 type TestClient() =
-    inherit Client<CMsg, SMsg>(CMsg.encoder, SMsg.decoder, bufferSize)
+    inherit Client<CMsg, SMsg>(CMsg.encoder, SMsg.decoder)
 
     override this.OnPopRecvMsg(msg) =
         msg.Value |> function
@@ -83,7 +80,7 @@ let waiting() =
     Console.WriteLine("Enter..")
     Console.ReadLine() |> ignore
 
-let main _ =
+let main'() =
     let ipEndpoint =
         let ipAdd = Dns.GetHostEntry("localhost").AddressList.[0]
         IPEndPoint(ipAdd, 8000)
@@ -93,7 +90,7 @@ let main _ =
     let client = new TestClient(DebugDisplay = true) :> IClient<_>
 
     server.StartAcceptingAsync()
-    server.StartMessaging()
+    server.StartMessagingAsync()
 
     client.StartAsync(ipEndpoint)
 
@@ -110,11 +107,56 @@ let main _ =
     Console.WriteLine("Enter..")
     Console.ReadLine() |> ignore
 
+
+    // 終了処理
     client.Dispose()
 
     Console.WriteLine("Enter..")
     Console.ReadLine() |> ignore
 
+    server.Dispose()
+
+    Console.WriteLine("Enter..")
+    Console.ReadLine() |> ignore
+
+
+
+let main() =
+    let ipEndpoint =
+        let ipAdd = Dns.GetHostEntry("localhost").AddressList.[0]
+        IPEndPoint(ipAdd, 8000)
+
+    let server = new TestServer(ipEndpoint, DebugDisplay = true) :> IServer<_>
+
+    server.StartAcceptingAsync()
+    server.StartMessagingAsync()
+
+    Thread.Sleep(100)
+    Console.WriteLine("Enter..")
+    Console.ReadLine() |> ignore
+
+    let clients = [|for _ in 1..10 -> new TestClient(DebugDisplay = true) :> IClient<_>|]
+
+    clients |> Seq.iter(fun c -> c.StartAsync(ipEndpoint))
+
+    Thread.Sleep(100)
+    Console.WriteLine("Enter..")
+    Console.ReadLine() |> ignore
+
+    clients |> Seq.indexed |> Seq.iter(fun (i, c) -> c.Enqueue(CMsg <| sprintf "Hello from Client %d" i))
+
+    Thread.Sleep(100)
+    Console.WriteLine("Enter..")
+    Console.ReadLine() |> ignore
+
+    for _ in 1..5 do
+        server.Enqueue(SMsg "Hello from server")
+
+    Console.WriteLine("Enter..")
+    Console.ReadLine() |> ignore
+
+
+    clients |> Seq.iter(fun c -> c.Dispose())
     server.Dispose()
 
     Console.WriteLine("Enter..")
