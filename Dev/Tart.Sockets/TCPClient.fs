@@ -229,14 +229,14 @@ open System.Text
 
 type CryptedClient<'SendMsg, 'RecvMsg>(aes : AesManaged, encoder, decoder) =
     inherit Client<'SendMsg, 'RecvMsg>(
-        Crypt.encryptor (aes.CreateEncryptor()) encoder,
-        Crypt.decryptor (aes.CreateDecryptor()) decoder)
+        Crypt.createEncryptor aes encoder,
+        Crypt.createDecrypter aes decoder)
 
     new(iv : string, key : string, encoder, decoder, ?cipherMode, ?paddingMode) =
         let aes =
             new AesManaged(
-                KeySize = key.Length,
-                BlockSize = iv.Length,
+                KeySize = key.Length * 8,
+                BlockSize = iv.Length * 8,
                 Mode = defaultArg cipherMode CipherMode.CBC,
                 IV = Encoding.UTF8.GetBytes(iv),
                 Key = Encoding.UTF8.GetBytes(key),

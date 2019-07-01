@@ -272,8 +272,8 @@ open System.Text
 [<AbstractClass>]
 type CryptedServer<'SendMsg, 'RecvMsg>(aes : AesManaged, encoder, decoder, endpoint) =
     inherit ServerBase<'SendMsg, 'RecvMsg>(
-        Crypt.encryptor (aes.CreateEncryptor()) encoder,
-        Crypt.decryptor (aes.CreateDecryptor()) decoder,
+        Crypt.createEncryptor aes encoder,
+        Crypt.createDecrypter aes decoder,
         endpoint)
 
     new (aes, encoder, decoder, port, ?ipAddress) =
@@ -283,8 +283,8 @@ type CryptedServer<'SendMsg, 'RecvMsg>(aes : AesManaged, encoder, decoder, endpo
     new(iv : string, key : string, encoder, decoder, port, ?ipAddress, ?cipherMode, ?paddingMode) =
         let aes =
             new AesManaged(
-                KeySize = key.Length,
-                BlockSize = iv.Length,
+                KeySize = key.Length * 8,
+                BlockSize = iv.Length * 8,
                 Mode = defaultArg cipherMode CipherMode.CBC,
                 IV = Encoding.UTF8.GetBytes(iv),
                 Key = Encoding.UTF8.GetBytes(key),
