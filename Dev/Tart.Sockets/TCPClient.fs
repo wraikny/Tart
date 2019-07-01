@@ -16,11 +16,10 @@ type ClientBase<'SendMsg, 'RecvMsg> internal (encoder, decoder, socket) =
 
     let encoder msg =
         let bytes = encoder msg
-        let size = bytes |> Array.length |> BitConverter.GetBytes
+        let size = bytes |> Array.length |> uint16 |> BitConverter.GetBytes
         Array.append size bytes
 
-    let decoder msg =
-        decoder msg
+    let decoder = decoder
 
     let sendQueue = new MsgQueue<'SendMsg>()
     let recvQueue = new MsgQueue<'RecvMsg>()
@@ -106,9 +105,9 @@ type ClientBase<'SendMsg, 'RecvMsg> internal (encoder, decoder, socket) =
 
         async {
             while socket.Poll(0, SelectMode.SelectRead) do
-                do! recv 4 <| fun bytes -> async {
-                    let size = BitConverter.ToInt32(bytes, 0)
-                    do! recv size <| fun bytes -> async {
+                do! recv sizeof<uint16> <| fun bytes -> async {
+                    let size = BitConverter.ToInt16(bytes, 0)
+                    do! recv (int size) <| fun bytes -> async {
                         decoder bytes
                         |> Option.iter(fun msg ->
                             this.DebugPrint(sprintf "Receive: %A" msg)
