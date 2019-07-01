@@ -96,6 +96,29 @@ type ServerBase<'SendMsg, 'RecvMsg>(encoder, decoder, endpoint) =
                 raise <| InvalidOperationException()
 
 
+    member this.SendTo(id, msg) =
+        (lock _lockObj <| fun _ -> clients.TryGetValue(id))
+        |> function
+        | true, client ->
+            (client :> IMsgQueue<_>).Enqueue(msg)
+            true
+        | _ ->
+            false
+
+    member this.SendToEveryone(msg) =
+        for (_, client) in this.Clients do
+            client.Enqueue(msg)
+
+
+    member this.SendToOthers(nonTargetId, msg) =
+        let mutable t = true
+        for (clientId, client) in this.Clients do
+            if t && clientId = nonTargetId then
+                t <- false
+            else
+                client.Enqueue(msg)
+
+
     member private this.AsyncClientsDispatch() =
         let removeIds = new List<ClientID>()
 
