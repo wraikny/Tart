@@ -1,264 +1,296 @@
-﻿    namespace wraikny.Tart.Sockets.TCP
+﻿namespace wraikny.Tart.Sockets.TCP
 
-    open System
-    open System.Linq
-    open System.Threading
-    open System.Net
-    open System.Net.Sockets
-    open System.Collections.Generic
+open System
+open System.Linq
+open System.Threading
+open System.Net
+open System.Net.Sockets
+open System.Collections.Generic
 
-    open wraikny.Tart.Helper.Utils
-    open wraikny.Tart.Sockets
-
-
-    [<AbstractClass>]
-    type ServerBase<'SendMsg, 'RecvMsg>(encoder, decoder, endpoint) =
-        let mutable nextClientID : ClientID = LanguagePrimitives.GenericZero
-
-        let _lockObj = new Object()
-        let clients = new Dictionary<ClientID, ClientBase<'SendMsg, 'RecvMsg>>()
-        let endpoint = endpoint
-        let mutable listener : Socket = null
-
-        let encoder : 'SendMsg -> byte [] = encoder
-        let decoder : byte[] -> 'RecvMsg option = decoder
-
-        let createClient s = new ClientBase<_, _>(encoder, decoder, s, DebugDisplay = false)
-
-        let receiveQueue = new MsgQueue<ClientID * 'RecvMsg>()
-        let sendQueue = new MsgQueue<'SendMsg>()
+open wraikny.Tart.Helper.Utils
+open wraikny.Tart.Sockets
 
 
-        let mutable cancelAccepting = null
-        let mutable cancelMessaging = null
+[<AbstractClass>]
+type ServerBase<'SendMsg, 'RecvMsg>(encoder, decoder, endpoint) =
+    let mutable nextClientID : ClientID = LanguagePrimitives.GenericZero
 
-        let mutable _debugDisplay = false
+    let _lockObj = new Object()
+    let clients = new Dictionary<ClientID, ClientBase<'SendMsg, 'RecvMsg>>()
+    let endpoint = endpoint
+    let mutable listener : Socket = null
 
-        new (encoder, decoder, port, ?ipAddress) =
-            let ipAddress = defaultArg ipAddress IPAddress.Any
-            new ServerBase<_, _>(encoder, decoder, IPEndPoint(ipAddress, port))
+    let encoder : 'SendMsg -> byte [] = encoder
+    let decoder : byte[] -> 'RecvMsg option = decoder
+
+    let createClient s = new ClientBase<_, _>(encoder, decoder, s, DebugDisplay = false)
+
+    let receiveQueue = new MsgQueue<ClientID * 'RecvMsg>()
+    let sendQueue = new MsgQueue<'SendMsg>()
 
 
-        member this.Clients
-            with get() =
-                lock _lockObj <| fun _ ->
-                    clients
-                        .Select(fun i -> (i.Key, i.Value :> IClientHandler<'SendMsg>))
-                        .ToList()
-                    :> IEnumerable<_>
+    let mutable cancelAccepting = null
+    let mutable cancelMessaging = null
 
-        member this.TryGetClient(clientId) =
+    let mutable _debugDisplay = false
+
+    new (encoder, decoder, port, ?ipAddress) =
+        let ipAddress = defaultArg ipAddress IPAddress.Any
+        new ServerBase<_, _>(encoder, decoder, IPEndPoint(ipAddress, port))
+
+
+    member this.Clients
+        with get() =
             lock _lockObj <| fun _ ->
-                clients.TryGetValue(clientId)
-                |> function
-                | true, client -> client :> IClientHandler<'SendMsg> |> Some
-                | _ -> None
+                clients
+                    .Select(fun i -> (i.Key, i.Value :> IClientHandler<'SendMsg>))
+                    .ToList()
+                :> IEnumerable<_>
+
+    member this.TryGetClient(clientId) =
+        lock _lockObj <| fun _ ->
+            clients.TryGetValue(clientId)
+            |> function
+            | true, client -> client :> IClientHandler<'SendMsg> |> Some
+            | _ -> None
         
-        abstract OnConnectedClientAsync : ClientID -> unit
-        default __.OnConnectedClientAsync _ = ()
+    abstract OnConnectedClientAsync : ClientID -> unit
+    default __.OnConnectedClientAsync _ = ()
 
-        abstract OnPopReceiveMsgAsync : ClientID * 'RecvMsg -> Async<unit>
-        abstract OnPopSendMsgAsync : 'SendMsg -> Async<unit>
+    abstract OnPopReceiveMsgAsync : ClientID * 'RecvMsg -> Async<unit>
+    abstract OnPopSendMsgAsync : 'SendMsg -> Async<unit>
 
-        member __.DebugDisplay
-            with get() = _debugDisplay
-            and  set(value) = _debugDisplay <- value
+    member __.DebugDisplay
+        with get() = _debugDisplay
+        and  set(value) = _debugDisplay <- value
 
-        member inline private this.DebugPrint(s) =
-            if this.DebugDisplay then
-                Console.WriteLine(sprintf "[wraikny.Tart.Sockets.TCP.ServerBase] %A" s)
-
-
-        member this.RemoveClient(clientId) =
-            lock _lockObj <| fun _ ->
-                if clients.ContainsKey(clientId) then
-                    clients.Remove(clientId) |> ignore
-                    this.DebugPrint(sprintf "Removed Client of %A" clientId)
+    member inline private this.DebugPrint(s) =
+        if this.DebugDisplay then
+            Console.WriteLine(sprintf "[wraikny.Tart.Sockets.TCP.ServerBase] %A" s)
 
 
-        member private this.AsyncClientsDispatch() =
-            let removeIds = new List<ClientID>()
+    member this.RemoveClient(clientId) =
+        lock _lockObj <| fun _ ->
+            if clients.ContainsKey(clientId) then
+                clients.Remove(clientId) |> ignore
+                this.DebugPrint(sprintf "Removed Client of %A" clientId)
 
-            let rec loop() = async {
-                let clientsList = lock _lockObj <| fun _ -> clients.ToList()
-                for i in clientsList do
-                    let client = i.Value
-                    try
-                        do! client.Dispatch()
-                        if not client.IsConnected then
-                            removeIds.Add(i.Key)
-                    with
-                    | :? SocketException ->
+
+    member private this.AsyncClientsDispatch() =
+        let removeIds = new List<ClientID>()
+
+        let rec loop() = async {
+            let clientsList = lock _lockObj <| fun _ -> clients.ToList()
+            for i in clientsList do
+                let client = i.Value
+                try
+                    do! client.Dispatch()
+                    if not client.IsConnected then
                         removeIds.Add(i.Key)
+                with
+                | :? SocketException ->
+                    removeIds.Add(i.Key)
 
-                lock _lockObj <| fun _ ->
-                    for id in removeIds do
-                        this.DebugPrint(sprintf "Remove client (id: %A)" id)
-                        clients.Remove(id) |> ignore
+            lock _lockObj <| fun _ ->
+                for id in removeIds do
+                    this.DebugPrint(sprintf "Remove client (id: %A)" id)
+                    clients.Remove(id) |> ignore
 
-                removeIds.Clear()
+            removeIds.Clear()
 
+            Thread.Sleep(5)
+            return! loop()
+        }
+
+        loop()
+
+    member private this.AsyncPopReceiveMsg() =
+        let rec loop() = async {
+            match receiveQueue.TryDequeue() with
+            | Some(msg) ->
+                do! this.OnPopReceiveMsgAsync(msg)
+            | None -> ()
+            return! loop()
+        }
+
+        loop()
+
+
+    member private this.AsyncReceive() =
+        async {
+            let clientsList = lock _lockObj <| fun _ -> clients.ToList()
+
+            for i in clientsList do
+                let client = i.Value
+                for r in client.Receive() do
+                    this.DebugPrint(sprintf "Received message %A from %A" r i.Key)
+                    (receiveQueue :> IMsgQueue<_>).Enqueue(i.Key,  r)
+        }
+
+
+    member private this.AsyncPopSendMsg() =
+        let rec loop() = async {
+            match sendQueue.TryDequeue() with
+            | Some(msg) ->
+                this.DebugPrint(sprintf "Pop SendMsg: %A" msg)
+                do! this.OnPopSendMsgAsync(msg)
+                return! loop()
+            | None -> ()
+        }
+
+        loop()
+
+
+    member private this.AsyncServerDispatch() =
+        async {
+            while true do
+                do! this.AsyncPopSendMsg()
+                do! this.AsyncReceive()
+                // this.DebugPrint("Dispathing")
                 Thread.Sleep(5)
-                return! loop()
-            }
-
-            loop()
-
-        member private this.AsyncPopReceiveMsg() =
-            let rec loop() = async {
-                match receiveQueue.TryDequeue() with
-                | Some(msg) ->
-                    do! this.OnPopReceiveMsgAsync(msg)
-                | None -> ()
-                return! loop()
-            }
-
-            loop()
+        }
 
 
-        member private this.AsyncReceive() =
-            async {
-                let clientsList = lock _lockObj <| fun _ -> clients.ToList()
-
-                for i in clientsList do
-                    let client = i.Value
-                    for r in client.Receive() do
-                        this.DebugPrint(sprintf "Received message %A from %A" r i.Key)
-                        (receiveQueue :> IMsgQueue<_>).Enqueue(i.Key,  r)
-            }
+    member this.IServer with get() = this :> IServer<_>
 
 
-        member private this.AsyncPopSendMsg() =
-            let rec loop() = async {
-                match sendQueue.TryDequeue() with
-                | Some(msg) ->
-                    this.DebugPrint(sprintf "Pop SendMsg: %A" msg)
-                    do! this.OnPopSendMsgAsync(msg)
-                    return! loop()
-                | None -> ()
-            }
+    interface IServer<'SendMsg> with
+        member this.IsAccepting with get() = cancelAccepting <> null
 
-            loop()
-
-
-        member private this.AsyncServerDispatch() =
-            async {
-                while true do
-                    do! this.AsyncPopSendMsg()
-                    do! this.AsyncReceive()
-                    // this.DebugPrint("Dispathing")
-                    Thread.Sleep(5)
-            }
-
-
-        member this.IServer with get() = this :> IServer<_>
-
-
-        interface IServer<'SendMsg> with
-            member this.IsAccepting with get() = cancelAccepting <> null
-
-            member this.IsMessaging with get() = cancelMessaging <> null
+        member this.IsMessaging with get() = cancelMessaging <> null
             
-            member this.StartAcceptingAsync() =
-                if this.IServer.IsAccepting then
-                    raise <| InvalidOperationException()
+        member this.StartAcceptingAsync() =
+            if this.IServer.IsAccepting then
+                raise <| InvalidOperationException()
 
-                this.DebugPrint("Start Accepting")
+            this.DebugPrint("Start Accepting")
 
-                cancelAccepting <- new CancellationTokenSource()
+            cancelAccepting <- new CancellationTokenSource()
 
-                listener <- new Socket(AddressFamily.InterNetworkV6, SocketType.Stream, ProtocolType.Tcp)
+            listener <- new Socket(AddressFamily.InterNetworkV6, SocketType.Stream, ProtocolType.Tcp)
                 
-                listener.Bind(endpoint)
-                listener.Listen(int SocketOptionName.MaxConnections)
+            listener.Bind(endpoint)
+            listener.Listen(int SocketOptionName.MaxConnections)
 
-                this.DebugPrint(sprintf "Start Listening at %A" endpoint)
+            this.DebugPrint(sprintf "Start Listening at %A" endpoint)
 
-                let rec loop() = async {
-                    let! socket = listener.AsyncAccept()
+            let rec loop() = async {
+                let! socket = listener.AsyncAccept()
                 
-                    this.OnConnectedClientAsync(nextClientID)
+                this.OnConnectedClientAsync(nextClientID)
                 
-                    lock _lockObj <| fun _ ->
-                        clients.Add(nextClientID, createClient socket )
+                lock _lockObj <| fun _ ->
+                    clients.Add(nextClientID, createClient socket )
 
-                        this.DebugPrint(sprintf "Accepted client (id: %A)" nextClientID)
+                    this.DebugPrint(sprintf "Accepted client (id: %A)" nextClientID)
 
-                        nextClientID <- nextClientID + LanguagePrimitives.GenericOne
+                    nextClientID <- nextClientID + LanguagePrimitives.GenericOne
                 
-                    return! loop()
-                }
+                return! loop()
+            }
                 
-                loop()
-                |> fun a -> Async.Start(a, cancelAccepting.Token)
+            loop()
+            |> fun a -> Async.Start(a, cancelAccepting.Token)
 
-                // this.IServer
+            // this.IServer
 
 
-            member this.StopAcceptingAsync() =
-                if not this.IServer.IsAccepting then
-                    raise <| InvalidOperationException()
+        member this.StopAcceptingAsync() =
+            if not this.IServer.IsAccepting then
+                raise <| InvalidOperationException()
 
-                this.DebugPrint("Stop Accepting")
+            this.DebugPrint("Stop Accepting")
 
-                cancelAccepting.Cancel()
+            cancelAccepting.Cancel()
 
-                listener.Close()
-                listener <- null
+            listener.Close()
+            listener <- null
                 
-                cancelAccepting <- null
+            cancelAccepting <- null
 
-                // this.IServer
-
-
-            member this.StartMessagingAsync() =
-                if this.IServer.IsMessaging then
-                    raise <| InvalidOperationException()
-
-                this.DebugPrint("Start Messaging")
-
-                cancelMessaging <- new CancellationTokenSource()
-
-                [|
-                    this.AsyncClientsDispatch()
-                    this.AsyncServerDispatch()
-                    this.AsyncPopReceiveMsg()
-                |]
-                |> Async.Parallel
-                |> Async.Ignore
-                |> fun a -> Async.Start(a, cancelMessaging.Token)
-
-                // this.IServer
+            // this.IServer
 
 
-            member this.StopMessagingAsync() =
-                if not this.IServer.IsMessaging then
-                    raise <| InvalidOperationException()
+        member this.StartMessagingAsync() =
+            if this.IServer.IsMessaging then
+                raise <| InvalidOperationException()
 
-                this.DebugPrint("Stop Messaging")
+            this.DebugPrint("Start Messaging")
 
-                cancelMessaging.Cancel()
+            cancelMessaging <- new CancellationTokenSource()
 
-                cancelMessaging <- null
+            [|
+                this.AsyncClientsDispatch()
+                this.AsyncServerDispatch()
+                this.AsyncPopReceiveMsg()
+            |]
+            |> Async.Parallel
+            |> Async.Ignore
+            |> fun a -> Async.Start(a, cancelMessaging.Token)
 
-                // this.IServer
+            // this.IServer
 
 
-        interface IMsgQueue<'SendMsg> with
-            member this.Enqueue(msg) =
-                (sendQueue :> IMsgQueue<_>).Enqueue(msg)
+        member this.StopMessagingAsync() =
+            if not this.IServer.IsMessaging then
+                raise <| InvalidOperationException()
 
-        interface IDisposable with
-            member this.Dispose() =
-                this.DebugPrint("Dispose")
-                for c in clients do
-                    (c.Value :> IDisposable).Dispose()
-                clients.Clear()
+            this.DebugPrint("Stop Messaging")
 
-                this.DebugPrint("Clients Cleared")
+            cancelMessaging.Cancel()
 
-                if this.IServer.IsAccepting then
-                    this.IServer.StopAcceptingAsync() |> ignore
+            cancelMessaging <- null
 
-                if this.IServer.IsMessaging then
-                    this.IServer.StopMessagingAsync() |> ignore
+            // this.IServer
+
+
+    interface IMsgQueue<'SendMsg> with
+        member this.Enqueue(msg) =
+            (sendQueue :> IMsgQueue<_>).Enqueue(msg)
+
+    interface IDisposable with
+        member this.Dispose() =
+            this.DebugPrint("Dispose")
+            for c in clients do
+                (c.Value :> IDisposable).Dispose()
+            clients.Clear()
+
+            this.DebugPrint("Clients Cleared")
+
+            if this.IServer.IsAccepting then
+                this.IServer.StopAcceptingAsync() |> ignore
+
+            if this.IServer.IsMessaging then
+                this.IServer.StopMessagingAsync() |> ignore
+
+
+
+open System.Security.Cryptography
+open System.Text
+
+// https://qiita.com/ak2ie/items/f97ee5265527507f5308
+[<AbstractClass>]
+type CryptedServer<'SendMsg, 'RecvMsg>(aes : AesManaged, encoder, decoder, endpoint) =
+    inherit ServerBase<'SendMsg, 'RecvMsg>(
+        Crypt.encryptor (aes.CreateEncryptor()) encoder,
+        Crypt.decryptor (aes.CreateDecryptor()) decoder,
+        endpoint)
+
+    new (aes, encoder, decoder, port, ?ipAddress) =
+        let ipAddress = defaultArg ipAddress IPAddress.Any
+        new CryptedServer<_, _>(aes, encoder, decoder, IPEndPoint(ipAddress, port))
+
+    new(iv : string, key : string, encoder, decoder, port, ?ipAddress, ?cipherMode, ?paddingMode) =
+        let aes =
+            new AesManaged(
+                KeySize = key.Length,
+                BlockSize = iv.Length,
+                Mode = defaultArg cipherMode CipherMode.CBC,
+                IV = Encoding.UTF8.GetBytes(iv),
+                Key = Encoding.UTF8.GetBytes(key),
+                Padding = defaultArg paddingMode PaddingMode.PKCS7
+            )
+
+
+        let ipAddress = defaultArg ipAddress IPAddress.Any
+        new CryptedServer<_, _>(aes, encoder, decoder, IPEndPoint(ipAddress, port))

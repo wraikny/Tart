@@ -45,6 +45,7 @@
     <Compile Include="AssemblyInfo.fs" />
     <Content Include="packages.config" />
     <Compile Include="Extension.fs" />
+    <Compile Include="Crypt.fs" />
     <Compile Include="Interface.fs" />
     <Compile Include="TCPClient.fs" />
     <Compile Include="TCPServer.fs" />
