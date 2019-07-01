@@ -103,27 +103,22 @@ let main'() =
         Console.WriteLine("waiting connection ...")
         Thread.Sleep(5)
 
-    Thread.Sleep(100)
+    waiting()
 
     server.Enqueue(SMsg "Hello! from Server")
     client.Enqueue(CMsg "Hello! from client")
 
-    Thread.Sleep(100)
-    Console.WriteLine("Enter..")
-    Console.ReadLine() |> ignore
+    waiting()
 
 
     // 終了処理
     client.Dispose()
 
-    Console.WriteLine("Enter..")
-    Console.ReadLine() |> ignore
+    waiting()
 
     server.Dispose()
 
-    Console.WriteLine("Enter..")
-    Console.ReadLine() |> ignore
-
+    waiting()
 
 
 let main() =
@@ -136,40 +131,28 @@ let main() =
     server.StartAcceptingAsync()
     server.StartMessagingAsync()
 
-    Thread.Sleep(100)
-    Console.WriteLine("Enter..")
-    Console.ReadLine() |> ignore
+    waiting()
 
     let clients = [|for _ in 1..10 -> new TestClient(DebugDisplay = true) :> IClient<_>|]
 
     clients |> Seq.iter(fun c -> c.StartAsync(ipEndpoint))
 
-    Thread.Sleep(100)
-    Console.WriteLine("Enter..")
-    Console.ReadLine() |> ignore
+    waiting()
 
     clients |> Seq.indexed |> Seq.iter(fun (i, c) -> c.Enqueue(CMsg <| sprintf "Hello from Client %d" i))
 
-    Thread.Sleep(100)
-    Console.WriteLine("Enter..")
-    Console.ReadLine() |> ignore
+    waiting()
 
     for _ in 1..5 do
         server.Enqueue(SMsg "Hello from server")
 
-    Thread.Sleep(100)
-    Console.WriteLine("Enter..")
-    Console.ReadLine() |> ignore
+    waiting()
 
 
     clients |> Seq.iter(fun c -> c.Dispose())
 
-    Thread.Sleep(100)
-    Console.WriteLine("Enter..")
-    Console.ReadLine() |> ignore
+    waiting()
 
     server.Dispose()
 
-    Thread.Sleep(100)
-    Console.WriteLine("Enter..")
-    Console.ReadLine() |> ignore
+    waiting()
