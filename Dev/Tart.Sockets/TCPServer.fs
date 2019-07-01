@@ -17,13 +17,12 @@ type ServerBase<'SendMsg, 'RecvMsg>(encoder, decoder, endpoint) =
 
     let _lockObj = new Object()
     let clients = new Dictionary<ClientID, ClientBase<'SendMsg, 'RecvMsg>>()
+
     let endpoint = endpoint
     let mutable listener : Socket = null
 
     let encoder : 'SendMsg -> byte [] = encoder
     let decoder : byte[] -> 'RecvMsg option = decoder
-
-    let createClient s = new ClientBase<_, _>(encoder, decoder, s, DebugDisplay = false)
 
     let receiveQueue = new MsgQueue<ClientID * 'RecvMsg>()
     let sendQueue = new MsgQueue<'SendMsg>()
@@ -37,6 +36,28 @@ type ServerBase<'SendMsg, 'RecvMsg>(encoder, decoder, endpoint) =
     new (encoder, decoder, port, ?ipAddress) =
         let ipAddress = defaultArg ipAddress IPAddress.Any
         new ServerBase<_, _>(encoder, decoder, IPEndPoint(ipAddress, port))
+
+
+    abstract OnConnectedClientAsync : ClientID -> unit
+    default __.OnConnectedClientAsync _ = ()
+
+    abstract OnPopReceiveMsgAsync : ClientID * 'RecvMsg -> Async<unit>
+    abstract OnPopSendMsgAsync : 'SendMsg -> Async<unit>
+
+    abstract OnClientFailedToSend : ClientID * IClientHandler<'SendMsg> * 'SendMsg -> unit
+    default __.OnClientFailedToSend(_, _, _) = ()
+
+    abstract OnClientFailedToReceive : ClientID * IClientHandler<'SendMsg> -> unit
+    default __.OnClientFailedToReceive(_, _) = ()
+    
+
+    member private server.CreateClient(s, clientId) =
+        { new ClientBase<_, _>(encoder, decoder, s, DebugDisplay = false) with
+            override client.OnFailedToSend(msg) =
+                server.OnClientFailedToSend(clientId, client :> IClientHandler<_>, msg)
+            override client.OnFailedToReceive() =
+                server.OnClientFailedToReceive(clientId, client :> IClientHandler<_>)
+        }
 
 
     member this.Clients
@@ -53,12 +74,7 @@ type ServerBase<'SendMsg, 'RecvMsg>(encoder, decoder, endpoint) =
             |> function
             | true, client -> client :> IClientHandler<'SendMsg> |> Some
             | _ -> None
-        
-    abstract OnConnectedClientAsync : ClientID -> unit
-    default __.OnConnectedClientAsync _ = ()
-
-    abstract OnPopReceiveMsgAsync : ClientID * 'RecvMsg -> Async<unit>
-    abstract OnPopSendMsgAsync : 'SendMsg -> Async<unit>
+       
 
     member __.DebugDisplay
         with get() = _debugDisplay
@@ -71,9 +87,13 @@ type ServerBase<'SendMsg, 'RecvMsg>(encoder, decoder, endpoint) =
 
     member this.RemoveClient(clientId) =
         lock _lockObj <| fun _ ->
-            if clients.ContainsKey(clientId) then
+            clients.TryGetValue(clientId) |> function
+            | true, client ->
+                (client :> IDisposable).Dispose()
                 clients.Remove(clientId) |> ignore
                 this.DebugPrint(sprintf "Removed Client of %A" clientId)
+            | _ ->
+                raise <| InvalidOperationException()
 
 
     member private this.AsyncClientsDispatch() =
@@ -180,7 +200,7 @@ type ServerBase<'SendMsg, 'RecvMsg>(encoder, decoder, endpoint) =
                 this.OnConnectedClientAsync(nextClientID)
                 
                 lock _lockObj <| fun _ ->
-                    clients.Add(nextClientID, createClient socket )
+                    clients.Add(nextClientID, this.CreateClient(socket, nextClientID) )
 
                     this.DebugPrint(sprintf "Accepted client (id: %A)" nextClientID)
 
@@ -266,7 +286,7 @@ type ServerBase<'SendMsg, 'RecvMsg>(encoder, decoder, endpoint) =
 
 
 open System.Security.Cryptography
-open System.Text
+open System.Text 
 
 // https://qiita.com/ak2ie/items/f97ee5265527507f5308
 [<AbstractClass>]

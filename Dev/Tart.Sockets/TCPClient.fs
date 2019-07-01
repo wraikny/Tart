@@ -48,6 +48,12 @@ type ClientBase<'SendMsg, 'RecvMsg> internal (encoder, decoder, socket) =
     abstract OnDisconnected : unit -> unit
     default __.OnDisconnected() = ()
 
+    abstract OnFailedToSend : 'SendMsg -> unit
+    default __.OnFailedToSend _ = ()
+
+    abstract OnFailedToReceive : unit -> unit
+    default __.OnFailedToReceive() = ()
+
     member __.DebugDisplay
         with get() = _debugDisplay
         and  set(value) = _debugDisplay <- value
@@ -78,7 +84,7 @@ type ClientBase<'SendMsg, 'RecvMsg> internal (encoder, decoder, socket) =
                 let! sendSize = this.Socket.AsyncSend(encoder msg)
                 
                 if sendSize = 0 then
-                    this.Disconnect() |> ignore
+                    this.OnFailedToSend(msg)
                 return! loop()
             | None -> ()
         }
@@ -92,7 +98,10 @@ type ClientBase<'SendMsg, 'RecvMsg> internal (encoder, decoder, socket) =
             
             let! recvSize = socket.AsyncReceive(buffer)
             
-            if recvSize > 0 then do! f(buffer)
+            if recvSize > 0 then
+                do! f(buffer)
+            else
+                this.OnFailedToReceive()
         }
 
         async {
@@ -116,7 +125,7 @@ type ClientBase<'SendMsg, 'RecvMsg> internal (encoder, decoder, socket) =
 
         async {
             if socket.Poll(0, SelectMode.SelectWrite) then
-                do! this.DispatchSend() |> Async.Ignore
+                do! this.DispatchSend()
 
             do! this.DispatchRecv()
         }

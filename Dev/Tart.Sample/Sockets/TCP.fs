@@ -60,6 +60,9 @@ type TestServer(ipEndpoint) =
                 client.Enqueue(sendMsg)
         }
 
+    override this.OnClientFailedToSend(_, _, _) = ()
+    override this.OnClientFailedToReceive(_, _) = ()
+
 
 type TestClient() =
     inherit Client<CMsg, SMsg>(CMsg.encoder, SMsg.decoder)
@@ -73,6 +76,8 @@ type TestClient() =
     override this.OnConnecting() = ()
     override this.OnConnected() = ()
     override this.OnDisconnected() = ()
+    override this.OnFailedToSend _ = ()
+    override this.OnFailedToReceive() = ()
 
 
 let waiting() =
@@ -152,12 +157,19 @@ let main() =
     for _ in 1..5 do
         server.Enqueue(SMsg "Hello from server")
 
+    Thread.Sleep(100)
     Console.WriteLine("Enter..")
     Console.ReadLine() |> ignore
 
 
     clients |> Seq.iter(fun c -> c.Dispose())
+
+    Thread.Sleep(100)
+    Console.WriteLine("Enter..")
+    Console.ReadLine() |> ignore
+
     server.Dispose()
 
+    Thread.Sleep(100)
     Console.WriteLine("Enter..")
     Console.ReadLine() |> ignore
