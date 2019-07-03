@@ -166,9 +166,37 @@ type ClientBase<'SendMsg, 'RecvMsg> internal (encoder, decoder, socket) =
             this.Disconnect() |> ignore
 
 
+open System.Security.Cryptography
+open System.Text
+
+
 [<AbstractClass>]
 type Client<'SendMsg, 'RecvMsg>(encoder, decoder) =
     inherit ClientBase<'SendMsg, 'RecvMsg>(encoder, decoder, null)
+
+    new(aes : AesManaged, encoder, decoder) =
+        new Client<_, _>(
+            Crypt.createEncryptor aes encoder,
+            Crypt.createDecrypter aes decoder
+        )
+    
+    new(iv : string, key : string, encoder, decoder, ?cipherMode, ?paddingMode) =
+        if iv.Length <> 16 then
+            raise <| ArgumentException("The length of IV must be 16")
+        if key.Length <> 32 then
+            raise <| ArgumentException("The length of Key must be 32")
+    
+        let aes =
+            new AesManaged(
+                KeySize = 256,
+                BlockSize = 128,
+                Mode = defaultArg cipherMode CipherMode.CBC,
+                IV = Encoding.UTF8.GetBytes(iv),
+                Key = Encoding.UTF8.GetBytes(key),
+                Padding = defaultArg paddingMode PaddingMode.PKCS7
+            )
+    
+        new Client<_, _>(aes, encoder, decoder)
 
     member inline private this.DebugPrint(s) =
         if this.DebugDisplay then
@@ -230,32 +258,3 @@ type Client<'SendMsg, 'RecvMsg>(encoder, decoder) =
         // member this.Disconnect() = this.Disconnect()
 
         // member this.Send(msg) = this.Send(msg)
-
-
-open System.Security.Cryptography
-open System.Text
-
-[<AbstractClass>]
-type CryptedClient<'SendMsg, 'RecvMsg>(aes : AesManaged, encoder, decoder) =
-    inherit Client<'SendMsg, 'RecvMsg>(
-        Crypt.createEncryptor aes encoder,
-        Crypt.createDecrypter aes decoder)
-
-    new(iv : string, key : string, encoder, decoder, ?cipherMode, ?paddingMode) =
-        if iv.Length <> 16 then
-            raise <| ArgumentException("The length of IV must be 16")
-        if key.Length <> 32 then
-            raise <| ArgumentException("The length of Key must be 32")
-
-        let aes =
-            new AesManaged(
-                KeySize = 256,
-                BlockSize = 128,
-                Mode = defaultArg cipherMode CipherMode.CBC,
-                IV = Encoding.UTF8.GetBytes(iv),
-                Key = Encoding.UTF8.GetBytes(key),
-                Padding = defaultArg paddingMode PaddingMode.PKCS7
-            )
-
-        new CryptedClient<_, _>(aes, encoder, decoder)
-

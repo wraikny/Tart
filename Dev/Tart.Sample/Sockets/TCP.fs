@@ -50,7 +50,7 @@ type CMsg with
     member inline x.Value with get() = x |> CMsg.value
 
 type TestServer(ipEndpoint : IPEndPoint) =
-    inherit CryptedServer<SMsg, CMsg>(iv, key, SMsg.encoder, CMsg.decoder, ipEndpoint)
+    inherit ServerBase<SMsg, CMsg>(iv, key, SMsg.encoder, CMsg.decoder, ipEndpoint)
 
     override this.OnPopReceiveMsgAsync (clientId, recvMsg) =
         async {
@@ -71,7 +71,7 @@ type TestServer(ipEndpoint : IPEndPoint) =
 
 
 type TestClient() =
-    inherit CryptedClient<CMsg, SMsg>(iv, key, CMsg.encoder, SMsg.decoder)
+    inherit Client<CMsg, SMsg>(iv, key, CMsg.encoder, SMsg.decoder)
 
     override this.OnPopRecvMsg(msg) =
         msg.Value |> function
