@@ -166,7 +166,7 @@ type ClientBase<'SendMsg, 'RecvMsg> internal (encoder, decoder, socket) =
             this.Disconnect() |> ignore
 
 
-
+[<AbstractClass>]
 type Client<'SendMsg, 'RecvMsg>(encoder, decoder) =
     inherit ClientBase<'SendMsg, 'RecvMsg>(encoder, decoder, null)
 
@@ -235,6 +235,7 @@ type Client<'SendMsg, 'RecvMsg>(encoder, decoder) =
 open System.Security.Cryptography
 open System.Text
 
+[<AbstractClass>]
 type CryptedClient<'SendMsg, 'RecvMsg>(aes : AesManaged, encoder, decoder) =
     inherit Client<'SendMsg, 'RecvMsg>(
         Crypt.createEncryptor aes encoder,
@@ -257,3 +258,4 @@ type CryptedClient<'SendMsg, 'RecvMsg>(aes : AesManaged, encoder, decoder) =
             )
 
         new CryptedClient<_, _>(aes, encoder, decoder)
+
