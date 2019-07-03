@@ -241,10 +241,15 @@ type CryptedClient<'SendMsg, 'RecvMsg>(aes : AesManaged, encoder, decoder) =
         Crypt.createDecrypter aes decoder)
 
     new(iv : string, key : string, encoder, decoder, ?cipherMode, ?paddingMode) =
+        if iv.Length <> 16 then
+            raise <| ArgumentException("The length of IV must be 16")
+        if key.Length <> 32 then
+            raise <| ArgumentException("The length of Key must be 32")
+
         let aes =
             new AesManaged(
-                KeySize = key.Length * 8,
-                BlockSize = iv.Length * 8,
+                KeySize = 256,
+                BlockSize = 128,
                 Mode = defaultArg cipherMode CipherMode.CBC,
                 IV = Encoding.UTF8.GetBytes(iv),
                 Key = Encoding.UTF8.GetBytes(key),

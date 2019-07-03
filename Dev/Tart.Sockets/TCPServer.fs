@@ -323,17 +323,26 @@ type CryptedServer<'SendMsg, 'RecvMsg>(aes : AesManaged, encoder, decoder, endpo
         let ipAddress = defaultArg ipAddress IPAddress.Any
         new CryptedServer<_, _>(aes, encoder, decoder, IPEndPoint(ipAddress, port))
 
-    new(iv : string, key : string, encoder, decoder, port, ?ipAddress, ?cipherMode, ?paddingMode) =
+    new(iv : string, key : string, encoder, decoder, ipEndPoint, ?cipherMode, ?paddingMode) =
+        if iv.Length <> 16 then
+            raise <| ArgumentException("The length of IV must be 16")
+        if key.Length <> 32 then
+            raise <| ArgumentException("The length of Key must be 32")
+
         let aes =
             new AesManaged(
-                KeySize = key.Length * 8,
-                BlockSize = iv.Length * 8,
+                KeySize = 256,
+                BlockSize = 128,
                 Mode = defaultArg cipherMode CipherMode.CBC,
                 IV = Encoding.UTF8.GetBytes(iv),
                 Key = Encoding.UTF8.GetBytes(key),
                 Padding = defaultArg paddingMode PaddingMode.PKCS7
             )
 
+        new CryptedServer<_, _>(aes, encoder, decoder, ipEndPoint)
 
+    new(iv : string, key : string, encoder, decoder, port, ?ipAddress, ?cipherMode, ?paddingMode) =
         let ipAddress = defaultArg ipAddress IPAddress.Any
-        new CryptedServer<_, _>(aes, encoder, decoder, IPEndPoint(ipAddress, port))
+        let cipherMode = defaultArg cipherMode CipherMode.CBC
+        let paddingMode = defaultArg paddingMode PaddingMode.PKCS7
+        new CryptedServer<_, _>(iv, key, encoder, decoder, IPEndPoint(ipAddress, port), cipherMode, paddingMode)

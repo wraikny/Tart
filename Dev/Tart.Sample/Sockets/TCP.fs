@@ -18,6 +18,12 @@ let encoding = System.Text.Encoding.UTF8
 let encoder (s : string) = encoding.GetBytes(s)
 let decoder (bytes : byte[]) = encoding.GetString(bytes)
 
+[<Literal>]
+let iv = "aaaaaaaaaaaaaaaa"
+
+[<Literal>]
+let key = "ssssssssssssssssssssssssssssssss"
+
 type SMsg = SMsg of string
 
 module SMsg =
@@ -43,8 +49,8 @@ module CMsg =
 type CMsg with
     member inline x.Value with get() = x |> CMsg.value
 
-type TestServer(ipEndpoint) =
-    inherit ServerBase<SMsg, CMsg>(SMsg.encoder, CMsg.decoder, ipEndpoint)
+type TestServer(ipEndpoint : IPEndPoint) =
+    inherit CryptedServer<SMsg, CMsg>(iv, key, SMsg.encoder, CMsg.decoder, ipEndpoint)
 
     override this.OnPopReceiveMsgAsync (clientId, recvMsg) =
         async {
@@ -65,7 +71,7 @@ type TestServer(ipEndpoint) =
 
 
 type TestClient() =
-    inherit Client<CMsg, SMsg>(CMsg.encoder, SMsg.decoder)
+    inherit CryptedClient<CMsg, SMsg>(iv, key, CMsg.encoder, SMsg.decoder)
 
     override this.OnPopRecvMsg(msg) =
         msg.Value |> function
@@ -85,7 +91,7 @@ let waiting() =
     Console.WriteLine("Enter..")
     Console.ReadLine() |> ignore
 
-let main'() =
+let main() =
     let ipEndpoint =
         let ipAdd = Dns.GetHostEntry("localhost").AddressList.[0]
         IPEndPoint(ipAdd, 8000)
@@ -121,7 +127,7 @@ let main'() =
     waiting()
 
 
-let main() =
+let main'() =
     let ipEndpoint =
         let ipAdd = Dns.GetHostEntry("localhost").AddressList.[0]
         IPEndPoint(ipAdd, 8000)
