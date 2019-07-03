@@ -22,6 +22,8 @@ type private Messenger<'Msg, 'ViewMsg, 'Model, 'ViewModel>
 
     let mutable port : IMsgQueue<'ViewMsg> option = None
 
+    let observable = new Observable<'Msg>()
+
     override this.OnPopMsg(msg) =
         let newModel, cmd = corePrograms.update msg lastModel
         
@@ -30,6 +32,8 @@ type private Messenger<'Msg, 'ViewMsg, 'Model, 'ViewModel>
         modelQueue.Enqueue(newModel)
 
         lastModel <- newModel
+
+        observable.Notify(msg)
 
 
     member this.InitModel() =
@@ -41,6 +45,11 @@ type private Messenger<'Msg, 'ViewMsg, 'Model, 'ViewModel>
 
         lastModel <- model
         lastModelExist <- true
+
+
+    interface IObservable<'Msg> with
+        member this.Add(o) = observable.Add(o)
+        member this.Clear() = observable.Clear()
     
 
     interface IMessenger<'Msg, 'ViewMsg, 'ViewModel> with

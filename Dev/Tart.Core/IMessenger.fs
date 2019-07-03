@@ -7,6 +7,8 @@ open wraikny.Tart.Helper.Utils
 [<Interface>]
 type IMessenger<'Msg, 'ViewMsg, 'ViewModel> =
     inherit IMsgQueue<'Msg>
+    inherit IObservable<'Msg>
+
     /// Sleeping time in every updating
     abstract SleepTime : uint32 with get, set
 
