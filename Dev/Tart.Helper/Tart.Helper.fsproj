@@ -66,6 +66,7 @@
     <Compile Include="Collections\Seq.fs" />
     <Compile Include="Collections\HashMap.fs" />
     <Compile Include="Collections\FixedSizeQueue.fs" />
+    <Compile Include="Collections\Queue.fs" />
     <Compile Include="Utils\LockObject.fs" />
     <Compile Include="Utils\Observer.fs" />
     <Compile Include="Utils\MsgQueue.fs" />
