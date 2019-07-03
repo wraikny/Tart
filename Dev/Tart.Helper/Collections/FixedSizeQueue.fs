@@ -1,59 +1,48 @@
-﻿namespace wraikny.Tart.Helper.Utils
+﻿namespace wraikny.Tart.Helper.Collections
 
 open System.Collections.Generic
 
-type private FixedSizeQueueParam<'T> =
-    | Limit of int
-    | Collection of IEnumerable<'T>
-
-
 /// Fixed Size (automatically dequeue) and Thread Safe (with lock)
-[<Class>]
-type FixedSizeQueue<'T> private (p) =
-    let queue, limit = p |> function
-        | Limit limit ->
-            new Queue<'T>(), limit
-        | Collection collection ->
-            let queue =
-                new Queue<'T>(collection)
-            queue, queue.Count
-
-    /// puseudo for lock
-    let _lock = new System.Object()
-
+type FixedSizeQueue<'T> private(queue, limit) = class
+    let queue : Queue<'T> = queue
+    let limit : int = limit
+    let _lock = System.Object()
 
     /// Constructer with limit
     public new(limit : int) =
-        new FixedSizeQueue<'T>(Limit limit)
+        new FixedSizeQueue<'T>(new Queue<'T>(), limit)
 
 
     /// Constructer from collection
     public new(collection : IEnumerable<'T>) =
-        new FixedSizeQueue<'T>(Collection collection)
+        let queue = new Queue<'T>(collection)
+        new FixedSizeQueue<'T>(queue, queue.Count)
+
+    member private __.Lock(f) =
+        lock _lock <| fun _ -> f()
 
 
-    /// Limit of queue length
-    member val Limit = limit with get
+    member __.Limit with get() = limit
 
 
     /// Get queue count with lock
-    member public __.Count
+    member public this.Count
         with get() =
-            lock _lock <| fun _ ->
+            this.Lock <| fun _ ->
                 queue.Count
 
     
     /// Enqueue and dequeue while count > limit with lock
     member public this.Enqueue(o : 'T) =
-        lock _lock <| fun _ ->
+        this.Lock <| fun _ ->
             queue.Enqueue(o)
             while queue.Count > this.Limit do
                 queue.Dequeue() |> ignore
 
 
     /// Dequeue with lock
-    member public __.TryDequeue() =
-        lock _lock <| fun _ ->
+    member public this.TryDequeue() =
+        this.Lock <| fun _ ->
             if queue.Count > 0 then
                 Some <| queue.Dequeue()
             else
@@ -61,22 +50,25 @@ type FixedSizeQueue<'T> private (p) =
 
   
     /// Clear queue with lock
-    member public __.Clear() =
-        lock _lock <| fun _ ->
+    member public this.Clear() =
+        this.Lock <| fun _ ->
             queue.Clear()
 
 
     /// Get Enumeartor with lock
-    member __.GetEnumerator() =
-        lock _lock <| fun _ ->
+    member this.GetEnumerator() =
+        this.Lock <| fun _ ->
             (new List<'T>(queue)).GetEnumerator()
             :> IEnumerator<'T>
 
 
     interface IReadOnlyCollection<'T> with
-        member this.Count
-            with get() = this.Count 
+        member this.Count with get() = this.Count 
+
         member this.GetEnumerator() = this.GetEnumerator()
+
         member this.GetEnumerator() =
             this.GetEnumerator()
             :> System.Collections.IEnumerator
+
+end

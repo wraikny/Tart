@@ -4,5 +4,5 @@
 let pi = float32 System.Math.PI
 
 [<CompiledName "DegreeToRadian">]
-let degreeToRadian degree =
+let inline degreeToRadian degree =
     degree * System.Math.PI / 180.0

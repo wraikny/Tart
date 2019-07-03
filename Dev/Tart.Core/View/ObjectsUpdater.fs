@@ -4,88 +4,128 @@
 open System.Collections.Generic;
 
 
-/// 追加削除の発生するオブジェクトのクラスが実装するインターフェース。
 [<Interface>]
-type IObjectUpdatee<'ViewModel> =
-    abstract Update : 'ViewModel -> unit
+type IUpdatee<'ObjectViewModel> =
+    abstract Update : 'ObjectViewModel -> unit
 
 
-/// 追加削除の発生するオブジェクトの更新を行うクラスが実装するインターフェース。 
+/// Interface of adding, removing and updating objects
 [<Interface>]
 type IObjectsUpdater =
-    abstract UpdatingEnabled : bool with get, set
+    abstract EnabledUpdating : bool with get, set
+    abstract EnabledPooling : bool with get, set
 
 
 
-/// 追加削除の発生するオブジェクトの更新を行うためのビューモデル。
-type UpdaterViewModel<'ActorViewModel> =
+/// ViewModel record to updatin objects
+type UpdaterViewModel<'ObjectViewModel> =
     {
-        nextID : uint32
-        objects : Map<uint32, 'ActorViewModel>
+        objects : (uint32 * 'ObjectViewModel) list
     }
 
 
-/// 追加削除の発生するオブジェクトの更新を行うクラス。
+[<Struct>]
+type ObjectsParent<'Object, 'ObjectViewModel
+    when 'Object :> IUpdatee<'ObjectViewModel>
+    > = {
+    create : unit -> 'Object
+    add : 'Object -> unit
+    remove : 'Object -> unit
+    dispose : 'Object -> unit
+}
+
+
+/// Class of adding, removing and updating objects
 [<Class>]
 type ObjectsUpdater<'ViewModel, 'Object, 'ObjectViewModel
-    when 'Object :> obj
-    and 'Object :> IObjectUpdatee<'ObjectViewModel>
-    >(init, add, remove) =
-    let mutable nextID = 0u
+    when 'Object :> IUpdatee<'ObjectViewModel>
+    >(parent) =
     let objects = new Dictionary<uint32, 'Object>()
+    let existFlags = new HashSet<uint32>()
 
-    let init = init
-    let add = add
-    let remove = remove
+    let parent : ObjectsParent<'Object, 'ObjectViewModel> = parent
 
+    let objectPooling = new Stack<'Object>()
+
+    let mutable enabledUpdating = true
+    let mutable enabledPooling = true
 
     interface IObjectsUpdater with
-        member val UpdatingEnabled = true with get, set
+        member this.EnabledUpdating
+            with get() = enabledUpdating
+            and set(value) =
+                if not value then
+                    objectPooling.Clear()
+                    enabledPooling <- false
+
+                enabledUpdating <- value
+
+        member __.EnabledPooling
+            with get() = enabledPooling
+            and set(value) =
+                if not value then
+                    objectPooling.Clear()
+
+                enabledPooling <- value
 
 
-    /// ビューモデルを元にオブジェクトの更新を行う。
-    member this.Update(viewModel : UpdaterViewModel<_> option) =
-        viewModel |> function
-        | Some viewModel ->
-            this.AddObjects(&viewModel)
-            if (this :> IObjectsUpdater).UpdatingEnabled then
-                this.UpdateActors(&viewModel)
-        | None -> ()
+    /// Update objects on ViewModel
+    member this.Update(viewModel : UpdaterViewModel<_>) =
+        if (this :> IObjectsUpdater).EnabledUpdating then
+            this.UpdateObjects(viewModel)
+        else
+            this.AddObjects(viewModel)
 
 
-    /// ビューモデルを元にidを照合してオブジェクトの追加を行う。
-    member this.AddObjects (viewModel : _ inref) =
-        let newNextID = viewModel.nextID
-        if nextID <> newNextID then
-            
-            for id in nextID..(newNextID - 1u) do
-                viewModel.objects
-                |> Map.tryFind id
-                |> function
-                | None -> ()
-                | Some objectViewModel ->
-                    let object : 'Object = init()
-                    object.Update(objectViewModel)
-
-                    objects.Add(id, object)
-                    add(object)
-
-            nextID <- newNextID
+    member private this.Create() =
+        if (this :> IObjectsUpdater).EnabledPooling then
+            try objectPooling.Pop()
+            with | :? System.InvalidOperationException -> parent.create()
+        else
+            parent.create()
 
 
-    /// ビューモデルを元にオブジェクトの更新と破棄を行う。
-    member this.UpdateActors (viewModel : _ inref) =
-        let objects' =
-            objects
-            |> Seq.map(fun x -> (x.Key, x.Value))
+    member private this.Remove(id : uint32) =
+        let object = objects.Item(id)
+        objects.Remove(id) |> ignore
+        if (this :> IObjectsUpdater).EnabledPooling then
+            parent.remove(object)
+            objectPooling.Push(object)
+        else
+            parent.dispose(object)
 
-        for (id, object) in objects' do
-            viewModel.objects
-            |> Map.tryFind id
-            |> function
-            | Some objectViewModel ->
+
+    /// Add objects on ViewModel
+    member private this.AddObjects (viewModel) =
+        for (id, objectViewModel) in viewModel.objects do
+            if not <| objects.ContainsKey(id) then
+                let object : 'Object = this.Create()
                 object.Update(objectViewModel)
+                objects.Add(id, object)
+                parent.add(object)
 
-            | None ->
-                remove(object)
-                objects.Remove(id) |> ignore
+
+    /// Add, Update, Remove objects on ViewModel
+    member private this.UpdateObjects (viewModel) =
+        for (id, objectViewModel) in viewModel.objects do
+            objects.TryGetValue(id) |> function
+            | true, result ->
+                result.Update(objectViewModel)
+            | false, _ ->
+                let object : 'Object = parent.create()
+                object.Update(objectViewModel)
+                objects.Add(id, object)
+                parent.add(object)
+
+            existFlags.Add(id) |> ignore
+
+        let removedObjectIDs =
+            objects
+            |> Seq.map(fun x -> x.Key)
+            |> Seq.filter(existFlags.Contains >> not)
+            |> Seq.toList
+
+        for id in removedObjectIDs do
+            this.Remove(id)
+
+        existFlags.Clear()

@@ -1,5 +1,6 @@
 namespace wraikny.Tart.Helper.Math
 
+[<Struct>]
 type ^a Vec2 =
     {
         x : ^a
@@ -30,10 +31,34 @@ type ^a Vec2 =
             y = a.y * b.y
         }
 
+    static member inline ( .* ) (a : ^b, b : ^b Vec2) : ^b Vec2 =
+        {
+            x = a * b.x
+            y = a * b.y
+        }
+
+    static member inline ( *. ) (a : ^b Vec2, b : ^b) : ^b Vec2 =
+        {
+            x = a.x * b
+            y = a.y * b
+        }
+
     static member inline (/) (a : ^b Vec2, b : ^b Vec2) : ^b Vec2 =
         {
             x = a.x / b.x
             y = a.y / b.y
+        }
+
+    static member inline (./) (a : ^b, b : ^b Vec2) : ^b Vec2 =
+        {
+            x = a / b.x
+            y = a / b.y
+        }
+
+    static member inline (/.) (a : ^b Vec2, b : ^b) : ^b Vec2 =
+        {
+            x = a.x / b
+            y = a.y / b
         }
 
 
@@ -43,19 +68,16 @@ module Vec2 =
     let inline init(x, y) : ^a Vec2 =
         { x = x; y = y }
 
-    [<CompiledName "Zero">]
-    let inline zero() : ^a Vec2 =
-        let zero = LanguagePrimitives.GenericZero
-        init(zero, zero)
-
-    [<CompiledName "FromScalar">]
-    let inline fromScalar a = init(a, a)
+    let inline internal init1 x = init(x, x)
 
     [<CompiledName "X">]
     let inline x v = v.x
 
     [<CompiledName "Y">]
     let inline y v = v.y
+
+    [<CompiledName "Axes">]
+    let inline axes() : (^a Vec2 -> ^a) list = [x; y]
 
     [<CompiledName "XY">]
     let inline xy v = v.x, v.y

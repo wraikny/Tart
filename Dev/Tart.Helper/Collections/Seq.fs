@@ -1,14 +1,13 @@
-﻿namespace wraikny.Tart.Helper.Extension
+﻿namespace wraikny.Tart.Helper.Collections
 
-[<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
 module Seq =
     [<CompiledName "FilterMap">]
-    let filterMap f =
+    let inline filterMap f : #seq<'a> -> seq<'b> =
         Seq.map f
         >> Seq.filter Option.isSome
         >> Seq.map Option.get
 
     [<CompiledName "TryAssoc">]
-    let tryAssoc key =
+    let inline tryAssoc key : #seq<'a * 'b> -> 'b option =
         Seq.tryFind (fst >> (=) key)
         >> Option.map snd

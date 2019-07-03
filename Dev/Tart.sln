@@ -11,6 +11,8 @@ Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Tart.Sample", "Tart.Sample\
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Tart.Advanced", "Tart.Advanced\Tart.Advanced.fsproj", "{CE58DC38-831B-4BD5-87CB-BF861687A3BF}"
 EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Tart.Sockets", "Tart.Sockets\Tart.Sockets.fsproj", "{8C31222F-FE5D-4BF9-BA2F-CCA4F84210DF}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -33,6 +35,10 @@ Global
 		{CE58DC38-831B-4BD5-87CB-BF861687A3BF}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{CE58DC38-831B-4BD5-87CB-BF861687A3BF}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{CE58DC38-831B-4BD5-87CB-BF861687A3BF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8C31222F-FE5D-4BF9-BA2F-CCA4F84210DF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8C31222F-FE5D-4BF9-BA2F-CCA4F84210DF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8C31222F-FE5D-4BF9-BA2F-CCA4F84210DF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8C31222F-FE5D-4BF9-BA2F-CCA4F84210DF}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

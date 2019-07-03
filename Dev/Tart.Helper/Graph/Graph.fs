@@ -1,5 +1,6 @@
 ﻿namespace wraikny.Tart.Helper.Graph
 
+[<Struct>]
 type Node<'V> = {
     label : int
     value : 'V
@@ -22,7 +23,7 @@ module Node =
         }
 
 
-
+[<Struct>]
 type Edge< 'V, 'W
     when 'W : comparison
     > =
@@ -36,16 +37,16 @@ type Edge< 'V, 'W
 [<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
 module Edge =
     [<CompiledName "Init">]
-    let init n1 n2 w = { node1 = n1; node2 = n2; weight = w }
+    let inline init n1 n2 w = { node1 = n1; node2 = n2; weight = w }
 
     [<CompiledName "Node1">]
-    let node1 e = e.node1
+    let inline node1 e = e.node1
 
     [<CompiledName "Node2">]
-    let node2 e = e.node2
+    let inline node2 e = e.node2
 
     [<CompiledName "Weight">]
-    let weight e = e.weight
+    let inline weight e = e.weight
 
     [<CompiledName "Equal">]
     let equal (e1 : Edge<'a, 'b>) (e2 : Edge<'a, 'b>) =
@@ -53,11 +54,11 @@ module Edge =
         || ( (Node.equal e1.node1 e2.node2) && (Node.equal e1.node2 e2.node1) )
 
     [<CompiledName "Values">]
-    let values edge =
+    let inline values edge =
         edge.node1.value, edge.node2.value
 
     [<CompiledName "MapValues">]
-    let mapValues f edge =
+    let inline mapValues f edge =
         {
             weight = edge.weight
             node1 = edge.node1 |> Node.map f
@@ -76,7 +77,7 @@ type NodeTriangle(node1, node2, node3) =
 
     let edges =
         let createEdge (a : Node<float32 Vec2>) (b : Node<float32 Vec2>) =
-            let w = VectorClass.length(a.value - b.value)
+            let w = Vector.length(a.value - b.value)
             Edge.init a b w
 
         let e1 = createEdge node1 node2

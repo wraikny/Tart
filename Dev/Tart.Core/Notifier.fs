@@ -1,14 +1,16 @@
 ﻿namespace wraikny.Tart.Core
 
-open wraikny.Tart.Helper
+open wraikny.Tart.Helper.Utils
 
 type Notifier<'Msg, 'ViewMsg, 'ViewModel>(messenger) =
     inherit Observable<'ViewModel>()
 
-    member val Messenger : IMessenger<'Msg, 'ViewModel> = messenger with get
+    member val Messenger : IMessenger<'Msg, 'ViewMsg, 'ViewModel> = messenger with get
 
-    member this.Update() =
-        this.Messenger.TryViewModel |> function
+    member this.Pull() =
+        this.Messenger.TryPopViewModel |> function
         | Some viewModel ->
-            this.NotifyObservers(viewModel)
-        | None -> ()
+            this.Notify(viewModel)
+            true
+        | None ->
+            false

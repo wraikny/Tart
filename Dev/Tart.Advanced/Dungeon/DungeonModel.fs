@@ -3,25 +3,28 @@
 open wraikny.Tart.Helper.Math
 open wraikny.Tart.Helper.Geometry
 open wraikny.Tart.Helper.Graph
+open wraikny.Tart.Helper.Collections
 
+[<Struct>]
 type SpaceID =
-    | Large of int
-    | Small of int
-    | Corridor of int
+    | Large of large:int
+    | Small of small:int
+    | Corridor of corridor:int
 
 
 [<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
 module SpaceID =
     [<CompiledName "ID">]
-    let id id = id |> function
+    let inline value id = id |> function
         | Large id
         | Small id
         | Corridor id -> id
 
 
+[<Struct>]
 type Space = {
     id : SpaceID
-    rect : int Rect
+    rect : int Rect2
 }
 
 
@@ -33,25 +36,25 @@ module Space =
     }
 
     [<CompiledName "ID">]
-    let id s = s.id
+    let inline id s = s.id
 
     [<CompiledName "Rect">]
-    let rect s = s.rect
+    let inline rect s = s.rect
 
 
 type DungeonModel = {
     /// IDと大部屋の対応
-    largeRooms : Map<int, Space>
+    largeRooms : HashMap<int, Space>
     /// IDと小さい部屋の対応
-    smallRooms : Map<int, Space>
+    smallRooms : HashMap<int, Space>
     /// IDと廊下の対応
-    corridors : Map<int, Space>
+    corridors : HashMap<int, Space>
 
     /// 大部屋のIDをノードのラベルに、距離を重みにもつノードのリスト
     largeRoomEdges : Edge<unit, float32> list
 
     /// マスの座標と空間IDの対応
-    cells : Map<int Vec2, SpaceID>
+    cells : HashMap<int Vec2, SpaceID>
 }
 
 
@@ -65,13 +68,25 @@ module DungeonModel =
             | Corridor id -> dungeon.corridors, id
 
         target
-        |> Map.tryFind id
+        |> HashMap.tryFind id
 
         
     [<CompiledName "GetSpaceAt">]
     let getSpaceAt coordinate dungeon =
         dungeon.cells
-        |> Map.tryFind coordinate
+        |> HashMap.tryFind coordinate
         |> Option.bind(fun id ->
             tryFindSpace id dungeon
         )
+
+
+    [<CompiledName "CellToCoordinate">]
+    let inline cellToCoordinate (cellSize : float32 Vec2) (cell : int Vec2) : float32 Vec2 =
+        let cellf = cell |> Vec2.map float32
+        cellf * cellSize
+
+
+    [<CompiledName "CoordinateToCell">]
+    let inline coordinateToCell (cellSize : float32 Vec2) (coordinate : float32 Vec2) : int Vec2 =
+        coordinate / cellSize
+        |> Vec2.map (floor >> int)

@@ -1,118 +1,57 @@
 ﻿namespace wraikny.Tart.Core
 
 open System.Threading
+open wraikny.Tart.Helper.Collections
 open wraikny.Tart.Helper.Utils
-open System.Collections.Concurrent
-
-
-
-[<Class>]
-type private CoreMessenger<'Msg>() =
-    let msgQueue = new ConcurrentQueue<'Msg>()
-
-    member __.PushMsg(msg) =
-        msgQueue.Enqueue(msg)
-
-
-    member __.TryPopMsg() : 'Msg option =
-        let success, result = msgQueue.TryDequeue()
-        if success then
-            Some result
-        else
-            None
 
 
 
 [<Class>]
 type private Messenger<'Msg, 'ViewMsg, 'Model, 'ViewModel>
     (environment, corePrograms) =
+    inherit MsgQueueAsync<'Msg>()
 
     let corePrograms : CoreProgram<_, _, _, _> = corePrograms
 
-    let environment : Environment<'ViewMsg> = environment
+    let environment : IEnvironment = environment
 
-    let coreMessenger = new CoreMessenger<'Msg>()
-
-    let mutable lastModel :'Model option = None
+    let mutable lastModel = Unchecked.defaultof<'Model>
+    let mutable lastModelExist = false
 
     let modelQueue = new FixedSizeQueue<'Model>(1)
 
-    let isRunning = new LockObject<bool>(false)
+    let mutable port : IMsgQueue<'ViewMsg> option = None
 
-    let mutable sleepTime = 5
-
-
-    member private __.IsRunning
-        with get() : bool =
-            isRunning.Value
-        and set(value) =
-            isRunning.Value <- value
-
-
-    member private this.MainLoop initModel =
-        let running = this.IsRunning
-        if not running then
-            this.IsRunning <- true
-
-            let update model =
-                coreMessenger.TryPopMsg() |> function
-                | None -> model
-
-                | Some(msg) ->
-                    let newModel, cmd = corePrograms.update msg model
-
-                    cmd |> Cmd.execute
-                        (this :> IMsgSender<_>)
-                        environment
-
-                    modelQueue.Enqueue(newModel)
-                    Thread.Sleep(sleepTime)
-                    newModel
+    override this.OnPopMsg(msg) =
+        let newModel, cmd = corePrograms.update msg lastModel
         
-            /// Main Loop
-            let rec loop model =
-                // stop with cache
-                if not this.IsRunning then
-                    lastModel <- Some model
-                    ()
+        cmd |> Cmd.execute this port environment
+        
+        modelQueue.Enqueue(newModel)
 
-                // update
-                else
-                    model
-                    |> update
-                    |> loop
-
-            async {
-                initModel
-                |> loop
-            } |> Async.Start
-
-        // Is started main loop in this call
-        not running
+        lastModel <- newModel
 
 
-    member private this.InitializeModel() =
+    member this.InitModel() =
         let model, cmd = corePrograms.init
         
-        cmd |> Cmd.execute
-            (this :> IMsgSender<_>)
-            environment
+        cmd |> Cmd.execute this port environment
         
         modelQueue.Enqueue(model)
 
-        model
-
-
-    interface IMsgSender<'Msg> with
-        member this.PushMsg(msg) = coreMessenger.PushMsg(msg)
+        lastModel <- model
+        lastModelExist <- true
     
 
-    interface IMessenger<'Msg, 'ViewModel> with
+    interface IMessenger<'Msg, 'ViewMsg, 'ViewModel> with
         member this.SleepTime
-            with get() = sleepTime
-            and  set(value) = sleepTime <- value
+            with get() = this.SleepTime
+            and  set(value) = this.SleepTime <- value
 
-        member this.TryViewModel
+        member __.SetPort(port_) =
+            port <- Some (port_ :> IMsgQueue<'ViewMsg>)
+
+        member this.TryPopViewModel
             with get() =
                 modelQueue.TryDequeue()
                 |> Option.map corePrograms.view
@@ -121,28 +60,30 @@ type private Messenger<'Msg, 'ViewMsg, 'Model, 'ViewModel>
             with get() = this.IsRunning
 
         member this.StartAsync() =
-            this.InitializeModel()
-            |> this.MainLoop
+            this.InitModel()
+            this.StartAsync()
 
         member this.ResumeAsync() =
-            lastModel |> function
-            | Some model -> this.MainLoop(model)
-            | None ->
-                (this :> IMessenger<'Msg, 'ViewModel>).StartAsync()
+            if lastModelExist then
+                this.StartAsync()
+                true
+            else
+                (this :> IMessenger<_, _, _>).StartAsync()
+                false
 
         member this.Stop() =
-            this.IsRunning <- false
+            this.Stop()
 
 
 [<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
 module Messenger =
     [<CompiledName "CreateMessenger">]
-    let createMessenger (environment) (corePrograms) =
-        (new Messenger<_, _, _, _>(environment, corePrograms))
-        :> IMessenger<_, _>
+    let createMessenger (environment : Environment) (corePrograms) =
+        (new Messenger<_, _, _, _>(environment :> IEnvironment, corePrograms))
+        :> IMessenger<_, _, _>
 
 
     [<CompiledName "BuildMessenger">]
     let buildMessenger (envBuilder) (corePrograms) =
         (new Messenger<_, _, _, _>(envBuilder |> EnvironmentBuilder.build, corePrograms))
-        :> IMessenger<_, _>
+        :> IMessenger<_, _, _>

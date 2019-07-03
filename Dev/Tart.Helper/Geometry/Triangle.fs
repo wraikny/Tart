@@ -2,14 +2,18 @@
 
 open wraikny.Tart.Helper.Math
 
-
-type Triangle< ^a> =
+[<Struct>]
+type Triangle< 'a > =
     {
-        p1 : ^a
-        p2 : ^a
-        p3 : ^a
+        p1 : 'a
+        p2 : 'a
+        p3 : 'a
     }
 
+
+type ^a Triangle2 = ^a Vec2 Triangle
+type ^a Triangle3 = ^a Vec3 Triangle
+type ^a Triangle4 = ^a Vec4 Triangle
 
 
 [<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
@@ -33,7 +37,7 @@ module Triangle =
     let inline p3 t = t.p3
 
     [<CompiledName "Equal">]
-    let inline equal a b =
+    let equal a b =
         let f q1 q2 q3 =
             (a.p1 = q1 b) && (a.p2 = q2 b) && (a.p3 = q3 b)
 
@@ -41,7 +45,7 @@ module Triangle =
         (f p1 p3 p2) || (f p2 p1 p3) || (f p3 p2 p1)
 
     [<CompiledName "HasCommonPoint">]
-    let inline hasCommonPoint a b =
+    let hasCommonPoint a b =
         seq {
             let l = [p1; p2; p3]
             for s in l do
@@ -55,7 +59,7 @@ module Triangle =
 
 
     [<CompiledName "CircumscribedCircle">]
-    let inline circumscribedCircle (t : Triangle< float32 Vec2 >) : Circle< float32, float32 Vec2 > =
+    let circumscribedCircle (t : Triangle< float32 Vec2 >) : Sphere< float32, float32 Vec2 > =
         let x1, y1 = t.p1.x, t.p1.y
         let x2, y2 = t.p2.x, t.p2.y
         let x3, y3 = t.p3.x, t.p3.y
@@ -71,6 +75,6 @@ module Triangle =
 
         let center = Vec2.init(x, y)
 
-        let r = VectorClass.length <| Vec2.init(center.x - x1, center.y - y1)
+        let r = Vector.length <| Vec2.init(center.x - x1, center.y - y1)
 
-        Circle.init(center, r)
+        Sphere.init(center, r)

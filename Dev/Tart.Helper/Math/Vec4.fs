@@ -1,5 +1,6 @@
 ﻿namespace wraikny.Tart.Helper.Math
 
+[<Struct>]
 type ^a Vec4 =
     {
         x : ^a
@@ -40,12 +41,44 @@ type ^a Vec4 =
             w = a.w * b.w
         }
 
+    static member inline ( .* ) (a : ^b, b : ^b Vec4) : ^b Vec4 =
+        {
+            x = a * b.x
+            y = a * b.y
+            z = a * b.z
+            w = a * b.w
+        }
+
+    static member inline ( *. ) (a : ^b Vec4, b : ^b) : ^b Vec4 =
+        {
+            x = a.x * b
+            y = a.y * b
+            z = a.z * b
+            w = a.w * b
+        }
+
     static member inline (/) (a : ^b Vec4, b : ^b Vec4) : ^b Vec4 =
         {
             x = a.x / b.x
             y = a.y / b.y
             z = a.z / b.z
             w = a.w / b.w
+        }
+
+    static member inline (./) (a : ^b, b : ^b Vec4) : ^b Vec4 =
+        {
+            x = a / b.x
+            y = a / b.y
+            z = a / b.z
+            w = a / b.w
+        }
+
+    static member inline (/.) (a : ^b Vec4, b : ^b) : ^b Vec4 =
+        {
+            x = a.x / b
+            y = a.y / b
+            z = a.z / b
+            w = a.w / b
         }
 
 
@@ -55,13 +88,7 @@ module Vec4 =
     let inline init(x, y, z, w) : ^a Vec4 =
         { x = x; y = y; z = z; w = w }
 
-    [<CompiledName "Zero">]
-    let inline zero() : ^a Vec4 =
-        let zero = LanguagePrimitives.GenericZero
-        init(zero, zero, zero, zero)
-
-    [<CompiledName "FromScalar">]
-    let inline fromScalar a = init(a, a, a, a)
+    let inline internal init1 x = init(x, x, x, x)
 
     [<CompiledName "X">]
     let inline x v = v.x
@@ -72,29 +99,11 @@ module Vec4 =
     [<CompiledName "Z">]
     let inline z v = v.z
 
-    [<CompiledName "XY">]
-    let inline xy (v : ^a Vec4) = v.x, v.y
+    [<CompiledName "W">]
+    let inline w v = v.w
 
-    [<CompiledName "YZ">]
-    let inline yz (v : ^a Vec4) = v.y, v.z
-
-    [<CompiledName "ZW">]
-    let inline zw (v : ^a Vec4) = v.z, v.w
-
-    [<CompiledName "WX">]
-    let inline wx (v : ^a Vec4) = v.w, v.x
-
-    [<CompiledName "XYZ">]
-    let inline xyz (v : ^a Vec4) = v.x, v.y, v.z
-
-    [<CompiledName "YZW">]
-    let inline yzw (v : ^a Vec4) = v.y, v.z, v.w
-
-    [<CompiledName "ZWX">]
-    let inline zwx (v : ^a Vec4) = v.z, v.w, v.x
-
-    [<CompiledName "WXY">]
-    let inline wxy (v : ^a Vec4) = v.w, v.x, v.y
+    [<CompiledName "Axes">]
+    let inline axes() : (^a Vec4 -> ^a) list = [x; y; z; w]
 
     [<CompiledName "XYZW">]
     let inline xyzw (v : ^a Vec4) = v.x, v.y, v.z, v.w

@@ -3,6 +3,7 @@
 open wraikny.Tart.Advanced.Dungeon
 open wraikny.Tart.Helper.Geometry
 open wraikny.Tart.Helper.Math
+open wraikny.Tart.Helper.Collections
 
 let createScene builder =
     let dungeonModel =
@@ -12,11 +13,11 @@ let createScene builder =
 
     // printfn "%A" dungeonModel
     printfn "Seed: %d" builder.seed
-    printfn "Large: %d" <| (Map.toSeq >> Seq.length) dungeonModel.largeRooms
-    printfn "Small: %d" <| (Map.toSeq >> Seq.length) dungeonModel.smallRooms
-    printfn "Corridor: %d" <| (Map.toSeq >> Seq.length) dungeonModel.corridors
+    printfn "Large: %d" <| (HashMap.toSeq >> Seq.length) dungeonModel.largeRooms
+    printfn "Small: %d" <| (HashMap.toSeq >> Seq.length) dungeonModel.smallRooms
+    printfn "Corridor: %d" <| (HashMap.toSeq >> Seq.length) dungeonModel.corridors
     printfn "Edges: %d" <| (Seq.length) dungeonModel.largeRoomEdges
-    printfn "Cells: %d" <| (Map.toSeq >> Seq.length) dungeonModel.cells
+    printfn "Cells: %d" <| (HashMap.toSeq >> Seq.length) dungeonModel.cells
 
     printfn "----------------------------------------"
     printfn "----------------------------------------"
@@ -35,8 +36,8 @@ let createScene builder =
 
     let n = 2.0f
 
-    let create (r : int Rect) =
-        let r = r |> Rect.map1 (float32 >> (*) n)
+    let create (r : int Vec2 Rect) =
+        let r = r |> Rect.mapVec (float32 >> (*) n)
         let rect =
             new asd.RectangleShape(
                 DrawingArea =
@@ -44,17 +45,17 @@ let createScene builder =
             )
         new asd.GeometryObject2D(Shape = rect)
 
-    for (id, c) in (dungeonModel.corridors |> Map.toSeq) do
+    for (id, c) in (dungeonModel.corridors |> HashMap.toSeq) do
         let c = create c.rect
         c.Color <- new asd.Color(255uy, 255uy, 0uy, 255uy)
         corridors.AddObject(c)
 
-    for (id, c) in (dungeonModel.smallRooms |> Map.toSeq) do
+    for (id, c) in (dungeonModel.smallRooms |> HashMap.toSeq) do
         let c = create c.rect
         c.Color <- new asd.Color(0uy, 0uy, 255uy, 200uy)
         corridors.AddObject(c)
 
-    let largeRooms = dungeonModel.largeRooms |> Map.toList
+    let largeRooms = dungeonModel.largeRooms |> HashMap.toList
 
     for (id, c) in largeRooms do
         let c = create c.rect
@@ -64,11 +65,11 @@ let createScene builder =
     for e in dungeonModel.largeRoomEdges do
         let n1, n2 = e.node1.label, e.node2.label
         let s1, s2 =
-            dungeonModel.largeRooms |> Map.find n1
-            , dungeonModel.largeRooms |> Map.find n2
+            dungeonModel.largeRooms |> HashMap.find n1
+            , dungeonModel.largeRooms |> HashMap.find n2
         let p1, p2 =
-            s1.rect |> Rect.map1 (float32 >> (*) n) |> Rect.centerPosition
-            , s2.rect |> Rect.map1 (float32 >> (*) n) |> Rect.centerPosition
+            s1.rect |> Rect.mapVec (float32 >> (*) n) |> Rect.centerPosition
+            , s2.rect |> Rect.mapVec (float32 >> (*) n) |> Rect.centerPosition
 
         let line =
             new asd.LineShape(
@@ -82,7 +83,7 @@ let createScene builder =
 
     let camera() =
         let ws = asd.Engine.WindowSize
-        let posList = largeRooms |> List.map(fun (_, s) -> Vec2.fromScalar n * Vec2.map float32 s.rect.position)
+        let posList = largeRooms |> List.map(fun (_, s) -> n .* Vec2.map float32 s.rect.position)
         let minX = posList |> List.map Vec2.x |> List.min
         let maxX = posList |> List.map Vec2.x |> List.max
         let minY = posList |> List.map Vec2.y |> List.min

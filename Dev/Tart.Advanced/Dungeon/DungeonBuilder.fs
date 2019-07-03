@@ -4,6 +4,7 @@ open System
 
 open wraikny.Tart.Helper.Math
 open wraikny.Tart.Helper.Geometry
+open wraikny.Tart.Helper.Collections
 
 type DungeonBuilder = {
     /// 乱数生成に用いるシード値
@@ -81,17 +82,17 @@ module private WithRandom =
 
                 let rand = builder |> getRandomValue
 
-                (min + (max - min) * Vec2.fromScalar rand)
+                (min + (max - min) *. rand)
                 |> Vec2.map int
 
-            Rect.init (pos - size / Vec2.fromScalar 2) size
+            Rect.init (pos - size /. 2) size
         )
 
 
     open wraikny.Tart.Helper.Graph
         
         
-    let getLargeRoomEdges (largeRooms : (int * int Rect) list) (withRandom : WithRandom) : Edge<unit, float32> list =
+    let getLargeRoomEdges (largeRooms : (int * int Rect2) list) (withRandom : WithRandom) : Edge<unit, float32> list =
         let largeRoomsCount = largeRooms |> List.length
         
         let largeRoomEdges =
@@ -99,7 +100,7 @@ module private WithRandom =
             |> List.map(fun (id, rect) ->
                 let pos = rect.position |> Vec2.map float32
                 let size = rect.size |> Vec2.map float32
-                Node.init (id, pos + size / Vec2.fromScalar 2.0f)
+                Node.init (id, pos + size /. 2.0f)
             )
             |> Delaunay2.getNodesList
         
@@ -137,14 +138,14 @@ module private WithRandom =
 
 [<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
 module DungeonBuilder =
-    let private distributeRooms (rooms : int Rect list) (rate : float32) =
+    let private distributeRooms (rooms : int Rect2 list) (rate : float32) =
         let threshold =
             let len = rooms |> List.length |> float32
             let sum =
                 rooms
                 |> List.map ( Rect.size >> (Vec2.map float32) )
-                |> List.fold (+) (Vec2.zero())
-            sum * Vec2.fromScalar(rate / len)
+                |> List.fold (+) (Vector.zero())
+            sum *. (rate / len)
 
         rooms
         |> List.partition(fun rect ->
@@ -156,11 +157,11 @@ module DungeonBuilder =
     // open System.Linq
 
 
-    let private moveRooms (rooms : int Rect list) movingRate : int Rect list =
+    let private moveRooms (rooms : int Rect2 list) movingRate : int Rect2 list =
         let roomsList = new List<MovingRoom>()
 
         for r in rooms do
-            let movingRoom = new MovingRoom(r |> Rect.map1 float32, movingRate, roomsList)
+            let movingRoom = new MovingRoom(r |> Rect.mapVec float32, movingRate, roomsList)
             roomsList.Add(movingRoom)
 
 
@@ -174,10 +175,10 @@ module DungeonBuilder =
         [ for r in roomsList -> r.RectI ]
 
 
-    let private generateCorridors (width) (rect1 : int Rect, rect2 : int Rect) : int Rect list =
+    let private generateCorridors (width) (rect1 : int Rect2, rect2 : int Rect2) : int Rect2 list =
         
         let center1, center2 = Rect.centerPosition rect1, Rect.centerPosition rect2
-        let middle = (center1 + center2) / Vec2.fromScalar 2
+        let middle = (center1 + center2) /. 2
 
         let lurd1 = rect1 |> Rect.get_LU_RD
         let lurd2 = rect2 |> Rect.get_LU_RD
@@ -194,7 +195,7 @@ module DungeonBuilder =
             )
 
         let createCorridorAt size pos =
-            Rect.init (pos - size / Vec2.fromScalar 2) size
+            Rect.init (pos - size /. 2) size
 
 
         if isCollidedX && isCollidedY then
@@ -213,11 +214,11 @@ module DungeonBuilder =
             |> Seq.toList
 
 
-    let private spacesToMap =
+    let private spacesToHashMap =
         List.map(fun (r : Space) ->
-            r.id |> SpaceID.id, r
+            r.id |> SpaceID.value, r
         )
-        >> Map.ofList
+        >> HashMap.ofList
 
 
     [<CompiledName "Generate">]
@@ -242,7 +243,7 @@ module DungeonBuilder =
             , smallRoomRects |> List.indexed |> toRoom SpaceID.Small
 
 
-        let largeRoomsMap = spacesToMap largeRooms
+        let largeRoomsHashMap = spacesToHashMap largeRooms
 
 
         let largeRoomsEdges =
@@ -254,12 +255,12 @@ module DungeonBuilder =
             seq {
                 for e in largeRoomsEdges do
                     let room1 =
-                        largeRoomsMap
-                        |> Map.find e.node1.label
+                        largeRoomsHashMap
+                        |> HashMap.find e.node1.label
 
                     let room2 =
-                        largeRoomsMap
-                        |> Map.find e.node2.label
+                        largeRoomsHashMap
+                        |> HashMap.find e.node2.label
 
                     yield!
                         generateCorridors builder.corridorWidth (room1.rect, room2.rect)
@@ -288,17 +289,18 @@ module DungeonBuilder =
             let getCells (spaces : Space list) =
                 spaces
                 |> Seq.map(fun space ->
-                    let lu, rd = space.rect |> Rect.get_LU_RD
+                    let lu = space.rect.position
+                    let size = space.rect.size
                     seq {
-                        for x in (lu.x)..(rd.x) do
-                        for y in (lu.y)..(rd.y) do
-                            yield ( (x, y), space.id )
+                        for dx in 0..(size.x - 1) do
+                        for dy in 0..(size.y - 1) do
+                            yield ( lu + Vec2.init(dx, dy), space.id )
                     }
                 )
                 |> Seq.concat
 
             seq {
-                let cellsDict = new Dictionary<int * int, SpaceID>()
+                let cellsDict = new Dictionary<int Vec2, SpaceID>()
 
                 for (cdn, id) in (getCells largeRooms) do
                     cellsDict.[cdn] <- id
@@ -312,15 +314,15 @@ module DungeonBuilder =
                         cellsDict.[cdn] <- id
 
                 for item in cellsDict ->
-                    (Vec2.init item.Key, item.Value)
+                    (item.Key, item.Value)
             }
-            |> Map.ofSeq
+            |> HashMap.ofSeq
 
 
         {
-            largeRooms = largeRoomsMap
-            smallRooms = collidedSmallRooms |> spacesToMap
-            corridors = corridors |> spacesToMap
+            largeRooms = largeRoomsHashMap
+            smallRooms = collidedSmallRooms |> spacesToHashMap
+            corridors = corridors |> spacesToHashMap
 
             largeRoomEdges = largeRoomsEdges
 

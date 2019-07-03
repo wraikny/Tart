@@ -45,11 +45,10 @@ let init : Model * Cmd<Msg, _> =
     }, Cmd.none
 
 
-let messengerBuilder() : IMessenger<Msg, ViewModel> =
+let messengerBuilder() : IMessenger<Msg, _, ViewModel> =
     Messenger.buildMessenger
         {
             seed = 0
-            updater = None
         }
         {
             init = init

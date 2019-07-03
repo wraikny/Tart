@@ -1,7 +1,9 @@
 ﻿namespace wraikny.Tart.Core
 
+open wraikny.Tart.Helper.Utils
+
 type internal PushMessage<'Msg> = 'Msg -> unit
-type internal Command<'Msg> = IEnvironmentCore -> PushMessage<'Msg> -> unit
+type internal Command<'Msg> = IEnvironment -> PushMessage<'Msg> -> unit
 
 type Cmd<'Msg, 'ViewMsg> =
     {
@@ -12,16 +14,16 @@ type Cmd<'Msg, 'ViewMsg> =
 
 [<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
 module Cmd =
-    let internal commands (cmd : Cmd<_, _>) = cmd.commands
-    let internal viewMsgs (cmd : Cmd<_, _>) = cmd.viewMsgs
+    let inline internal commands (cmd : Cmd<_, _>) = cmd.commands
+    let inline internal viewMsgs (cmd : Cmd<_, _>) = cmd.viewMsgs
 
-    let internal init (commands) (viewCommands) : Cmd<'Msg, 'ViewMsg> =
+    let inline internal init (commands) (viewCommands) : Cmd<'Msg, 'ViewMsg> =
         {
             commands = commands
             viewMsgs = viewCommands
         }
 
-    let internal singleCommand ( command : Command<'Msg> ) : Cmd<'Msg, 'ViewMsg> =
+    let inline internal singleCommand ( command : Command<'Msg> ) : Cmd<'Msg, 'ViewMsg> =
         init [command] []
 
     [<CompiledName "ViewMsg">]
@@ -29,19 +31,20 @@ module Cmd =
         init [] m
 
 
-    let internal execute
-        (sender : IMsgSender<'Msg>)
-        (env : Environment<'ViewMsg>)
+    let inline internal execute
+        (messenger : #IMsgQueue<'Msg>)
+        (port : #IMsgQueue<'ViewMsg> option)
+        (env : #IEnvironment)
         (cmd : Cmd<'Msg, 'ViewMsg>) =
         for c in cmd.commands do
-            c (env :> IEnvironmentCore) (fun msg -> sender.PushMsg msg)
+            c env <| fun msg -> messenger.Enqueue msg
 
         
-        env.Updater |> function
+        port |> function
         | None -> ()
-        | Some(sender) ->
+        | Some(port) ->
             for msg in cmd.viewMsgs do
-                sender.PushMsg(msg)
+                port.Enqueue(msg)
 
 
     /// Empty command
@@ -78,7 +81,7 @@ module Cmd =
         }
 
     [<CompiledName "MapViewMsgs">]
-    let mapViewMsgs (f : 'a -> 'ViewMsg) (cmd : Cmd<'Msg, 'a>) : Cmd<'Msg, 'ViewMsg> =
+    let inline mapViewMsgs (f : 'a -> 'ViewMsg) (cmd : Cmd<'Msg, 'a>) : Cmd<'Msg, 'ViewMsg> =
         {
             commands = cmd.commands
             viewMsgs = cmd.viewMsgs |> List.map f

@@ -2,22 +2,28 @@
 
 open wraikny.Tart.Helper.Math
 
-type ^a Rect =
+[<Struct>]
+type ^Vec Rect =
     {
-        position : ^a Vec2
-        size : ^a Vec2
+        position : ^Vec
+        size : ^Vec
     }
+
+
+type ^a Rect2 = ^a Vec2 Rect
+type ^a Rect3 = ^a Vec3 Rect
+type ^a Rect4 = ^a Vec4 Rect
 
 
 [<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
 module Rect =
     [<CompiledName "Init">]
-    let inline init position size : _ Rect =
+    let inline init position size =
         { position = position; size = size }
 
     [<CompiledName "Zero">]
-    let inline zero() : ^a Rect =
-        let zero = Vec2.zero()
+    let inline zero() =
+        let zero = Vector.zero()
         init zero zero
 
     [<CompiledName "Position">]
@@ -45,42 +51,65 @@ module Rect =
             size = rect.size |> f
         }
 
-    [<CompiledName "Map1">]
-    let inline map1 f = (Vec2.map f) |> map
+    [<CompiledName "MapVec">]
+    let inline mapVec f =
+        (Vector.map f) |> map 
 
     [<CompiledName "DiagonalPosition">]
-    let inline diagonalPosition (r : ^a Rect) : ^a Vec2 =
-        Vec2.init(
-            r.position.x + r.size.x
-            , r.position.y + r.size.y
-        )
+    let inline diagonalPosition r : ^Vec
+        when (VectorBuiltin or ^Vec) :
+            (static member VectorImpl : ^Vec -> Vector< ^a, ^Vec, ^Ma, ^MVec >)
+        =
+        r.position + r.size
 
     [<CompiledName "CenterPosition">]
-    let inline centerPosition (r : ^a Rect) : ^a Vec2 =
+    let inline centerPosition r : ^Vec
+        when (VectorBuiltin or ^Vec) :
+            (static member VectorImpl : ^Vec -> Vector< ^a, ^Vec, ^Ma, ^MVec >)
+        =
         let one = LanguagePrimitives.GenericOne
         let two = one + one
-        Vec2.init(
-            r.position.x + r.size.x / two
-            , r.position.y + r.size.y / two
-        )
+        r.position + r.size /. two
 
-    let inline get_LU_RD (r : ^a Rect) : (^a Vec2 * ^a Vec2) =
+    [<CompiledName "Get_LU_RD">]
+    let inline get_LU_RD r : (^Vec * ^Vec)
+        when (VectorBuiltin or ^Vec) :
+            (static member VectorImpl : ^Vec -> Vector< ^a, ^Vec, ^Ma, ^MVec >)
+        =
         r.position, diagonalPosition r
 
 
     [<CompiledName "IsCollidedAxis">]
-    let inline isCollidedAxis(axis : ^a Vec2 -> ^a) (aLU, aRD) (bLU, bRD) : bool =
+    let inline isCollidedAxis(axis : ^Vec -> ^a) (aLU, aRD) (bLU, bRD) : bool
+        when (VectorBuiltin or ^Vec) :
+            (static member VectorImpl : ^Vec -> Vector< ^a, ^Vec, ^Ma, ^MVec >)
+        =
         not (axis aRD < axis bLU || axis bRD < axis aLU)
 
+    [<CompiledName "IsInside">]
+    let inline isInside p r : bool
+        when (VectorBuiltin or ^Vec) :
+            (static member VectorImpl : ^Vec -> Vector< ^a, ^Vec, ^Ma, ^MVec >)
+        =
+        let lu, rd = get_LU_RD r
+        Vector.axes()
+        |> List.map(fun axis ->
+            (axis lu) <= (axis p)
+            && (axis p) <= (axis rd)
+        )
+        |> List.fold (&&) true
 
     [<CompiledName "IsCollided">]
-    let inline isCollided (a : ^a Rect) (b : ^a Rect) : bool =
+    let inline isCollided a b : bool
+        when (VectorBuiltin or ^Vec) :
+            (static member VectorImpl : ^Vec -> Vector< ^a, ^Vec, ^Ma, ^MVec >)
+        =
         let aLURD = get_LU_RD a
         let bLURD = get_LU_RD b
 
         let isCollided =
-            (isCollidedAxis Vec2.x aLURD bLURD)
-            && (isCollidedAxis Vec2.y aLURD bLURD)
+            Vector.axes()
+            |> List.map(fun axis -> isCollidedAxis axis aLURD bLURD)
+            |> List.fold (&&) true
 
         isCollided
-

@@ -8,7 +8,7 @@ open wraikny.Tart.Helper.Geometry
 
 
 [<Class>]
-type internal MovingRoom(rect : float32 Rect, movingRate, rooms) =
+type internal MovingRoom(rect : float32 Rect2, movingRate, rooms) =
     let rooms : IReadOnlyList<MovingRoom> = rooms
 
     let movingRate : float32 = movingRate
@@ -20,7 +20,7 @@ type internal MovingRoom(rect : float32 Rect, movingRate, rooms) =
 
     member this.Position with get() = position
     member this.RightDown with get() = position + size
-    member this.Center with get() = position + size / Vec2.fromScalar 2.0f
+    member this.Center with get() = position + size /. 2.0f
 
     member val IsMoving = true with get, set
 
@@ -34,7 +34,7 @@ type internal MovingRoom(rect : float32 Rect, movingRate, rooms) =
         lastPosition <- position
 
         for other in targets do
-            let len (o : MovingRoom) = o.Center |> VectorClass.squaredLength
+            let len (o : MovingRoom) = o.Center |> Vector.squaredLength
             if (len this) > (len other) then
                 this.Move(other)
                 other.Move(this)
@@ -45,18 +45,18 @@ type internal MovingRoom(rect : float32 Rect, movingRate, rooms) =
 
 
         let d = 0.5f * movingRate * movingRate * count
-        this.IsMoving <- VectorClass.squaredLength (lastPosition - position) > d * d
+        this.IsMoving <- Vector.squaredLength (lastPosition - position) > d * d
     
 
 
     member this.RectF
-        with get() : float32 Rect = {
+        with get() : float32 Rect2 = {
             position = this.Position
             size = size
         }
 
     member this.RectI
-        with get() : int Rect = this.RectF |> Rect.map1 int
+        with get() : int Rect2 = this.RectF |> Rect.mapVec int
 
 
     member private this.IsCollidedWith(other : MovingRoom) =
@@ -80,7 +80,7 @@ type internal MovingRoom(rect : float32 Rect, movingRate, rooms) =
         let diff = Vec2.init <| if abs dx < abs dy then (dx, 0.0f) else (0.0f, dy)
         // let diff = Vec2.init(dx, dy)
 
-        let diff = diff * Vec2.fromScalar movingRate
+        let diff = diff *. movingRate
 
         this.UpdatePosition(diff)
         // this.UpdatePosition(this.Center |> Vec2.normalize)

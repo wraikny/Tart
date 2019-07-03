@@ -6,7 +6,7 @@ open System.Linq
 
 /// 指定したフレーム数待機するコルーチンを生成する。
 [<CompiledName "WaitFrames">]
-let waitFrames n =
+let inline waitFrames n =
     seq { for _ in 1..n -> () }
 
 

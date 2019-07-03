@@ -8,11 +8,11 @@ open wraikny.Tart.Helper.Geometry
 module Delaunay2 =
     /// 全体を包含する正三角形を求める
     [<CompiledName "GetHugeTriangle">]
-    let getHugeTriangle (range : float32 Rect) : Triangle<Vec2<float32>> =
+    let getHugeTriangle (range : float32 Rect2) : float32 Triangle2 =
 
         // 与えられた矩形を包含する円を求める  
         let center = range |> Rect.centerPosition
-        let radius = VectorClass.length (range.position - center)
+        let radius = Vector.length (range.position - center)
 
         // その円に外接する正三角形を求める  
         let sqrt3 = sqrt(3.0f)
@@ -94,7 +94,7 @@ module Delaunay2 =
                 // 外接円
                 let c = Triangle.circumscribedCircle t.Triangle
 
-                let sqDistance = VectorClass.squaredLength (c.center - p.value)
+                let sqDistance = Vector.squaredLength (c.center - p.value)
 
                 if(sqDistance < c.radius * c.radius) then
                     // 新しい三角形を作り、一時ハッシュに入れる  
@@ -127,7 +127,7 @@ module Delaunay2 =
 
 
     [<CompiledName "GetNodesList">]
-    let getNodesList points : Edge<Vec2<float32>, float32> list =
+    let getNodesList points : Edge<float32 Vec2, float32> list =
         let triangles = getTrianglesList points
 
         let edges = new List<Edge<float32 Vec2, float32>>()

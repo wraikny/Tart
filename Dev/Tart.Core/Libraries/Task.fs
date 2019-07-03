@@ -1,7 +1,10 @@
 ﻿namespace wraikny.Tart.Core.Libraries
 
-open wraikny.Tart.Helper.Basic
 open wraikny.Tart.Helper.Monad
+
+
+[<Struct>]
+type Never = Never
 
 
 type Task<'Ok, 'Error> =
@@ -13,33 +16,57 @@ type Task<'Ok, 'Error> =
 [<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
 module Task =
     [<CompiledName "Init">]
-    let init (f) =
-        { f = f }
+    let inline init (f) = { f = f }
 
-
-    let internal f (task) = task.f
+    let inline internal f (task) = task.f
 
 
     // let internal isAsync (task) = task.isAsync
 
     [<CompiledName "Succeed">]
-    let succeed (a : 'a) : Task<'a, 'Error> =
+    let inline succeed (a : 'a) : Task<'a, 'Error> =
         (fun _ -> Result.Ok a) |> init
 
 
     [<CompiledName "Fail">]
-    let fail (x : 'x) : Task<'Ok, 'x> =
+    let inline fail (x : 'x) : Task<'Ok, 'x> =
         (fun _ -> Result.Error x) |> init
 
 
+    [<CompiledName "Bind">]
+    let inline bind (f : 'a -> Task<'b, 'x>) (task : Task<'a, 'x>) : Task<'b, 'x> =
+        (fun _ ->
+            task.f() |> function
+            | Ok v -> (f v).f()
+            | Error e -> Result.Error e
+        )
+        |> init
+
+    type TaskBuilder() =
+        member __.Bind(x, k) = bind x k
+        member __.Return(x) = succeed x
+        member __.ReturnFrom(x) = x
+        member __.Delay(f) = f()
+        member __.Combine(a, b) =
+            a.f() |> function
+            | Ok _ -> a
+            | Error _ -> b()
+
+        member __.For(inp, f) =
+            seq {for a in inp -> f a}
+        member __.Yield(x) = succeed x
+        member __.YieldFrom(x) = x
+
+    let task = new TaskBuilder()
+
     [<CompiledName "Map">]
-    let map (f : 'a -> 'b) (task : Task<'a, 'Error>) : Task<'b, 'Error> =
+    let inline map (f : 'a -> 'b) (task : Task<'a, 'Error>) : Task<'b, 'Error> =
         task.f >> Result.map f
         |> init
 
 
     [<CompiledName "Map2">]
-    let map2 (f : 'a -> 'b -> 'c)
+    let inline map2 (f : 'a -> 'b -> 'c)
         (task1 : Task<'a, 'Error>)
         (task2 : Task<'b, 'Error>)
         : Task<'c, 'Error> =
@@ -52,7 +79,7 @@ module Task =
 
 
     [<CompiledName "Map3">]
-    let map3 (f : 'a -> 'b -> 'c -> 'd)
+    let inline map3 (f : 'a -> 'b -> 'c -> 'd)
         (task1 : Task<'a, 'Error>)
         (task2 : Task<'b, 'Error>)
         (task3 : Task<'c, 'Error>)
@@ -67,7 +94,7 @@ module Task =
 
 
     [<CompiledName "Map4">]
-    let map4 (f : 'a -> 'b -> 'c -> 'd -> 'e)
+    let inline map4 (f : 'a -> 'b -> 'c -> 'd -> 'e)
         (task1 : Task<'a, 'Error>)
         (task2 : Task<'b, 'Error>)
         (task3 : Task<'c, 'Error>)
@@ -84,7 +111,7 @@ module Task =
 
 
     [<CompiledName "Map5">]
-    let map5 (f : 'a -> 'b -> 'c -> 'd -> 'e -> 'f)
+    let inline map5 (f : 'a -> 'b -> 'c -> 'd -> 'e -> 'f)
         (task1 : Task<'a, 'Error>)
         (task2 : Task<'b, 'Error>)
         (task3 : Task<'c, 'Error>)
@@ -101,19 +128,10 @@ module Task =
         }
         |> init
 
-
-    [<CompiledName "AndThen">]
-    let andThen (f : 'a -> Task<'b, 'x>) (task : Task<'a, 'x>) : Task<'b, 'x> =
-        (fun _ ->
-            task.f() |> function
-            | Ok v -> (f v).f()
-            | Error e -> Result.Error e
-        )
-        |> init
-
+    open System.Collections.Generic
 
     [<CompiledName "Sequence">]
-    let sequence (tasks : Task<'a, 'x> list) : Task<'a list, 'x> =
+    let inline sequence (tasks : Task<'a, 'x> list) : Task<'a list, 'x> =
         let rec doTasks result tasks =
             tasks |> function
             | [] -> Result.Ok result
@@ -127,7 +145,7 @@ module Task =
 
 
     [<CompiledName "OnError">]
-    let onError (f : 'x -> Task<'a, 'y>) (task : Task<'a, 'x>) : Task<'a, 'y> =
+    let inline onError (f : 'x -> Task<'a, 'y>) (task : Task<'a, 'x>) : Task<'a, 'y> =
         (fun _ ->
             task.f() |> function
             | Ok v -> Result.Ok v
@@ -137,7 +155,7 @@ module Task =
 
             
     [<CompiledName "MapError">]
-    let mapError (f : 'x -> 'y) (task : Task<'a, 'x>) : Task<'a, 'y> =
+    let inline mapError (f : 'x -> 'y) (task : Task<'a, 'x>) : Task<'a, 'y> =
         task.f >> Result.mapError f
         |> init
 

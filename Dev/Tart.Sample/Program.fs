@@ -4,8 +4,6 @@ open System
 open System.Threading
 
 
-
-
 module Program =
     let readLine () = Console.ReadLine()
 
@@ -31,7 +29,7 @@ module Program =
                     printfn "Input correctly!"
 
                 | Some n ->
-                    messenger.PushMsg(nextMsg n)
+                    messenger.Enqueue(nextMsg n)
 
             input |> function
             | "q" -> ()
@@ -49,7 +47,7 @@ module Program =
                 inputNumMsg (fun n -> Counter.Msg.Random(0, n))
 
             | "c" ->
-                messenger.PushMsg(Counter.Msg.Clear)
+                messenger.Enqueue(Counter.Msg.Clear)
 
             | _ ->
                 printfn "Input correctly!"
@@ -58,7 +56,7 @@ module Program =
             if input <> "q" then
                 Thread.Sleep(10)
 
-                messenger.TryViewModel |> function
+                messenger.TryPopViewModel |> function
                 | Some view -> loop view
                 | None ->
                     printfn "Failed to get viewModel. Display old one."
@@ -67,7 +65,7 @@ module Program =
 
         messenger.StartAsync() |> ignore
 
-        messenger.TryViewModel |> function
+        messenger.TryPopViewModel |> function
         | Some view -> loop view
         | None -> ()
 
@@ -80,8 +78,14 @@ module Program =
 
     [<EntryPoint>]
     let main _ = 
-        // counter()
-        Advanced.Dungeon.generate()
+        Sockets.TCP.main()
+        //try
+        //    // counter()
+        //    // Advanced.Dungeon.generate()
+
+        //    Sockets.TCP.main()
+        //with e ->
+        //    printfn "\nError Occured:\n%A" e
 
         Console.ReadLine() |> ignore
         0

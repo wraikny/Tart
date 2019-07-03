@@ -6,7 +6,7 @@ module Random =
     type 'a Generator = | Generator of (System.Random -> 'a)
     
 
-    let private getFunc (g : 'a Generator) : (System.Random -> 'a) =
+    let inline private getFunc (g : 'a Generator) : (System.Random -> 'a) =
         g |> function | Generator(f) -> f
 
 
@@ -18,21 +18,21 @@ module Random =
 
     
     [<CompiledName "Int">]
-    let int (minValue : int) (maxValue : int) : int Generator =
+    let inline int (minValue : int) (maxValue : int) : int Generator =
         Generator(fun rand ->
             rand.Next(minValue, maxValue)
         )
 
 
     [<CompiledName "Float">]
-    let float (minValue : float) (maxValue : float) : float Generator =
+    let inline float (minValue : float) (maxValue : float) : float Generator =
         Generator(fun rand ->
             minValue + rand.NextDouble() * (maxValue - minValue)
         )
 
 
     [<CompiledName "List">]
-    let list (length : int) (generator : 'a Generator) : ('a list) Generator =
+    let inline list (length : int) (generator : 'a Generator) : ('a list) Generator =
         Generator(fun rand ->
             seq {
                 for index in 0..length-1 ->
@@ -44,14 +44,14 @@ module Random =
 
 
     [<CompiledName "Map">]
-    let map (f : 'a -> 'b) (generator : 'a Generator) : 'b Generator =
+    let inline map (f : 'a -> 'b) (generator : 'a Generator) : 'b Generator =
         Generator(fun rand ->
             f (getFunc generator rand)
         )
 
 
     [<CompiledName "Map2">]
-    let map2 (f : 'a -> 'b -> 'c) (g1 : 'a Generator) (g2 : 'b Generator) : 'c Generator =
+    let inline map2 (f : 'a -> 'b -> 'c) (g1 : 'a Generator) (g2 : 'b Generator) : 'c Generator =
         Generator(fun rand ->
             f
                 (getFunc g1 rand)
@@ -60,7 +60,7 @@ module Random =
 
 
     [<CompiledName "Map3">]
-    let map3 (f : 'a -> 'b -> 'c -> 'd)
+    let inline map3 (f : 'a -> 'b -> 'c -> 'd)
         (g1 : 'a Generator)
         (g2 : 'b Generator)
         (g3 : 'c Generator)
@@ -74,7 +74,7 @@ module Random =
 
 
     [<CompiledName "Map4">]
-    let map4 (f : 'a -> 'b -> 'c -> 'd -> 'e)
+    let inline map4 (f : 'a -> 'b -> 'c -> 'd -> 'e)
         (g1 : 'a Generator)
         (g2 : 'b Generator)
         (g3 : 'c Generator)
@@ -90,7 +90,7 @@ module Random =
 
 
     [<CompiledName "Map5">]
-    let map5 (f : 'a -> 'b -> 'c -> 'd -> 'e -> 'f)
+    let inline map5 (f : 'a -> 'b -> 'c -> 'd -> 'e -> 'f)
         (g1 : 'a Generator)
         (g2 : 'b Generator)
         (g3 : 'c Generator)
@@ -108,12 +108,12 @@ module Random =
 
 
     [<CompiledName "Pair">]
-    let pair (g1 : 'a Generator) (g2 : 'b Generator) : ('a * 'b) Generator =
+    let inline pair (g1 : 'a Generator) (g2 : 'b Generator) : ('a * 'b) Generator =
         map2 (fun a b -> a, b) g1 g2
 
 
     [<CompiledName "AndThen">]
-    let andThen(f : 'a -> 'b Generator) (g : 'a Generator) : 'b Generator =
+    let inline andThen(f : 'a -> 'b Generator) (g : 'a Generator) : 'b Generator =
         Generator(fun rand ->
             getFunc ((getFunc g rand) |> f) rand
         )
@@ -121,7 +121,7 @@ module Random =
 
     [<CompiledName "Generate">]
     let generate (msg : 'a -> 'Msg) (generator : 'a Generator) : Cmd<'Msg, _> =
-        (fun (env : IEnvironmentCore) pushMsg ->
+        (fun (env : IEnvironment) pushMsg ->
             pushMsg( (getFunc generator)(env.Random) |> msg )
         )
         |> Cmd.singleCommand

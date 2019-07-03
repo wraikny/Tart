@@ -2,26 +2,28 @@
 
 open wraikny.Tart.Helper.Math
 
-
-type Line< ^a, ^Vec
-        when (VectorBuiltin or ^Vec) :
-            (static member VectorImpl : ^Vec -> VectorClass< ^a, ^Vec >)
-    > =
+[<Struct>]
+type ^Vec Line=
     {
         startPoint : ^Vec
         endPoint : ^Vec
     }
 
 
+type ^a Line2 = ^a Vec2 Line
+type ^a Line3 = ^a Vec3 Line
+type ^a Line4 = ^a Vec4 Line
+
+
 [<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
 module Line =
     [<CompiledName "Init">]
-    let inline init(s, e) : Line<_, _> =
+    let inline init(s, e) =
         { startPoint = s; endPoint = e; }
 
     [<CompiledName "Zero">]
-    let inline zero() : Line<_, _> =
-        let zero = VectorClass.zero()
+    let inline zero() =
+        let zero = Vector.zero()
         init(zero, zero)
 
     [<CompiledName "StartPoint">]
@@ -30,7 +32,15 @@ module Line =
     [<CompiledName "EndPoint">]
     let inline endPoint l = l.endPoint
 
+    [<CompiledName "Equal">]
+    let inline equal a b =
+        (a.startPoint = b.startPoint && a.endPoint = b.endPoint)
+        || (a.endPoint = b.startPoint && a.startPoint = b.endPoint)
 
     [<CompiledName "Length">]
     let inline length l =
-        VectorClass.length(l.startPoint - l.endPoint)
+        Vector.length(l.startPoint - l.endPoint)
+
+    [<CompiledName "SquaredLength">]
+    let inline squaredLength l =
+        Vector.squaredLength(l.startPoint - l.endPoint)

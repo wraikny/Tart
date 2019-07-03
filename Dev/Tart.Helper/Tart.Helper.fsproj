@@ -44,8 +44,6 @@
   <ItemGroup>
     <Compile Include="AssemblyInfo.fs" />
     <Content Include="packages.config" />
-    <Compile Include="Observer.fs" />
-    <Compile Include="Basic.fs" />
     <Compile Include="Coroutine.fs" />
     <Compile Include="Monad\Maybe.fs" />
     <Compile Include="Monad\Either.fs" />
@@ -53,20 +51,24 @@
     <Compile Include="Math\Vec2.fs" />
     <Compile Include="Math\Vec3.fs" />
     <Compile Include="Math\Vec4.fs" />
-    <Compile Include="Math\VectorClass.fs" />
+    <Compile Include="Math\Vector.fs" />
     <Compile Include="Math\Color.fs" />
     <Compile Include="Math\Easing.fs" />
-    <Compile Include="Geometry\Rect.fs" />
+    <Compile Include="Math\Utils.fs" />
     <Compile Include="Geometry\Line.fs" />
-    <Compile Include="Geometry\Circle.fs" />
+    <Compile Include="Geometry\Rect.fs" />
+    <Compile Include="Geometry\Sphere.fs" />
     <Compile Include="Geometry\Triangle.fs" />
     <Compile Include="Graph\Graph.fs" />
     <Compile Include="Graph\UnionFold.fs" />
     <Compile Include="Graph\SpanningTree.fs" />
     <Compile Include="Graph\Delaunay.fs" />
-    <Compile Include="Extension\Seq.fs" />
-    <Compile Include="Utils\FixedSizeQueue.fs" />
+    <Compile Include="Collections\Seq.fs" />
+    <Compile Include="Collections\HashMap.fs" />
+    <Compile Include="Collections\FixedSizeQueue.fs" />
     <Compile Include="Utils\LockObject.fs" />
+    <Compile Include="Utils\Observer.fs" />
+    <Compile Include="Utils\MsgQueue.fs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="FSharp.Core">
@@ -77,7 +79,7 @@
     <Reference Include="System.Core" />
     <Reference Include="System.Numerics" />
     <Reference Include="System.ValueTuple">
-      <HintPath>..\packages\System.ValueTuple.4.4.0\lib\netstandard1.0\System.ValueTuple.dll</HintPath>
+      <HintPath>..\..\..\WhiteDungeon\Dev\packages\System.ValueTuple.4.5.0\lib\netstandard1.0\System.ValueTuple.dll</HintPath>
       <Private>True</Private>
     </Reference>
   </ItemGroup>

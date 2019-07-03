@@ -1,5 +1,6 @@
 ﻿namespace wraikny.Tart.Helper.Math
 
+[<Struct>]
 type ^a Vec3 =
     {
         x : ^a
@@ -35,11 +36,39 @@ type ^a Vec3 =
             z = a.z * b.z
         }
 
+    static member inline ( .* ) (a : ^b, b : ^b Vec3) : ^b Vec3 =
+        {
+            x = a * b.x
+            y = a * b.y
+            z = a * b.z
+        }
+
+    static member inline ( *. ) (a : ^b Vec3, b : ^b) : ^b Vec3 =
+        {
+            x = a.x * b
+            y = a.y * b
+            z = a.z * b
+        }
+
     static member inline (/) (a : ^b Vec3, b : ^b Vec3) : ^b Vec3 =
         {
             x = a.x / b.x
             y = a.y / b.y
             z = a.z / b.z
+        }
+
+    static member inline (./) (a : ^b, b : ^b Vec3) : ^b Vec3 =
+        {
+            x = a / b.x
+            y = a / b.y
+            z = a / b.z
+        }
+
+    static member inline (/.) (a : ^b Vec3, b : ^b) : ^b Vec3 =
+        {
+            x = a.x / b
+            y = a.y / b
+            z = a.z / b
         }
 
 
@@ -49,13 +78,7 @@ module Vec3 =
     let inline init(x, y, z) : ^a Vec3 =
         { x = x; y = y; z = z }
 
-    [<CompiledName "Zero">]
-    let inline zero() : ^a Vec3 =
-        let zero = LanguagePrimitives.GenericZero
-        init(zero, zero, zero)
-
-    [<CompiledName "FromScalar">]
-    let inline fromScalar a = init(a, a, a)
+    let inline internal init1 x = init(x, x, x)
 
     [<CompiledName "X">]
     let inline x v = v.x
@@ -66,14 +89,8 @@ module Vec3 =
     [<CompiledName "Z">]
     let inline z v = v.z
 
-    [<CompiledName "XY">]
-    let inline xy (v : ^a Vec3) = v.x, v.y
-
-    [<CompiledName "YZ">]
-    let inline yz (v : ^a Vec3) = v.y, v.z
-
-    [<CompiledName "ZX">]
-    let inline zx (v : ^a Vec3) = v.z, v.x
+    [<CompiledName "Axes">]
+    let inline axes() : (^a Vec3 -> ^a) list = [x; y; z]
 
     [<CompiledName "XYZ">]
     let inline xyz (v : ^a Vec3) = v.x, v.y, v.z
