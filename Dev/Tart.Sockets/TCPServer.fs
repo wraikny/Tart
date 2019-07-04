@@ -43,43 +43,6 @@ type ServerBase<'SendMsg, 'RecvMsg>(encoder, decoder, endpoint) =
         new ServerBase<_, _>(encoder, decoder, IPEndPoint(ipAddress, port))
 
 
-    new (aes : AesManaged, encoder, decoder, endpoint) =
-        new ServerBase<'SendMsg, 'RecvMsg>(
-            Crypt.createEncryptor aes encoder,
-            Crypt.createDecrypter aes decoder,
-            endpoint)
-
-    new (aes, encoder, decoder, port, ?ipAddress) =
-        let ipAddress = defaultArg ipAddress IPAddress.Any
-        new ServerBase<_, _>(aes, encoder, decoder, IPEndPoint(ipAddress, port))
-
-    new(iv : string, key : string, encoder, decoder, ipEndPoint, ?cipherMode, ?paddingMode) =
-        if iv.Length <> 16 then
-            raise <| ArgumentException("The length of IV must be 16")
-        if key.Length <> 32 then
-            raise <| ArgumentException("The length of Key must be 32")
-
-        let aes =
-            new AesManaged(
-                KeySize = 256,
-                BlockSize = 128,
-                Mode = defaultArg cipherMode CipherMode.CBC,
-                IV = Encoding.UTF8.GetBytes(iv),
-                Key = Encoding.UTF8.GetBytes(key),
-                Padding = defaultArg paddingMode PaddingMode.PKCS7
-            )
-
-        new ServerBase<_, _>(aes, encoder, decoder, ipEndPoint)
-
-    new(iv : string, key : string, encoder, decoder, port, ?ipAddress, ?cipherMode, ?paddingMode) =
-        let ipAddress = defaultArg ipAddress IPAddress.Any
-        let cipherMode = defaultArg cipherMode CipherMode.CBC
-        let paddingMode = defaultArg paddingMode PaddingMode.PKCS7
-        new ServerBase<_, _>(iv, key, encoder, decoder, IPEndPoint(ipAddress, port), cipherMode, paddingMode)
-
-
-
-
     abstract OnConnectedClientAsync : ClientID -> unit
     default __.OnConnectedClientAsync _ = ()
 
@@ -236,7 +199,7 @@ type ServerBase<'SendMsg, 'RecvMsg>(encoder, decoder, endpoint) =
         }
 
 
-    member this.IServer with get() = this :> IServer<_>
+    member private this.IServer with get() = this :> IServer<_>
 
 
     interface IServer<'SendMsg> with
@@ -263,9 +226,13 @@ type ServerBase<'SendMsg, 'RecvMsg>(encoder, decoder, endpoint) =
                 let! socket = listener.AsyncAccept()
                 
                 this.OnConnectedClientAsync(nextClientID)
-                
+
+                let client = this.CreateClient(socket, nextClientID)
+
+                do! client.InitCryptOfServer()
+
                 lock _lockObj <| fun _ ->
-                    clients.Add(nextClientID, this.CreateClient(socket, nextClientID) )
+                    clients.Add(nextClientID, client )
 
                     this.DebugPrint(sprintf "Accepted client (id: %A)" nextClientID)
 

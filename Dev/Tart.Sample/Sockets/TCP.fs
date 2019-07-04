@@ -18,12 +18,6 @@ let encoding = System.Text.Encoding.UTF8
 let encoder (s : string) = encoding.GetBytes(s)
 let decoder (bytes : byte[]) = encoding.GetString(bytes)
 
-[<Literal>]
-let iv = "aaaaaaaaaaaaaaaa"
-
-[<Literal>]
-let key = "ssssssssssssssssssssssssssssssss"
-
 type SMsg = SMsg of string
 
 module SMsg =
@@ -50,7 +44,7 @@ type CMsg with
     member inline x.Value with get() = x |> CMsg.value
 
 type TestServer(ipEndpoint : IPEndPoint) =
-    inherit ServerBase<SMsg, CMsg>(iv, key, SMsg.encoder, CMsg.decoder, ipEndpoint)
+    inherit ServerBase<SMsg, CMsg>(SMsg.encoder, CMsg.decoder, ipEndpoint)
 
     override this.OnPopReceiveMsgAsync (clientId, recvMsg) =
         async {
@@ -71,7 +65,7 @@ type TestServer(ipEndpoint : IPEndPoint) =
 
 
 type TestClient() =
-    inherit Client<CMsg, SMsg>(iv, key, CMsg.encoder, SMsg.decoder)
+    inherit Client<CMsg, SMsg>(CMsg.encoder, SMsg.decoder)
 
     override this.OnPopRecvMsg(msg) =
         msg.Value |> function
