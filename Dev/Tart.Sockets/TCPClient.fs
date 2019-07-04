@@ -38,15 +38,14 @@ type ClientBase<'SendMsg, 'RecvMsg> internal (encoder, decoder, socket) =
     [<Literal>]
     let rsaKeySize = 1024
     [<Literal>]
-    let aesBlockSize = 128 // 固定
+    let aesBlockSize = 128 // fixed
     [<Literal>]
-    let aesKeySize = 128 // 128/192/256bitから選択
+    let aesKeySize = 128 // select from { 128bit, 192bit, 256bit }
 
     member private __.Encode(msg) =
         let bytes = encoder msg
         let encrypted = aes.CreateEncryptor().TransformFinalBlock(bytes, 0, bytes.Length)
-        let size = encrypted |> Array.length |> uint16 |> BitConverter.GetBytes
-        Array.append size encrypted
+        encrypted
 
 
     member private __.Decode(bytes) =
@@ -102,63 +101,73 @@ type ClientBase<'SendMsg, 'RecvMsg> internal (encoder, decoder, socket) =
     member inline private this.ReceiveOfSize(size) =
         async {
             let buffer = Array.zeroCreate<byte> (int size)
-            let! _ = socket.AsyncReceive(buffer)
-            return buffer
+            let! recvSize = socket.AsyncReceive(buffer)
+            return buffer, recvSize
+        }
+
+    member private this.ReceiveWithHead() =
+        async {
+            let! length, recvSize = this.ReceiveOfSize(2)
+            if recvSize = 0 then
+                return (Array.empty, 0)
+            else
+                let length = BitConverter.ToUInt16(length, 0)
+                return! this.ReceiveOfSize(length)
+        }
+
+    member private this.SendWithHead(bytes) =
+        async {
+            let length = bytes |> Array.length |> uint16 |> BitConverter.GetBytes
+            return! socket.AsyncSend(Array.append length bytes)
         }
 
 
     member internal this.InitCryptOfClient() =
         async {
-            // RSA暗号を作成する
-            let rsa = new RSACryptoServiceProvider()
+            // 1. Create RSA
+            let rsa = new RSACryptoServiceProvider(rsaKeySize)
 
             this.DebugPrint(sprintf "RSA:\n%s" <| rsa.ToXmlString(true))
 
-            // RSAの公開鍵を送る
-            let! _ =
-                let pubKey = rsa.PublicKey 
-                let length = pubKey.Length |> uint16 |> BitConverter.GetBytes
-                this.Socket.AsyncSend(Array.append length pubKey)
+            // 2a. Send Public Key of RSA
+            let! _ = this.SendWithHead(rsa.PublicKey)
 
-            // RSAで暗号化された初期化ベクトルと共通鍵を受け取る
-            let! encryptedLength = this.ReceiveOfSize(2)
-            let! encrypted =
-                this.ReceiveOfSize(BitConverter.ToUInt16(encryptedLength, 0))
+            let! iv, key = async {
+                // 5b. Receive AES's IV and Key which are encrypted by RSA public key
+                let! encrypted, _ = this.ReceiveWithHead()
 
-            // 初期化ベクトルと共通鍵を復号化する
-            let decrypted = rsa.Decrypt(encrypted, false)
+                // 6. Decrypted IV and Key
+                let decrypted = rsa.Decrypt(encrypted, false)
 
-            let ivLength = aesBlockSize / 8
-            let keyLength = aesKeySize / 8
-            let iv = decrypted.[0..ivLength-1]
-            let key = decrypted.[ivLength..ivLength + keyLength - 1]
-            // AESを作成する
+                let ivLength = aesBlockSize / 8
+
+                return decrypted |> Array.splitAt ivLength
+            }
+
             this.DebugPrint(sprintf "IV: %A" iv)
             this.DebugPrint(sprintf "Key: %A" key)
-            try
+            
+            // 7. Create AES
             aes <-
                 new AesCryptoServiceProvider(
                     BlockSize = aesBlockSize,
-                    KeySize = aesKeySize,
+                    KeySize = key.Length * 8,
                     Mode = CipherMode.CBC,
                     Padding = PaddingMode.PKCS7,
                     IV = iv,
                     Key = key
                 )
-            with e -> Console.WriteLine(e)
         }
 
     member internal this.InitCryptOfServer() =
         async {
-            // 公開鍵を受信する
+            // 2b. Receive Public Key of RSA
             let! pubKey = async {
-                let! length = this.ReceiveOfSize(2)
-                let! pubKey = this.ReceiveOfSize(BitConverter.ToInt16(length, 0))
-                // return pubKey |> System.Convert.ToBase64String
+                let! pubKey, _ = this.ReceiveWithHead()
                 return pubKey |> Encoding.UTF8.GetString
             }
 
-            // AESを作成する
+            // 3. Creat AES
             aes <-
                 new AesCryptoServiceProvider(
                     BlockSize = aesBlockSize,
@@ -169,16 +178,16 @@ type ClientBase<'SendMsg, 'RecvMsg> internal (encoder, decoder, socket) =
             aes.GenerateIV()
             aes.GenerateKey()
             
-            // 初期化ベクトルと共通鍵を暗号化する
+            // 4. Encrypt IV and Key of AES
             use rsa = new RSACryptoServiceProvider()
             rsa.FromXmlString(pubKey)
             this.DebugPrint(sprintf "IV: %A" aes.IV)
             this.DebugPrint(sprintf "Key: %A" aes.Key)
-            let encrypted = rsa.Encrypt(Array.append aes.IV aes.Key, false)
-            let encryptedLength = encrypted.Length |> uint16 |> BitConverter.GetBytes
 
-            // RSAで暗号化した初期化ベクトルと共通鍵を送信する
-            do! socket.AsyncSend(Array.append encryptedLength encrypted) |> Async.Ignore
+            let encrypted = rsa.Encrypt(Array.append aes.IV aes.Key, false)
+
+            // 5a. Send encrypted iv and key
+            do! this.SendWithHead(encrypted) |> Async.Ignore
         }
 
 
@@ -187,10 +196,11 @@ type ClientBase<'SendMsg, 'RecvMsg> internal (encoder, decoder, socket) =
             match sendQueue.TryDequeue() with
             | Some msg ->
                 this.DebugPrint(sprintf "Send: %A" msg)
-                let! sendSize = socket.AsyncSend(this.Encode(msg))
+                let! sendSize = this.SendWithHead(this.Encode(msg))
                 
                 if sendSize = 0 then
                     this.OnFailedToSend(msg)
+
                 return! loop()
             | None -> ()
         }
@@ -198,31 +208,18 @@ type ClientBase<'SendMsg, 'RecvMsg> internal (encoder, decoder, socket) =
         loop()
 
 
-    member private this.DispatchRecv() =
-        let recv bufferSize f = async {
-            let buffer = Array.zeroCreate<byte> bufferSize
-            
-            let! recvSize = socket.AsyncReceive(buffer)
-            
+    member private this.DispatchRecv() = async {
+        while socket.Poll(0, SelectMode.SelectRead) do
+            let! bytes, recvSize = this.ReceiveWithHead()
             if recvSize > 0 then
-                do! f(buffer)
+                this.Decode(bytes)
+                |> Option.iter(fun msg ->
+                    this.DebugPrint(sprintf "Receive: %A" msg)
+                    (recvQueue :> IMsgQueue<_>).Enqueue(msg)
+                )
             else
                 this.OnFailedToReceive()
-        }
-
-        async {
-            while socket.Poll(0, SelectMode.SelectRead) do
-                do! recv sizeof<uint16> <| fun bytes -> async {
-                    let size = BitConverter.ToInt16(bytes, 0)
-                    do! recv (int size) <| fun bytes -> async {
-                        this.Decode(bytes)
-                        |> Option.iter(fun msg ->
-                            this.DebugPrint(sprintf "Receive: %A" msg)
-                            (recvQueue :> IMsgQueue<_>).Enqueue(msg)
-                        )
-                    }
-                }
-        }
+    }
 
 
     member internal this.Dispatch() =
