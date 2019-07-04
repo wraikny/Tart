@@ -43,7 +43,7 @@ module CMsg =
 type CMsg with
     member inline x.Value with get() = x |> CMsg.value
 
-type TestServer(ipEndpoint) =
+type TestServer(ipEndpoint : IPEndPoint) =
     inherit ServerBase<SMsg, CMsg>(SMsg.encoder, CMsg.decoder, ipEndpoint)
 
     override this.OnPopReceiveMsgAsync (clientId, recvMsg) =
@@ -85,7 +85,7 @@ let waiting() =
     Console.WriteLine("Enter..")
     Console.ReadLine() |> ignore
 
-let main'() =
+let main() =
     let ipEndpoint =
         let ipAdd = Dns.GetHostEntry("localhost").AddressList.[0]
         IPEndPoint(ipAdd, 8000)
@@ -121,7 +121,7 @@ let main'() =
     waiting()
 
 
-let main() =
+let main'() =
     let ipEndpoint =
         let ipAdd = Dns.GetHostEntry("localhost").AddressList.[0]
         IPEndPoint(ipAdd, 8000)

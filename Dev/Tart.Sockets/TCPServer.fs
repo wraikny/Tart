@@ -11,6 +11,11 @@ open wraikny.Tart.Helper.Utils
 open wraikny.Tart.Sockets
 
 
+open System.Security.Cryptography
+open System.Text
+
+
+
 [<AbstractClass>]
 type ServerBase<'SendMsg, 'RecvMsg>(encoder, decoder, endpoint) =
     let mutable nextClientID : ClientID = LanguagePrimitives.GenericZero
@@ -194,7 +199,7 @@ type ServerBase<'SendMsg, 'RecvMsg>(encoder, decoder, endpoint) =
         }
 
 
-    member this.IServer with get() = this :> IServer<_>
+    member private this.IServer with get() = this :> IServer<_>
 
 
     interface IServer<'SendMsg> with
@@ -221,9 +226,13 @@ type ServerBase<'SendMsg, 'RecvMsg>(encoder, decoder, endpoint) =
                 let! socket = listener.AsyncAccept()
                 
                 this.OnConnectedClientAsync(nextClientID)
-                
+
+                let client = this.CreateClient(socket, nextClientID)
+
+                do! client.InitCryptOfServer()
+
                 lock _lockObj <| fun _ ->
-                    clients.Add(nextClientID, this.CreateClient(socket, nextClientID) )
+                    clients.Add(nextClientID, client )
 
                     this.DebugPrint(sprintf "Accepted client (id: %A)" nextClientID)
 
@@ -305,35 +314,3 @@ type ServerBase<'SendMsg, 'RecvMsg>(encoder, decoder, endpoint) =
 
             if this.IServer.IsMessaging then
                 this.IServer.StopMessagingAsync() |> ignore
-
-
-
-open System.Security.Cryptography
-open System.Text 
-
-// https://qiita.com/ak2ie/items/f97ee5265527507f5308
-[<AbstractClass>]
-type CryptedServer<'SendMsg, 'RecvMsg>(aes : AesManaged, encoder, decoder, endpoint) =
-    inherit ServerBase<'SendMsg, 'RecvMsg>(
-        Crypt.createEncryptor aes encoder,
-        Crypt.createDecrypter aes decoder,
-        endpoint)
-
-    new (aes, encoder, decoder, port, ?ipAddress) =
-        let ipAddress = defaultArg ipAddress IPAddress.Any
-        new CryptedServer<_, _>(aes, encoder, decoder, IPEndPoint(ipAddress, port))
-
-    new(iv : string, key : string, encoder, decoder, port, ?ipAddress, ?cipherMode, ?paddingMode) =
-        let aes =
-            new AesManaged(
-                KeySize = key.Length * 8,
-                BlockSize = iv.Length * 8,
-                Mode = defaultArg cipherMode CipherMode.CBC,
-                IV = Encoding.UTF8.GetBytes(iv),
-                Key = Encoding.UTF8.GetBytes(key),
-                Padding = defaultArg paddingMode PaddingMode.PKCS7
-            )
-
-
-        let ipAddress = defaultArg ipAddress IPAddress.Any
-        new CryptedServer<_, _>(aes, encoder, decoder, IPEndPoint(ipAddress, port))
