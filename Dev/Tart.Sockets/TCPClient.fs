@@ -38,9 +38,9 @@ type ClientBase<'SendMsg, 'RecvMsg> internal (encoder, decoder, socket) =
     [<Literal>]
     let rsaKeySize = 1024
     [<Literal>]
-    let aesBlockSize = 128 // 固定
+    let aesBlockSize = 128 // fixed
     [<Literal>]
-    let aesKeySize = 128 // 128/192/256bitから選択
+    let aesKeySize = 128 // select from { 128bit, 192bit, 256bit }
 
     member private __.Encode(msg) =
         let bytes = encoder msg
@@ -139,7 +139,7 @@ type ClientBase<'SendMsg, 'RecvMsg> internal (encoder, decoder, socket) =
             aes <-
                 new AesCryptoServiceProvider(
                     BlockSize = aesBlockSize,
-                    KeySize = aesKeySize,
+                    KeySize = key.Length * 8,
                     Mode = CipherMode.CBC,
                     Padding = PaddingMode.PKCS7,
                     IV = iv,
