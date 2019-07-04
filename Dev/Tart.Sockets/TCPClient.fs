@@ -110,7 +110,7 @@ type ClientBase<'SendMsg, 'RecvMsg> internal (encoder, decoder, socket) =
     member internal this.InitCryptOfClient() =
         async {
             // 1. Create RSA
-            let rsa = new RSACryptoServiceProvider()
+            let rsa = new RSACryptoServiceProvider(rsaKeySize)
 
             this.DebugPrint(sprintf "RSA:\n%s" <| rsa.ToXmlString(true))
 
