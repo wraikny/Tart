@@ -125,7 +125,7 @@ type ClientBase<'SendMsg, 'RecvMsg> internal (encoder, decoder, socket) =
     member internal this.InitCryptOfClient() =
         async {
             // 1. Create RSA
-            let rsa = new RSACryptoServiceProvider(rsaKeySize)
+            use rsa = new RSACryptoServiceProvider(rsaKeySize)
 
             this.DebugPrint(sprintf "RSA:\n%s" <| rsa.ToXmlString(true))
 
@@ -246,6 +246,7 @@ type ClientBase<'SendMsg, 'RecvMsg> internal (encoder, decoder, socket) =
                 socket.Dispose()
                 socket <- null
 
+                aes.Dispose()
                 aes <- null
 
                 this.OnDisconnected()
