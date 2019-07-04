@@ -109,33 +109,33 @@ type ClientBase<'SendMsg, 'RecvMsg> internal (encoder, decoder, socket) =
 
     member internal this.InitCryptOfClient() =
         async {
-            // RSA暗号を作成する
+            // 1. Create RSA
             let rsa = new RSACryptoServiceProvider()
 
             this.DebugPrint(sprintf "RSA:\n%s" <| rsa.ToXmlString(true))
 
-            // RSAの公開鍵を送る
+            // 2a. Send Public Key of RSA
             let! _ =
                 let pubKey = rsa.PublicKey 
                 let length = pubKey.Length |> uint16 |> BitConverter.GetBytes
                 this.Socket.AsyncSend(Array.append length pubKey)
 
-            // RSAで暗号化された初期化ベクトルと共通鍵を受け取る
+            // 5b. Receive AES's IV and Key which are encrypted by RSA public key
             let! encryptedLength = this.ReceiveOfSize(2)
             let! encrypted =
                 this.ReceiveOfSize(BitConverter.ToUInt16(encryptedLength, 0))
 
-            // 初期化ベクトルと共通鍵を復号化する
+            // 6. Decrypted IV and Key
             let decrypted = rsa.Decrypt(encrypted, false)
 
             let ivLength = aesBlockSize / 8
-            let keyLength = aesKeySize / 8
-            let iv = decrypted.[0..ivLength-1]
-            let key = decrypted.[ivLength..ivLength + keyLength - 1]
-            // AESを作成する
+
+            let iv, key = decrypted |> Array.splitAt ivLength
+
             this.DebugPrint(sprintf "IV: %A" iv)
             this.DebugPrint(sprintf "Key: %A" key)
-            try
+            
+            // 7. Create AES
             aes <-
                 new AesCryptoServiceProvider(
                     BlockSize = aesBlockSize,
@@ -145,12 +145,11 @@ type ClientBase<'SendMsg, 'RecvMsg> internal (encoder, decoder, socket) =
                     IV = iv,
                     Key = key
                 )
-            with e -> Console.WriteLine(e)
         }
 
     member internal this.InitCryptOfServer() =
         async {
-            // 公開鍵を受信する
+            // 2b. Receive Public Key of RSA
             let! pubKey = async {
                 let! length = this.ReceiveOfSize(2)
                 let! pubKey = this.ReceiveOfSize(BitConverter.ToInt16(length, 0))
@@ -158,7 +157,7 @@ type ClientBase<'SendMsg, 'RecvMsg> internal (encoder, decoder, socket) =
                 return pubKey |> Encoding.UTF8.GetString
             }
 
-            // AESを作成する
+            // 3. Creat AES
             aes <-
                 new AesCryptoServiceProvider(
                     BlockSize = aesBlockSize,
@@ -169,7 +168,7 @@ type ClientBase<'SendMsg, 'RecvMsg> internal (encoder, decoder, socket) =
             aes.GenerateIV()
             aes.GenerateKey()
             
-            // 初期化ベクトルと共通鍵を暗号化する
+            // 4. Encrypt IV and Key of AES
             use rsa = new RSACryptoServiceProvider()
             rsa.FromXmlString(pubKey)
             this.DebugPrint(sprintf "IV: %A" aes.IV)
@@ -177,7 +176,7 @@ type ClientBase<'SendMsg, 'RecvMsg> internal (encoder, decoder, socket) =
             let encrypted = rsa.Encrypt(Array.append aes.IV aes.Key, false)
             let encryptedLength = encrypted.Length |> uint16 |> BitConverter.GetBytes
 
-            // RSAで暗号化した初期化ベクトルと共通鍵を送信する
+            // 5a. Send encrypted iv and key
             do! socket.AsyncSend(Array.append encryptedLength encrypted) |> Async.Ignore
         }
 
