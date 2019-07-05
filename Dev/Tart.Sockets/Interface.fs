@@ -10,12 +10,6 @@ open wraikny.Tart.Helper.Utils
 type ClientID = uint32
 
 
-type SendMsg =
-    | ToEveryone
-    | ToOthers
-
-
-
 type IServer<'Msg> = interface
     inherit IDisposable
     inherit IMsgQueue<'Msg>
@@ -24,10 +18,10 @@ type IServer<'Msg> = interface
     abstract IsMessaging : bool with get
 
     abstract StartAcceptingAsync : unit -> unit
-    abstract StopAcceptingAsync : unit -> unit
+    abstract StopAccepting : unit -> unit
 
     abstract StartMessagingAsync : unit -> unit
-    abstract StopMessagingAsync : unit -> unit
+    abstract StopMessaging : unit -> unit
 end
 
 type IClientHandler<'Msg> = interface
@@ -49,3 +43,25 @@ type IClient<'Msg> = interface
 
     // abstract Send : 'Msg -> Async<unit>
 end
+
+
+[<Struct>]
+type internal SocketMsg<'Msg> =
+    // 0
+    | UserMsg of msg:'Msg
+
+with
+    member msg.Encode(encoder) =
+        let flag, bytes = 
+            msg |> function
+            | UserMsg msg ->
+                0uy, (encoder msg)
+
+        Array.append [|flag|] bytes
+
+    static member Decode(decoder, decrypted) =
+        let flag, bytes = Array.splitAt 1 decrypted
+        flag.[0] |> function
+        | 0uy ->
+            decoder bytes |> Option.map(UserMsg)
+        | _ -> None

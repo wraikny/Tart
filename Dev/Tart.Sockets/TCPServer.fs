@@ -22,6 +22,7 @@ type ServerBase<'SendMsg, 'RecvMsg>(encoder, decoder, endpoint) =
 
     let _lockObj = new Object()
     let clients = new Dictionary<ClientID, ClientBase<'SendMsg, 'RecvMsg>>()
+    // let mutable clientsCount = 0us
 
     let endpoint = endpoint
     let mutable listener : Socket = null
@@ -42,9 +43,11 @@ type ServerBase<'SendMsg, 'RecvMsg>(encoder, decoder, endpoint) =
         let ipAddress = defaultArg ipAddress IPAddress.Any
         new ServerBase<_, _>(encoder, decoder, IPEndPoint(ipAddress, port))
 
+    // member val MaxClients : uint16 option = None with get, set
 
-    abstract OnConnectedClientAsync : ClientID -> unit
-    default __.OnConnectedClientAsync _ = ()
+
+    abstract OnConnectedClient : ClientID * IClientHandler<'SendMsg> -> unit
+    default __.OnConnectedClient (_, _) = ()
 
     abstract OnPopReceiveMsgAsync : ClientID * 'RecvMsg -> Async<unit>
     abstract OnPopSendMsgAsync : 'SendMsg -> Async<unit>
@@ -96,6 +99,7 @@ type ServerBase<'SendMsg, 'RecvMsg>(encoder, decoder, endpoint) =
             | true, client ->
                 (client :> IDisposable).Dispose()
                 clients.Remove(clientId) |> ignore
+                // clientsCount <- clientsCount - 1us
                 this.DebugPrint(sprintf "Removed Client of %A" clientId)
             | _ ->
                 raise <| InvalidOperationException()
@@ -143,6 +147,7 @@ type ServerBase<'SendMsg, 'RecvMsg>(encoder, decoder, endpoint) =
                 for id in removeIds do
                     this.DebugPrint(sprintf "Remove client (id: %A)" id)
                     clients.Remove(id) |> ignore
+                    // clientsCount <- clientsCount - 1us
 
             removeIds.Clear()
 
@@ -223,44 +228,46 @@ type ServerBase<'SendMsg, 'RecvMsg>(encoder, decoder, endpoint) =
             this.DebugPrint(sprintf "Start Listening at %A" endpoint)
 
             let rec loop() = async {
+                //match this.MaxClients with
+                //| Some(x) when x <= (lock _lockObj <| fun _ -> clientsCount) ->
+                //    this.DebugPrint("Clients Count is over MaxClients.")
+                //    Thread.Sleep(1000)
+                //    return! loop()
+                //| _ ->
                 let! socket = listener.AsyncAccept()
-                
-                this.OnConnectedClientAsync(nextClientID)
-
                 let client = this.CreateClient(socket, nextClientID)
-
                 do! client.InitCryptOfServer()
 
                 lock _lockObj <| fun _ ->
                     clients.Add(nextClientID, client )
+                    // clientsCount <- clientsCount + 1us
 
                     this.DebugPrint(sprintf "Accepted client (id: %A)" nextClientID)
 
                     nextClientID <- nextClientID + LanguagePrimitives.GenericOne
-                
+
+                this.OnConnectedClient(nextClientID, client)
+                    
                 return! loop()
             }
                 
             loop()
             |> fun a -> Async.Start(a, cancelAccepting.Token)
 
-            // this.IServer
 
-
-        member this.StopAcceptingAsync() =
+        member this.StopAccepting() =
             if not this.IServer.IsAccepting then
                 raise <| InvalidOperationException()
 
-            this.DebugPrint("Stop Accepting")
+            this.DebugPrint("Stopping Accepting")
 
             cancelAccepting.Cancel()
+            cancelAccepting <- null
 
             listener.Close()
             listener <- null
-                
-            cancelAccepting <- null
-
-            // this.IServer
+            
+            this.DebugPrint("Stopped Accepting")
 
 
         member this.StartMessagingAsync() =
@@ -280,20 +287,17 @@ type ServerBase<'SendMsg, 'RecvMsg>(encoder, decoder, endpoint) =
             |> Async.Ignore
             |> fun a -> Async.Start(a, cancelMessaging.Token)
 
-            // this.IServer
 
-
-        member this.StopMessagingAsync() =
+        member this.StopMessaging() =
             if not this.IServer.IsMessaging then
                 raise <| InvalidOperationException()
 
-            this.DebugPrint("Stop Messaging")
+            this.DebugPrint("Stopping Messaging")
 
             cancelMessaging.Cancel()
-
             cancelMessaging <- null
 
-            // this.IServer
+            this.DebugPrint("Stopped Messaging")
 
 
     interface IMsgQueue<'SendMsg> with
@@ -303,14 +307,16 @@ type ServerBase<'SendMsg, 'RecvMsg>(encoder, decoder, endpoint) =
     interface IDisposable with
         member this.Dispose() =
             this.DebugPrint("Dispose")
-            for c in clients do
-                (c.Value :> IDisposable).Dispose()
-            clients.Clear()
-
-            this.DebugPrint("Clients Cleared")
-
             if this.IServer.IsAccepting then
-                this.IServer.StopAcceptingAsync() |> ignore
+                this.IServer.StopAccepting() |> ignore
 
             if this.IServer.IsMessaging then
-                this.IServer.StopMessagingAsync() |> ignore
+                this.IServer.StopMessaging() |> ignore
+
+            lock _lockObj <| fun _ ->
+                for c in clients do
+                    (c.Value :> IDisposable).Dispose()
+                clients.Clear()
+                // clientsCount <- 0us
+
+            this.DebugPrint("Clients Cleared")

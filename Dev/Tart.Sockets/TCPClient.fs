@@ -42,15 +42,15 @@ type ClientBase<'SendMsg, 'RecvMsg> internal (encoder, decoder, socket) =
     [<Literal>]
     let aesKeySize = 128 // select from { 128bit, 192bit, 256bit }
 
-    member private __.Encode(msg) =
-        let bytes = encoder msg
+    member private __.Encode(msg : 'SendMsg SocketMsg) =
+        let bytes = msg.Encode(encoder)
         let encrypted = aes.CreateEncryptor().TransformFinalBlock(bytes, 0, bytes.Length)
         encrypted
 
 
-    member private __.Decode(bytes) =
+    member private __.Decode(bytes) : 'RecvMsg SocketMsg option =
         let decrypted = aes.CreateDecryptor().TransformFinalBlock(bytes, 0, bytes.Length)
-        decoder decrypted
+        SocketMsg<'RecvMsg>.Decode(decoder, decrypted)
 
 
     member internal this.Socket
@@ -62,8 +62,8 @@ type ClientBase<'SendMsg, 'RecvMsg> internal (encoder, decoder, socket) =
         and  set(value) = cancel <- value
 
 
-    abstract OnPopRecvMsg : 'RecvMsg -> unit
-    default __.OnPopRecvMsg _ = ()
+    abstract OnPopRecvMsgAsync : 'RecvMsg -> Async<unit>
+    default __.OnPopRecvMsgAsync _ = async { () }
 
     abstract OnDisconnected : unit -> unit
     default __.OnDisconnected() = ()
@@ -92,7 +92,8 @@ type ClientBase<'SendMsg, 'RecvMsg> internal (encoder, decoder, socket) =
     member internal this.Receive() =
         let rec loop xs =
             recvQueue.TryDequeue() |> function
-            | Some(x) -> loop (x::xs)
+            | Some(x) ->
+                loop (x::xs)
             | None -> xs
 
         loop []
@@ -196,7 +197,7 @@ type ClientBase<'SendMsg, 'RecvMsg> internal (encoder, decoder, socket) =
             match sendQueue.TryDequeue() with
             | Some msg ->
                 this.DebugPrint(sprintf "Send: %A" msg)
-                let! sendSize = this.SendWithHead(this.Encode(msg))
+                let! sendSize = this.SendWithHead(this.Encode(UserMsg msg))
                 
                 if sendSize = 0 then
                     this.OnFailedToSend(msg)
@@ -213,10 +214,14 @@ type ClientBase<'SendMsg, 'RecvMsg> internal (encoder, decoder, socket) =
             let! bytes, recvSize = this.ReceiveWithHead()
             if recvSize > 0 then
                 this.Decode(bytes)
-                |> Option.iter(fun msg ->
-                    this.DebugPrint(sprintf "Receive: %A" msg)
-                    (recvQueue :> IMsgQueue<_>).Enqueue(msg)
-                )
+                |> function
+                | Some(socketMsg) ->
+                    match socketMsg with
+                    | UserMsg recvMsg ->
+                        this.DebugPrint(sprintf "Receive: %A" recvMsg)
+                        (recvQueue :> IMsgQueue<_>).Enqueue(recvMsg)
+
+                | None -> ()
             else
                 this.OnFailedToReceive()
     }
@@ -328,7 +333,7 @@ type Client<'SendMsg, 'RecvMsg>(encoder, decoder) =
                         async {
                             while true do
                                 for msg in this.Receive() do
-                                    this.OnPopRecvMsg(msg)
+                                    do! this.OnPopRecvMsgAsync(msg)
                                 Thread.Sleep(5)
                         }
                     |] |> Async.Parallel |> Async.Ignore

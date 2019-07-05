@@ -56,10 +56,12 @@ type TestServer(ipEndpoint : IPEndPoint) =
 
     override this.OnPopSendMsgAsync(sendMsg) =
         async {
+            Console.WriteLine("Nyan!")
             for (_, client) in this.Clients do
                 client.Enqueue(sendMsg)
         }
 
+    override this.OnConnectedClient(_, _) = ()
     override this.OnClientFailedToSend(_, _, _) = ()
     override this.OnClientFailedToReceive(_, _) = ()
 
@@ -67,11 +69,11 @@ type TestServer(ipEndpoint : IPEndPoint) =
 type TestClient() =
     inherit Client<CMsg, SMsg>(CMsg.encoder, SMsg.decoder)
 
-    override this.OnPopRecvMsg(msg) =
-        msg.Value |> function
+    override this.OnPopRecvMsgAsync(msg) = async {
+        match msg.Value with
         | "!remove" -> (this :> IClient<_>).Dispose()
         | _ -> ()
-        ()
+    }
 
     override this.OnConnecting() = ()
     override this.OnConnected() = ()
@@ -85,7 +87,7 @@ let waiting() =
     Console.WriteLine("Enter..")
     Console.ReadLine() |> ignore
 
-let main() =
+let main'() =
     let ipEndpoint =
         let ipAdd = Dns.GetHostEntry("localhost").AddressList.[0]
         IPEndPoint(ipAdd, 8000)
@@ -121,12 +123,12 @@ let main() =
     waiting()
 
 
-let main'() =
+let main() =
     let ipEndpoint =
         let ipAdd = Dns.GetHostEntry("localhost").AddressList.[0]
         IPEndPoint(ipAdd, 8000)
 
-    let server = new TestServer(ipEndpoint, DebugDisplay = true) :> IServer<_>
+    use server = new TestServer(ipEndpoint, DebugDisplay = true) :> IServer<_>
 
     server.StartAcceptingAsync()
     server.StartMessagingAsync()
@@ -152,7 +154,5 @@ let main'() =
     clients |> Seq.iter(fun c -> c.Dispose())
 
     waiting()
-
-    server.Dispose()
-
-    waiting()
+    //server.Dispose()
+    //waiting()
