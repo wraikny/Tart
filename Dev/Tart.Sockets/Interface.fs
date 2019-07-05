@@ -45,6 +45,9 @@ type IClient<'Msg> = interface
 end
 
 
+open wraikny.Tart.Helper.Monad
+
+
 [<Struct>]
 type internal SocketMsg<'Msg> =
     // 0
@@ -61,7 +64,12 @@ with
 
     static member Decode(decoder, decrypted) =
         let flag, bytes = Array.splitAt 1 decrypted
-        flag.[0] |> function
-        | 0uy ->
-            decoder bytes |> Option.map(UserMsg)
-        | _ -> None
+        maybe {
+            let! head = flag |> Array.tryHead
+            match head with
+            | 0uy ->
+                let! msg = decoder bytes
+                return UserMsg msg
+            | _ ->
+                return! None
+        }

@@ -101,8 +101,8 @@ type ServerBase<'SendMsg, 'RecvMsg>(encoder, decoder, endpoint) =
                 clients.Remove(clientId) |> ignore
                 // clientsCount <- clientsCount - 1us
                 this.DebugPrint(sprintf "Removed Client of %A" clientId)
-            | _ ->
-                raise <| InvalidOperationException()
+                true
+            | _ -> false
 
 
     member this.SendTo(id, msg) =
@@ -218,10 +218,9 @@ type ServerBase<'SendMsg, 'RecvMsg>(encoder, decoder, endpoint) =
 
             this.DebugPrint("Start Accepting")
 
-            cancelAccepting <- new CancellationTokenSource()
 
             listener <- new Socket(AddressFamily.InterNetworkV6, SocketType.Stream, ProtocolType.Tcp)
-                
+            
             listener.Bind(endpoint)
             listener.Listen(int SocketOptionName.MaxConnections)
 
@@ -247,10 +246,13 @@ type ServerBase<'SendMsg, 'RecvMsg>(encoder, decoder, endpoint) =
                     nextClientID <- nextClientID + LanguagePrimitives.GenericOne
 
                 this.OnConnectedClient(nextClientID, client)
-                    
+                
+                Thread.Sleep(5)
                 return! loop()
             }
                 
+            cancelAccepting <- new CancellationTokenSource()
+
             loop()
             |> fun a -> Async.Start(a, cancelAccepting.Token)
 

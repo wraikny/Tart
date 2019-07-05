@@ -50,7 +50,7 @@ type TestServer(ipEndpoint : IPEndPoint) =
         async {
             if recvMsg.Value = "!remove" then
                 let client = this.TryGetClient(clientId).Value
-                this.RemoveClient(clientId)
+                this.RemoveClient(clientId) |> ignore
             Console.WriteLine(sprintf "Received %s from (id: %A)" recvMsg.Value clientId)
         }
 

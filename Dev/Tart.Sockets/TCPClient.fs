@@ -122,7 +122,9 @@ type ClientBase<'SendMsg, 'RecvMsg> internal (encoder, decoder, socket) =
             return! socket.AsyncSend(Array.append length bytes)
         }
 
-
+    // --------------------------------------------------
+    // Begin: Diffie-Hellman key exchang
+    // --------------------------------------------------
     member internal this.InitCryptOfClient() =
         async {
             // 1. Create RSA
@@ -190,6 +192,9 @@ type ClientBase<'SendMsg, 'RecvMsg> internal (encoder, decoder, socket) =
             // 5a. Send encrypted iv and key
             do! this.SendWithHead(encrypted) |> Async.Ignore
         }
+    // --------------------------------------------------
+    // End: Diffie-Hellman key exchang
+    // --------------------------------------------------
 
 
     member private this.DispatchSend() =
@@ -199,7 +204,8 @@ type ClientBase<'SendMsg, 'RecvMsg> internal (encoder, decoder, socket) =
                 this.DebugPrint(sprintf "Send: %A" msg)
                 let! sendSize = this.SendWithHead(this.Encode(UserMsg msg))
                 
-                if sendSize = 0 then
+                if sendSize <= 0 then
+                    this.DebugPrint("Send Size <= 0")
                     this.OnFailedToSend(msg)
 
                 return! loop()
@@ -212,9 +218,14 @@ type ClientBase<'SendMsg, 'RecvMsg> internal (encoder, decoder, socket) =
     member private this.DispatchRecv() = async {
         while socket.Poll(0, SelectMode.SelectRead) do
             let! bytes, recvSize = this.ReceiveWithHead()
-            if recvSize > 0 then
-                this.Decode(bytes)
-                |> function
+            if recvSize <= 0 then
+                this.DebugPrint("Receive Size <= 0")
+                this.OnFailedToReceive()
+            elif not (bytes.Length > 1) then
+                this.DebugPrint("Receive Bytes Length <= 1")
+                this.OnFailedToReceive()
+            else
+                match this.Decode(bytes) with
                 | Some(socketMsg) ->
                     match socketMsg with
                     | UserMsg recvMsg ->
@@ -222,8 +233,6 @@ type ClientBase<'SendMsg, 'RecvMsg> internal (encoder, decoder, socket) =
                         (recvQueue :> IMsgQueue<_>).Enqueue(recvMsg)
 
                 | None -> ()
-            else
-                this.OnFailedToReceive()
     }
 
 
@@ -239,27 +248,34 @@ type ClientBase<'SendMsg, 'RecvMsg> internal (encoder, decoder, socket) =
         }
 
     member internal this.Disconnect() : bool =
-        lock _lockObj <| fun _ ->
-            if _isConnected then
-                this.DebugPrint("Disconnecting")
-                _isConnected <- false
+        let disconnectable =
+            lock _lockObj <| fun _ ->
+                if _isConnected then
+                    _isConnected <- false
+                    true
+                else
+                    false
 
-                if cancel <> null then
-                    cancel.Cancel()
-                    cancel <- null
+        if disconnectable then
+            this.DebugPrint("Disconnecting")
 
-                socket.Dispose()
-                socket <- null
+            if cancel <> null then
+                cancel.Cancel()
+                cancel <- null
 
-                aes.Dispose()
-                aes <- null
+            socket.Dispose()
+            socket <- null
 
-                this.OnDisconnected()
-                this.DebugPrint("Disconnected")
-                true
-            else
-                this.DebugPrint("Already disconnected")
-                false
+            aes.Dispose()
+            aes <- null
+
+            this.OnDisconnected()
+
+            this.DebugPrint("Disconnected")
+        else
+            this.DebugPrint("Already disconnected")
+
+        disconnectable
 
 
     interface IClientHandler<'SendMsg> with
