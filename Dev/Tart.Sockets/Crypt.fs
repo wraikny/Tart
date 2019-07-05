@@ -8,3 +8,15 @@ open System.Text
 type RSACryptoServiceProvider with
     member inline rsa.PublicKey = rsa.ToXmlString(false) |> Encoding.UTF8.GetBytes
     member inline rsa.PrivateKey = rsa.ToXmlString(true) |> Encoding.UTF8.GetBytes
+
+
+type AesCryptoServiceProvider with
+    member inline aes.Encrypt(bytes : byte [], ?offset, ?count) =
+        let offset = defaultArg offset 0
+        let count = defaultArg count bytes.Length
+        aes.CreateEncryptor().TransformFinalBlock(bytes, offset, count)
+
+    member inline aes.Decrypt(bytes : byte [], ?offset, ?count) =
+        let offset = defaultArg offset 0
+        let count = defaultArg count bytes.Length
+        aes.CreateDecryptor().TransformFinalBlock(bytes, offset, count)

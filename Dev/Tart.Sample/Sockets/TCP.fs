@@ -50,7 +50,9 @@ type TestServer(ipEndpoint : IPEndPoint) =
         async {
             if recvMsg.Value = "!remove" then
                 let client = this.TryGetClient(clientId).Value
+                do! client.SendMsgAsync(SMsg "!remove")
                 this.RemoveClient(clientId) |> ignore
+
             Console.WriteLine(sprintf "Received %s from (id: %A)" recvMsg.Value clientId)
         }
 
@@ -62,8 +64,8 @@ type TestServer(ipEndpoint : IPEndPoint) =
         }
 
     override this.OnConnectedClient(_, _) = ()
-    override this.OnClientFailedToSend(_, _, _) = ()
-    override this.OnClientFailedToReceive(_, _) = ()
+    override this.OnClientFailedToSend(_, _, _) = async{ () }
+    override this.OnClientFailedToReceive(_, _) = async{ () }
 
 
 type TestClient() =
@@ -75,11 +77,11 @@ type TestClient() =
         | _ -> ()
     }
 
-    override this.OnConnecting() = ()
-    override this.OnConnected() = ()
+    override this.OnConnecting() = async { () }
+    override this.OnConnected() = async { () }
     override this.OnDisconnected() = ()
-    override this.OnFailedToSend _ = ()
-    override this.OnFailedToReceive() = ()
+    override this.OnFailedToSend _ = async{ () }
+    override this.OnFailedToReceive() = async{ () }
 
 
 let waiting() =
@@ -139,9 +141,22 @@ let main() =
 
     clients |> Seq.iter(fun c -> c.StartAsync(ipEndpoint))
 
+    while clients |> Seq.map(fun c -> c.IsConnected) |> Seq.fold (&&) true do
+        Console.WriteLine("Waiting connections ..")
+        Thread.Sleep(100)
+
+    Console.WriteLine("All clients connected")
     waiting()
 
-    clients |> Seq.indexed |> Seq.iter(fun (i, c) -> c.Enqueue(CMsg <| sprintf "Hello from Client %d" i))
+    clients
+    |> Seq.indexed
+    |> Seq.iter(fun (i, c) ->
+        c.Enqueue(CMsg <| sprintf "Hello from Client %d" i)
+    )
+
+    waiting()
+
+    clients.[0].Enqueue(CMsg "!remove")
 
     waiting()
 

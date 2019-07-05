@@ -52,11 +52,11 @@ type ServerBase<'SendMsg, 'RecvMsg>(encoder, decoder, endpoint) =
     abstract OnPopReceiveMsgAsync : ClientID * 'RecvMsg -> Async<unit>
     abstract OnPopSendMsgAsync : 'SendMsg -> Async<unit>
 
-    abstract OnClientFailedToSend : ClientID * IClientHandler<'SendMsg> * 'SendMsg -> unit
-    default __.OnClientFailedToSend(_, _, _) = ()
+    abstract OnClientFailedToSend : ClientID * IClientHandler<'SendMsg> * 'SendMsg -> Async<unit>
+    default __.OnClientFailedToSend(_, _, _) = async{ () }
 
-    abstract OnClientFailedToReceive : ClientID * IClientHandler<'SendMsg> -> unit
-    default __.OnClientFailedToReceive(_, _) = ()
+    abstract OnClientFailedToReceive : ClientID * IClientHandler<'SendMsg> -> Async<unit>
+    default __.OnClientFailedToReceive(_, _) = async{ () }
     
 
     member private server.CreateClient(s, clientId) =
@@ -233,9 +233,12 @@ type ServerBase<'SendMsg, 'RecvMsg>(encoder, decoder, endpoint) =
                 //    Thread.Sleep(1000)
                 //    return! loop()
                 //| _ ->
+
                 let! socket = listener.AsyncAccept()
                 let client = this.CreateClient(socket, nextClientID)
                 do! client.InitCryptOfServer()
+
+                do! client.EncryptedSendWithHead(BitConverter.GetBytes(nextClientID)) |> Async.Ignore
 
                 lock _lockObj <| fun _ ->
                     clients.Add(nextClientID, client )
