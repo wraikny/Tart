@@ -250,7 +250,6 @@ type ServerBase<'SendMsg, 'RecvMsg>(encoder, decoder, endpoint) =
 
                 this.OnConnectedClient(nextClientID, client)
                 
-                Thread.Sleep(5)
                 return! loop()
             }
                 

@@ -137,7 +137,7 @@ let main() =
 
     waiting()
 
-    let clients = [|for _ in 1..10 -> new TestClient(DebugDisplay = true) :> IClient<_>|]
+    let clients = [|for _ in 1..100 -> new TestClient(DebugDisplay = true) :> IClient<_>|]
 
     clients |> Seq.iter(fun c -> c.StartAsync(ipEndpoint))
 
@@ -152,6 +152,7 @@ let main() =
     |> Seq.indexed
     |> Seq.iter(fun (i, c) ->
         c.Enqueue(CMsg <| sprintf "Hello from Client %d" i)
+        Thread.Sleep(5)
     )
 
     waiting()

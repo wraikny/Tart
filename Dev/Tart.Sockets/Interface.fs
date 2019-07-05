@@ -39,6 +39,8 @@ type IClient<'Msg> = interface
     inherit IDisposable
     inherit IMsgQueue<'Msg>
 
+    abstract ClientId : ClientID with get
+
     abstract IsConnected : bool with get
 
     abstract StartAsync : IPEndPoint -> unit

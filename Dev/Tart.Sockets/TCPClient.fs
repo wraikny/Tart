@@ -78,12 +78,16 @@ type ClientBase<'SendMsg, 'RecvMsg> internal (encoder, decoder, socket) =
     abstract OnFailedToReceive : unit -> Async<unit>
     default __.OnFailedToReceive() = async { () }
 
+    abstract OnError : exn -> unit
+    default this.OnError e =
+        this.DebugPrint(sprintf "\n%A" e)
+
 
     member __.DebugDisplay
         with get() = _debugDisplay
         and  set(value) = _debugDisplay <- value
 
-    member inline private this.DebugPrint(s) =
+    member private this.DebugPrint(s) =
         if this.DebugDisplay then
             Console.WriteLine(sprintf "[wraikny.Tart.Sockets.TCP.ClientBase] %A" s)
 
@@ -216,11 +220,15 @@ type ClientBase<'SendMsg, 'RecvMsg> internal (encoder, decoder, socket) =
     member this.SendMsgAsync(msg) =
         async {
             this.DebugPrint(sprintf "Send: %A" msg)
-            let! sendSize = this.SendWithHead(this.Encode(UserMsg msg))
+            try
+                let! sendSize = this.SendWithHead(this.Encode(UserMsg msg))
             
-            if sendSize <= 0 then
-                this.DebugPrint("Send Size <= 0")
-                do! this.OnFailedToSend(msg)
+                if sendSize <= 0 then
+                    this.DebugPrint("Send Size <= 0")
+                    do! this.OnFailedToSend(msg)
+            with e ->
+                this.OnError(e)
+                (this :> IDisposable).Dispose()
         }
 
     member private this.DispatchSend() =
@@ -262,10 +270,14 @@ type ClientBase<'SendMsg, 'RecvMsg> internal (encoder, decoder, socket) =
             raise <| InvalidOperationException()
 
         async {
-            if socket.Poll(0, SelectMode.SelectWrite) then
-                do! this.DispatchSend()
+            try
+                if socket.Poll(0, SelectMode.SelectWrite) then
+                    do! this.DispatchSend()
 
-            do! this.DispatchRecv()
+                do! this.DispatchRecv()
+            with e ->
+                this.OnError(e)
+                (this :> IDisposable).Dispose()
         }
 
     member internal this.Disconnect() : bool =
@@ -334,7 +346,6 @@ type Client<'SendMsg, 'RecvMsg>(encoder, decoder) =
     abstract OnConnected : unit -> Async<unit>
     default __.OnConnected() = async { () }
 
-
     member private this.Connect(ipEndpoint) =
         if this.IsConnected then
             raise <| InvalidOperationException()
@@ -342,20 +353,27 @@ type Client<'SendMsg, 'RecvMsg>(encoder, decoder) =
         this.Socket <- new Socket(AddressFamily.InterNetworkV6, SocketType.Stream, ProtocolType.Tcp)
         async {
             this.DebugPrint(sprintf "Connecting to %A" ipEndpoint)
+            try
+                do! this.Socket.AsyncConnect(ipEndpoint)
 
-            do! this.Socket.AsyncConnect(ipEndpoint)
-            do! this.InitCryptOfClient()
+                do! this.InitCryptOfClient()
 
-            let! clientId, _ = this.DecryptedReceiveWithHead()
-            this.ClientId <- Some <| BitConverter.ToUInt32(clientId, 0)
-            this.DebugPrint(sprintf "ClientId: %A" this.ClientId)
+                let! clientId, _ = this.DecryptedReceiveWithHead()
+                this.ClientId <- Some <| BitConverter.ToUInt32(clientId, 0)
+                this.DebugPrint(sprintf "ClientId: %A" this.ClientId)
 
-            this.IsConnected <- true
+                this.IsConnected <- true
 
-            this.DebugPrint(sprintf "Connected to server at %A" ipEndpoint)
+                this.DebugPrint(sprintf "Connected to server at %A" ipEndpoint)
+            with e ->
+                this.OnError(e)
+                (this :> IDisposable).Dispose()
+                    
         }
     
     interface IClient<'SendMsg> with
+        member this.ClientId with get() = this.ClientId.Value
+
         member this.IsConnected with get() = this.IsConnected
 
         member this.StartAsync(ipEndpoint) =
