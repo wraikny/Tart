@@ -32,8 +32,6 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="System.ValueTuple" Version="4.5.0" />
-  </ItemGroup>
-  <ItemGroup>
-    <Reference Include="FSharp.Core" />
+    <PackageReference Include="FSharp.Core" Version="4.6.2" />
   </ItemGroup>
 </Project>
