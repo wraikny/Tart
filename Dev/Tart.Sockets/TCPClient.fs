@@ -18,6 +18,7 @@ open System.Text
 
 type ClientBase<'SendMsg, 'RecvMsg> internal (encoder, decoder, socket) =
     let mutable socket : Socket = socket
+    let mutable clientId : ClientID option = None
 
     let encoder = encoder
     let decoder = decoder
@@ -42,15 +43,18 @@ type ClientBase<'SendMsg, 'RecvMsg> internal (encoder, decoder, socket) =
     [<Literal>]
     let aesKeySize = 128 // select from { 128bit, 192bit, 256bit }
 
-    member private __.Encode(msg) =
-        let bytes = encoder msg
-        let encrypted = aes.CreateEncryptor().TransformFinalBlock(bytes, 0, bytes.Length)
-        encrypted
+    member __.ClientId
+        with get() = clientId
+        and  internal set(value) = clientId <- value
+
+    member private __.Encode(msg : 'SendMsg SocketMsg) =
+        let bytes = msg.Encode(encoder)
+        aes.Encrypt(bytes)
 
 
-    member private __.Decode(bytes) =
-        let decrypted = aes.CreateDecryptor().TransformFinalBlock(bytes, 0, bytes.Length)
-        decoder decrypted
+    member private __.Decode(bytes) : 'RecvMsg SocketMsg option =
+        let decrypted = aes.Decrypt(bytes)
+        SocketMsg<'RecvMsg>.Decode(decoder, decrypted)
 
 
     member internal this.Socket
@@ -62,24 +66,28 @@ type ClientBase<'SendMsg, 'RecvMsg> internal (encoder, decoder, socket) =
         and  set(value) = cancel <- value
 
 
-    abstract OnPopRecvMsg : 'RecvMsg -> unit
-    default __.OnPopRecvMsg _ = ()
+    abstract OnPopRecvMsgAsync : 'RecvMsg -> Async<unit>
+    default __.OnPopRecvMsgAsync _ = async { () }
 
     abstract OnDisconnected : unit -> unit
     default __.OnDisconnected() = ()
 
-    abstract OnFailedToSend : 'SendMsg -> unit
-    default __.OnFailedToSend _ = ()
+    abstract OnFailedToSend : 'SendMsg -> Async<unit>
+    default __.OnFailedToSend _ = async { () }
 
-    abstract OnFailedToReceive : unit -> unit
-    default __.OnFailedToReceive() = ()
+    abstract OnFailedToReceive : unit -> Async<unit>
+    default __.OnFailedToReceive() = async { () }
+
+    abstract OnError : exn -> unit
+    default this.OnError e =
+        this.DebugPrint(sprintf "\n%A" e)
 
 
     member __.DebugDisplay
         with get() = _debugDisplay
         and  set(value) = _debugDisplay <- value
 
-    member inline private this.DebugPrint(s) =
+    member private this.DebugPrint(s) =
         if this.DebugDisplay then
             Console.WriteLine(sprintf "[wraikny.Tart.Sockets.TCP.ClientBase] %A" s)
 
@@ -92,20 +100,21 @@ type ClientBase<'SendMsg, 'RecvMsg> internal (encoder, decoder, socket) =
     member internal this.Receive() =
         let rec loop xs =
             recvQueue.TryDequeue() |> function
-            | Some(x) -> loop (x::xs)
+            | Some(x) ->
+                loop (x::xs)
             | None -> xs
 
         loop []
 
 
-    member inline private this.ReceiveOfSize(size) =
+    member inline internal this.ReceiveOfSize(size) =
         async {
             let buffer = Array.zeroCreate<byte> (int size)
             let! recvSize = socket.AsyncReceive(buffer)
             return buffer, recvSize
         }
 
-    member private this.ReceiveWithHead() =
+    member internal this.ReceiveWithHead() =
         async {
             let! length, recvSize = this.ReceiveOfSize(2)
             if recvSize = 0 then
@@ -115,17 +124,30 @@ type ClientBase<'SendMsg, 'RecvMsg> internal (encoder, decoder, socket) =
                 return! this.ReceiveOfSize(length)
         }
 
-    member private this.SendWithHead(bytes) =
+    member internal this.DecryptedReceiveWithHead() =
+        async {
+            let! bytes, recvSize = this.ReceiveWithHead()
+            return (aes.Decrypt(bytes), recvSize)
+        }
+
+    member internal this.SendWithHead(bytes) =
         async {
             let length = bytes |> Array.length |> uint16 |> BitConverter.GetBytes
             return! socket.AsyncSend(Array.append length bytes)
         }
 
+    member internal this.EncryptedSendWithHead(bytes) =
+        async {
+            return! this.SendWithHead(aes.Encrypt(bytes))
+        }
 
+    // --------------------------------------------------
+    // Begin: Diffie-Hellman key exchang
+    // --------------------------------------------------
     member internal this.InitCryptOfClient() =
         async {
             // 1. Create RSA
-            let rsa = new RSACryptoServiceProvider(rsaKeySize)
+            use rsa = new RSACryptoServiceProvider(rsaKeySize)
 
             this.DebugPrint(sprintf "RSA:\n%s" <| rsa.ToXmlString(true))
 
@@ -189,17 +211,31 @@ type ClientBase<'SendMsg, 'RecvMsg> internal (encoder, decoder, socket) =
             // 5a. Send encrypted iv and key
             do! this.SendWithHead(encrypted) |> Async.Ignore
         }
+    // --------------------------------------------------
+    // End: Diffie-Hellman key exchang
+    // --------------------------------------------------
 
+
+
+    member this.SendMsgAsync(msg) =
+        async {
+            this.DebugPrint(sprintf "Send: %A" msg)
+            try
+                let! sendSize = this.SendWithHead(this.Encode(UserMsg msg))
+            
+                if sendSize <= 0 then
+                    this.DebugPrint("Send Size <= 0")
+                    do! this.OnFailedToSend(msg)
+            with e ->
+                this.OnError(e)
+                (this :> IDisposable).Dispose()
+        }
 
     member private this.DispatchSend() =
         let rec loop() = async {
             match sendQueue.TryDequeue() with
             | Some msg ->
-                this.DebugPrint(sprintf "Send: %A" msg)
-                let! sendSize = this.SendWithHead(this.Encode(msg))
-                
-                if sendSize = 0 then
-                    this.OnFailedToSend(msg)
+                do! this.SendMsgAsync(msg)
 
                 return! loop()
             | None -> ()
@@ -211,14 +247,21 @@ type ClientBase<'SendMsg, 'RecvMsg> internal (encoder, decoder, socket) =
     member private this.DispatchRecv() = async {
         while socket.Poll(0, SelectMode.SelectRead) do
             let! bytes, recvSize = this.ReceiveWithHead()
-            if recvSize > 0 then
-                this.Decode(bytes)
-                |> Option.iter(fun msg ->
-                    this.DebugPrint(sprintf "Receive: %A" msg)
-                    (recvQueue :> IMsgQueue<_>).Enqueue(msg)
-                )
+            if recvSize <= 0 then
+                this.DebugPrint("Receive Size <= 0")
+                do! this.OnFailedToReceive()
+            elif not (bytes.Length > 1) then
+                this.DebugPrint("Receive Bytes Length <= 1")
+                do! this.OnFailedToReceive()
             else
-                this.OnFailedToReceive()
+                match this.Decode(bytes) with
+                | Some(socketMsg) ->
+                    match socketMsg with
+                    | UserMsg recvMsg ->
+                        this.DebugPrint(sprintf "Receive: %A" recvMsg)
+                        (recvQueue :> IMsgQueue<_>).Enqueue(recvMsg)
+
+                | None -> ()
     }
 
 
@@ -227,39 +270,55 @@ type ClientBase<'SendMsg, 'RecvMsg> internal (encoder, decoder, socket) =
             raise <| InvalidOperationException()
 
         async {
-            if socket.Poll(0, SelectMode.SelectWrite) then
-                do! this.DispatchSend()
+            try
+                if socket.Poll(0, SelectMode.SelectWrite) then
+                    do! this.DispatchSend()
 
-            do! this.DispatchRecv()
+                do! this.DispatchRecv()
+            with e ->
+                this.OnError(e)
+                (this :> IDisposable).Dispose()
         }
 
     member internal this.Disconnect() : bool =
-        lock _lockObj <| fun _ ->
-            if _isConnected then
-                this.DebugPrint("Disconnecting")
-                _isConnected <- false
+        let disconnectable =
+            lock _lockObj <| fun _ ->
+                if _isConnected then
+                    _isConnected <- false
+                    true
+                else
+                    false
 
-                if cancel <> null then
-                    cancel.Cancel()
-                    cancel <- null
+        if disconnectable then
+            this.DebugPrint("Disconnecting")
 
+            if cancel <> null then
+                cancel.Cancel()
+            cancel <- null
+
+            if socket <> null then
                 socket.Dispose()
-                socket <- null
+            socket <- null
 
-                aes <- null
+            this.ClientId <- None
 
-                this.OnDisconnected()
-                this.DebugPrint("Disconnected")
-                true
-            else
-                this.DebugPrint("Already disconnected")
-                false
+            aes.Dispose()
+            aes <- null
+
+            this.OnDisconnected()
+
+            this.DebugPrint("Disconnected")
+        else
+            this.DebugPrint("Already disconnected")
+
+        disconnectable
 
 
     interface IClientHandler<'SendMsg> with
         member this.IsConnected with get() = this.IsConnected
 
         // member this.SendSync(msg) = this.Send(msg)
+        member this.SendMsgAsync(msg) = this.SendMsgAsync(msg)
 
     interface IMsgQueue<'SendMsg> with
         member this.Enqueue(msg) =
@@ -281,12 +340,11 @@ type Client<'SendMsg, 'RecvMsg>(encoder, decoder) =
             Console.WriteLine(sprintf "[wraikny.Tart.Sockets.TCP.Client] %A" s)
 
 
-    abstract OnConnecting : unit -> unit
-    default __.OnConnecting() = ()
+    abstract OnConnecting : unit -> Async<unit>
+    default __.OnConnecting() = async { () }
 
-    abstract OnConnected : unit -> unit
-    default __.OnConnected() = ()
-
+    abstract OnConnected : unit -> Async<unit>
+    default __.OnConnected() = async { () }
 
     member private this.Connect(ipEndpoint) =
         if this.IsConnected then
@@ -295,17 +353,27 @@ type Client<'SendMsg, 'RecvMsg>(encoder, decoder) =
         this.Socket <- new Socket(AddressFamily.InterNetworkV6, SocketType.Stream, ProtocolType.Tcp)
         async {
             this.DebugPrint(sprintf "Connecting to %A" ipEndpoint)
+            try
+                do! this.Socket.AsyncConnect(ipEndpoint)
 
-            do! this.Socket.AsyncConnect(ipEndpoint)
+                do! this.InitCryptOfClient()
 
-            do! this.InitCryptOfClient()
+                let! clientId, _ = this.DecryptedReceiveWithHead()
+                this.ClientId <- Some <| BitConverter.ToUInt32(clientId, 0)
+                this.DebugPrint(sprintf "ClientId: %A" this.ClientId)
 
-            this.IsConnected <- true
+                this.IsConnected <- true
 
-            this.DebugPrint(sprintf "Connected to server at %A" ipEndpoint)
+                this.DebugPrint(sprintf "Connected to server at %A" ipEndpoint)
+            with e ->
+                this.OnError(e)
+                (this :> IDisposable).Dispose()
+                    
         }
     
     interface IClient<'SendMsg> with
+        member this.ClientId with get() = this.ClientId.Value
+
         member this.IsConnected with get() = this.IsConnected
 
         member this.StartAsync(ipEndpoint) =
@@ -313,9 +381,9 @@ type Client<'SendMsg, 'RecvMsg>(encoder, decoder) =
 
             this.Cancel <- new CancellationTokenSource()
             async {
-                this.OnConnecting()
+                do! this.OnConnecting()
                 do! this.Connect(ipEndpoint)
-                this.OnConnected()
+                do! this.OnConnected()
 
                 return! [|
                         async {
@@ -327,7 +395,7 @@ type Client<'SendMsg, 'RecvMsg>(encoder, decoder) =
                         async {
                             while true do
                                 for msg in this.Receive() do
-                                    this.OnPopRecvMsg(msg)
+                                    do! this.OnPopRecvMsgAsync(msg)
                                 Thread.Sleep(5)
                         }
                     |] |> Async.Parallel |> Async.Ignore

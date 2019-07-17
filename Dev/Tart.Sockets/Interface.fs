@@ -10,12 +10,6 @@ open wraikny.Tart.Helper.Utils
 type ClientID = uint32
 
 
-type SendMsg =
-    | ToEveryone
-    | ToOthers
-
-
-
 type IServer<'Msg> = interface
     inherit IDisposable
     inherit IMsgQueue<'Msg>
@@ -24,10 +18,10 @@ type IServer<'Msg> = interface
     abstract IsMessaging : bool with get
 
     abstract StartAcceptingAsync : unit -> unit
-    abstract StopAcceptingAsync : unit -> unit
+    abstract StopAccepting : unit -> unit
 
     abstract StartMessagingAsync : unit -> unit
-    abstract StopMessagingAsync : unit -> unit
+    abstract StopMessaging : unit -> unit
 end
 
 type IClientHandler<'Msg> = interface
@@ -35,6 +29,8 @@ type IClientHandler<'Msg> = interface
     inherit IMsgQueue<'Msg>
 
     abstract IsConnected : bool with get
+
+    abstract SendMsgAsync : 'Msg -> Async<unit>
     // abstract SendSync : 'Msg -> unit
 end
 
@@ -43,9 +39,41 @@ type IClient<'Msg> = interface
     inherit IDisposable
     inherit IMsgQueue<'Msg>
 
+    abstract ClientId : ClientID with get
+
     abstract IsConnected : bool with get
 
     abstract StartAsync : IPEndPoint -> unit
 
     // abstract Send : 'Msg -> Async<unit>
 end
+
+
+open wraikny.Tart.Helper.Monad
+
+
+[<Struct>]
+type internal SocketMsg<'Msg> =
+    // 0
+    | UserMsg of msg:'Msg
+
+with
+    member msg.Encode(encoder) =
+        let flag, bytes = 
+            msg |> function
+            | UserMsg msg ->
+                0uy, (encoder msg)
+
+        Array.append [|flag|] bytes
+
+    static member Decode(decoder, decrypted) =
+        let flag, bytes = Array.splitAt 1 decrypted
+        maybe {
+            let! head = flag |> Array.tryHead
+            match head with
+            | 0uy ->
+                let! msg = decoder bytes
+                return UserMsg msg
+            | _ ->
+                return! None
+        }

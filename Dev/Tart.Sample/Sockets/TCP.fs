@@ -50,34 +50,38 @@ type TestServer(ipEndpoint : IPEndPoint) =
         async {
             if recvMsg.Value = "!remove" then
                 let client = this.TryGetClient(clientId).Value
-                this.RemoveClient(clientId)
+                do! client.SendMsgAsync(SMsg "!remove")
+                this.RemoveClient(clientId) |> ignore
+
             Console.WriteLine(sprintf "Received %s from (id: %A)" recvMsg.Value clientId)
         }
 
     override this.OnPopSendMsgAsync(sendMsg) =
         async {
+            Console.WriteLine("Nyan!")
             for (_, client) in this.Clients do
                 client.Enqueue(sendMsg)
         }
 
-    override this.OnClientFailedToSend(_, _, _) = ()
-    override this.OnClientFailedToReceive(_, _) = ()
+    override this.OnConnectedClient(_, _) = ()
+    override this.OnClientFailedToSend(_, _, _) = async{ () }
+    override this.OnClientFailedToReceive(_, _) = async{ () }
 
 
 type TestClient() =
     inherit Client<CMsg, SMsg>(CMsg.encoder, SMsg.decoder)
 
-    override this.OnPopRecvMsg(msg) =
-        msg.Value |> function
+    override this.OnPopRecvMsgAsync(msg) = async {
+        match msg.Value with
         | "!remove" -> (this :> IClient<_>).Dispose()
         | _ -> ()
-        ()
+    }
 
-    override this.OnConnecting() = ()
-    override this.OnConnected() = ()
+    override this.OnConnecting() = async { () }
+    override this.OnConnected() = async { () }
     override this.OnDisconnected() = ()
-    override this.OnFailedToSend _ = ()
-    override this.OnFailedToReceive() = ()
+    override this.OnFailedToSend _ = async{ () }
+    override this.OnFailedToReceive() = async{ () }
 
 
 let waiting() =
@@ -85,7 +89,7 @@ let waiting() =
     Console.WriteLine("Enter..")
     Console.ReadLine() |> ignore
 
-let main() =
+let main'() =
     let ipEndpoint =
         let ipAdd = Dns.GetHostEntry("localhost").AddressList.[0]
         IPEndPoint(ipAdd, 8000)
@@ -121,25 +125,39 @@ let main() =
     waiting()
 
 
-let main'() =
+let main() =
     let ipEndpoint =
         let ipAdd = Dns.GetHostEntry("localhost").AddressList.[0]
         IPEndPoint(ipAdd, 8000)
 
-    let server = new TestServer(ipEndpoint, DebugDisplay = true) :> IServer<_>
+    use server = new TestServer(ipEndpoint, DebugDisplay = true) :> IServer<_>
 
     server.StartAcceptingAsync()
     server.StartMessagingAsync()
 
     waiting()
 
-    let clients = [|for _ in 1..10 -> new TestClient(DebugDisplay = true) :> IClient<_>|]
+    let clients = [|for _ in 1..100 -> new TestClient(DebugDisplay = true) :> IClient<_>|]
 
     clients |> Seq.iter(fun c -> c.StartAsync(ipEndpoint))
 
+    while clients |> Seq.map(fun c -> c.IsConnected) |> Seq.fold (&&) true do
+        Console.WriteLine("Waiting connections ..")
+        Thread.Sleep(100)
+
+    Console.WriteLine("All clients connected")
     waiting()
 
-    clients |> Seq.indexed |> Seq.iter(fun (i, c) -> c.Enqueue(CMsg <| sprintf "Hello from Client %d" i))
+    clients
+    |> Seq.indexed
+    |> Seq.iter(fun (i, c) ->
+        c.Enqueue(CMsg <| sprintf "Hello from Client %d" i)
+        Thread.Sleep(5)
+    )
+
+    waiting()
+
+    clients.[0].Enqueue(CMsg "!remove")
 
     waiting()
 
@@ -152,7 +170,5 @@ let main'() =
     clients |> Seq.iter(fun c -> c.Dispose())
 
     waiting()
-
-    server.Dispose()
-
-    waiting()
+    //server.Dispose()
+    //waiting()

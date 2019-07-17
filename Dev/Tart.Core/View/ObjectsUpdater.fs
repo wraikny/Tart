@@ -1,12 +1,7 @@
 ﻿namespace wraikny.Tart.Core.View
 
-
-open System.Collections.Generic;
-
-
-[<Interface>]
-type IUpdatee<'ObjectViewModel> =
-    abstract Update : 'ObjectViewModel -> unit
+open wraikny.Tart.Helper.Utils
+open System.Collections.Generic
 
 
 /// Interface of adding, removing and updating objects
@@ -26,7 +21,7 @@ type UpdaterViewModel<'ObjectViewModel> =
 
 [<Struct>]
 type ObjectsParent<'Object, 'ObjectViewModel
-    when 'Object :> IUpdatee<'ObjectViewModel>
+    when 'Object :> IObserver<'ObjectViewModel>
     > = {
     create : unit -> 'Object
     add : 'Object -> unit
@@ -38,7 +33,7 @@ type ObjectsParent<'Object, 'ObjectViewModel
 /// Class of adding, removing and updating objects
 [<Class>]
 type ObjectsUpdater<'ViewModel, 'Object, 'ObjectViewModel
-    when 'Object :> IUpdatee<'ObjectViewModel>
+    when 'Object :> IObserver<'ObjectViewModel>
     >(parent) =
     let objects = new Dictionary<uint32, 'Object>()
     let existFlags = new HashSet<uint32>()
