@@ -17,24 +17,18 @@ open System.Linq
 open System.Collections.Generic
 
 
-type Observable<'T>() =
+type Observable<'T>() = class
     let observers = new HashSet<IObserver<'T>>()
 
-    member this.Add(observer : #IObserver<'T>) =
-        if observers.Contains(observer) then
-            raise <| System.ArgumentException("is already added")
-        observers.Add(observer)
-
-
-    member this.Notify(input : 'T) =
+    member __.Notify(input : 'T) =
         for o in observers do
             o.Update(input)
 
-
-    member this.Clear() =
-        observers.Clear()
-
     interface IObservable<'T> with
-        member this.Add(o) = this.Add(o)
+        member __.Add(observer : #IObserver<'T>) =
+            if observers.Contains(observer) then
+                raise <| System.ArgumentException("is already added")
+            observers.Add(observer)
 
-        member this.Clear() = this.Clear()
+        member __.Clear() = observers.Clear()
+end

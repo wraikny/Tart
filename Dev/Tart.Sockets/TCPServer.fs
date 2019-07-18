@@ -20,7 +20,7 @@ open System.Text
 type ServerBase<'SendMsg, 'RecvMsg>(encoder, decoder, endpoint) =
     let mutable nextClientID : ClientID = LanguagePrimitives.GenericZero
 
-    let _lockObj = new Object()
+    let _lockObj = Object()
     let clients = new Dictionary<ClientID, ClientBase<'SendMsg, 'RecvMsg>>()
     // let mutable clientsCount = 0us
 
@@ -208,9 +208,9 @@ type ServerBase<'SendMsg, 'RecvMsg>(encoder, decoder, endpoint) =
 
 
     interface IServer<'SendMsg> with
-        member this.IsAccepting with get() = cancelAccepting <> null
+        member this.IsAccepting with get() = not (isNull cancelAccepting)
 
-        member this.IsMessaging with get() = cancelMessaging <> null
+        member this.IsMessaging with get() = not (isNull cancelMessaging)
             
         member this.StartAcceptingAsync() =
             if this.IServer.IsAccepting then

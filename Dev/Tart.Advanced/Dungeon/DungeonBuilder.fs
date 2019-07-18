@@ -132,7 +132,7 @@ module private WithRandom =
         
         largeRoomEdgesResult
         |> List.map(
-            Edge.mapValues(fun _ -> ())
+            Edge.mapValues(ignore)
         )
 
 
@@ -161,7 +161,7 @@ module DungeonBuilder =
         let roomsList = new List<MovingRoom>()
 
         for r in rooms do
-            let movingRoom = new MovingRoom(r |> Rect.mapVec float32, movingRate, roomsList)
+            let movingRoom = MovingRoom(r |> Rect.mapVec float32, movingRate, roomsList)
             roomsList.Add(movingRoom)
 
 
@@ -287,17 +287,14 @@ module DungeonBuilder =
 
         let cellsMap =
             let getCells (spaces : Space list) =
-                spaces
-                |> Seq.map(fun space ->
+                Seq.collect (fun space ->
                     let lu = space.rect.position
                     let size = space.rect.size
                     seq {
                         for dx in 0..(size.x - 1) do
                         for dy in 0..(size.y - 1) do
                             yield ( lu + Vec2.init(dx, dy), space.id )
-                    }
-                )
-                |> Seq.concat
+                    }) spaces
 
             seq {
                 let cellsDict = new Dictionary<int Vec2, SpaceID>()

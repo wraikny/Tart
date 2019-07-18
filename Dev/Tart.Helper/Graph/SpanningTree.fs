@@ -9,7 +9,7 @@ module SpanningTree =
     [<CompiledName "Kruskal">]
     let kruskal nodeCount (edges : Edge<_, _> list) =
         
-        let uf = new UnionFold(nodeCount)
+        let uf = UnionFold(nodeCount)
 
         let sortedEdges =
             edges

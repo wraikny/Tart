@@ -32,4 +32,4 @@ module Either =
 
         member __.YieldFrom(x) = x
 
-    let either = new EitherBulder()
+    let either = EitherBulder()

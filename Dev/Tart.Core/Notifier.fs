@@ -7,8 +7,8 @@ type Notifier<'Msg, 'ViewMsg, 'ViewModel>(messenger) =
     let observable = new Observable<'ViewModel>()
 
     interface IObservable<'ViewModel> with
-        member __.Add(o) = observable.Add(o)
-        member __.Clear() = observable.Clear()
+        member __.Add(o) = (observable :> IObservable<_>).Add(o)
+        member __.Clear() = (observable :> IObservable<_>).Clear()
 
     member val Messenger : IMessenger<'Msg, 'ViewMsg, 'ViewModel> = messenger with get
 

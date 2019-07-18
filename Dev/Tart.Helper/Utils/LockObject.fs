@@ -3,7 +3,7 @@
 [<Class>]
 type LockObject<'T>(value : 'T) =
     let mutable value = value
-    let _lock = new System.Object()
+    let _lock = System.Object()
 
     member public __.Value
         with get() =
@@ -17,7 +17,7 @@ type LockObject<'T>(value : 'T) =
 
 [<AbstractClass; Sealed>]
 type StaticLock private() =
-    static member private _lockObj = new System.Object()
+    static member private _lockObj = System.Object()
 
     static member Lock f =
         lock StaticLock._lockObj <|

@@ -26,9 +26,9 @@ type ClientBase<'SendMsg, 'RecvMsg> internal (encoder, decoder, socket) =
     let sendQueue = new MsgQueue<'SendMsg>()
     let recvQueue = new MsgQueue<'RecvMsg>()
 
-    let _lockObj = new Object()
+    let _lockObj = Object()
 
-    let mutable _isConnected = socket <> null
+    let mutable _isConnected = not <| isNull socket
 
     let mutable cancel : CancellationTokenSource = null
 
@@ -37,11 +37,11 @@ type ClientBase<'SendMsg, 'RecvMsg> internal (encoder, decoder, socket) =
     let mutable _debugDisplay = false
 
     [<Literal>]
-    let rsaKeySize = 1024
+    let RsaKeySize = 1024
     [<Literal>]
-    let aesBlockSize = 128 // fixed
+    let AesBlockSize = 128 // fixed
     [<Literal>]
-    let aesKeySize = 128 // select from { 128bit, 192bit, 256bit }
+    let AesKeySize = 128 // select from { 128bit, 192bit, 256bit }
 
     member __.ClientId
         with get() = clientId
@@ -147,7 +147,7 @@ type ClientBase<'SendMsg, 'RecvMsg> internal (encoder, decoder, socket) =
     member internal this.InitCryptOfClient() =
         async {
             // 1. Create RSA
-            use rsa = new RSACryptoServiceProvider(rsaKeySize)
+            use rsa = new RSACryptoServiceProvider(RsaKeySize)
 
             this.DebugPrint(sprintf "RSA:\n%s" <| rsa.ToXmlString(true))
 
@@ -161,7 +161,7 @@ type ClientBase<'SendMsg, 'RecvMsg> internal (encoder, decoder, socket) =
                 // 6. Decrypted IV and Key
                 let decrypted = rsa.Decrypt(encrypted, false)
 
-                let ivLength = aesBlockSize / 8
+                let ivLength = AesBlockSize / 8
 
                 return decrypted |> Array.splitAt ivLength
             }
@@ -172,7 +172,7 @@ type ClientBase<'SendMsg, 'RecvMsg> internal (encoder, decoder, socket) =
             // 7. Create AES
             aes <-
                 new AesCryptoServiceProvider(
-                    BlockSize = aesBlockSize,
+                    BlockSize = AesBlockSize,
                     KeySize = key.Length * 8,
                     Mode = CipherMode.CBC,
                     Padding = PaddingMode.PKCS7,
@@ -192,8 +192,8 @@ type ClientBase<'SendMsg, 'RecvMsg> internal (encoder, decoder, socket) =
             // 3. Creat AES
             aes <-
                 new AesCryptoServiceProvider(
-                    BlockSize = aesBlockSize,
-                    KeySize = aesKeySize,
+                    BlockSize = AesBlockSize,
+                    KeySize = AesKeySize,
                     Mode = CipherMode.CBC,
                     Padding = PaddingMode.PKCS7
                 )
@@ -250,7 +250,7 @@ type ClientBase<'SendMsg, 'RecvMsg> internal (encoder, decoder, socket) =
             if recvSize <= 0 then
                 this.DebugPrint("Receive Size <= 0")
                 do! this.OnFailedToReceive()
-            elif not (bytes.Length > 1) then
+            elif bytes.Length <= 1 then
                 this.DebugPrint("Receive Bytes Length <= 1")
                 do! this.OnFailedToReceive()
             else
@@ -292,11 +292,11 @@ type ClientBase<'SendMsg, 'RecvMsg> internal (encoder, decoder, socket) =
         if disconnectable then
             this.DebugPrint("Disconnecting")
 
-            if cancel <> null then
+            if not <| isNull cancel then
                 cancel.Cancel()
             cancel <- null
 
-            if socket <> null then
+            if not <| isNull socket then
                 socket.Dispose()
             socket <- null
 

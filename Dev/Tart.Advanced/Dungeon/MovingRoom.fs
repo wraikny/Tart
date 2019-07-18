@@ -29,7 +29,7 @@ type internal MovingRoom(rect : float32 Rect2, movingRate, rooms) =
         let targets =
             rooms
                 .Where(fun o -> o <> this)
-                .Where(fun o -> this.IsCollidedWith o)
+                .Where(this.IsCollidedWith)
 
         lastPosition <- position
 

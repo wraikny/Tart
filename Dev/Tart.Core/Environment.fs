@@ -10,13 +10,13 @@ type internal IEnvironment =
 [<Class>]
 type public Environment() =
     
-    let mutable random : Random = new Random()
+    let mutable random : Random = Random()
 
     member this.SetRandom(random' : Random) =
         random <- random'
         this
 
-    static member Initialize<'ViewMsg>() = new Environment()
+    static member Initialize<'ViewMsg>() = Environment()
 
     interface IEnvironment with
         member this.Random
@@ -34,7 +34,7 @@ type EnvironmentBuilder<'ViewMsg> =
 module EnvironmentBuilder =
     [<CompiledName "Build">]
     let build (builder) =
-        let env = new Environment()
-        env.SetRandom(new Random(builder.seed)) |> ignore
+        let env = Environment()
+        env.SetRandom(Random(builder.seed)) |> ignore
 
         env

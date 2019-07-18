@@ -48,8 +48,8 @@ type private Messenger<'Msg, 'ViewMsg, 'Model, 'ViewModel>
 
 
     interface IObservable<'Msg> with
-        member this.Add(o) = observable.Add(o)
-        member this.Clear() = observable.Clear()
+        member this.Add(o) = (observable :> IObservable<_>).Add(o)
+        member this.Clear() = (observable :> IObservable<_>).Clear()
     
 
     interface IMessenger<'Msg, 'ViewMsg, 'ViewModel> with

@@ -89,7 +89,7 @@ type MsgQueueAsync<'Msg>() =
         if running then
             this.IsRunning <- false
         else
-            raise <| new InvalidOperationException()
+            raise <| InvalidOperationException()
 
     interface IDisposable with
         member this.Dispose() =

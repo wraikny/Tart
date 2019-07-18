@@ -30,4 +30,4 @@ module Maybe =
 
         member __.YieldFrom(x) = x
 
-    let maybe = new MaybeBuilder()
+    let maybe = MaybeBuilder()

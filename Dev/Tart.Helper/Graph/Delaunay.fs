@@ -60,7 +60,7 @@ module Delaunay2 =
         let trianglesSet = new HashSet<NodeTriangle>()
 
         let addTriangleToSet nodes =
-            trianglesSet.Add( new NodeTriangle(nodes) )
+            trianglesSet.Add( NodeTriangle(nodes) )
 
         let hugeTriangleNodes =
             let node1 = Node.init (-1, hugeTriangle.p1)
@@ -79,7 +79,7 @@ module Delaunay2 =
             let tmpTriangleSet = new Dictionary<NodeTriangle, bool>()
 
             let addToTmpSet tri =
-                let tri = new NodeTriangle(tri)
+                let tri = NodeTriangle(tri)
 
                 let isDuplicated = tmpTriangleSet.ContainsKey(tri)
                 if isDuplicated then

@@ -24,7 +24,7 @@ let asParallel (coroutines : #seq<seq<unit>>) =
         while isContinue do
             isContinue <- false
             for c in coroutines do
-                if c.MoveNext() && isContinue = false then
+                if c.MoveNext() && not isContinue then
                     isContinue <- true
             yield ()
     }

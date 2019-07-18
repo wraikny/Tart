@@ -27,7 +27,7 @@ module Random =
         member __.For(inp, f) =
             seq {for a in inp -> f a}
 
-    let random = new RandomBuilder()
+    let random = RandomBuilder()
 
     [<CompiledName "Bool">]
     let bool : bool Generator =
