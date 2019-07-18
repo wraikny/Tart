@@ -5,6 +5,15 @@ Tart is a F# Library providing Model-View Game Architecture, inspired by "TEA".
 copyright 2019 wraikny
 writtenknown@gmail.com
 
+## Target
+.Net Standard 2.0
+* Tart.Helper
+* Tart.Core
+* Tart.Sockets
+
+.Net Framework 4.7.2
+* Tart.Sample
+
 ## Dependencies
 * FSharp.Core 4.6.2 : MIT (c) Microsoft Corporation.
   https://github.com/dotnet/fsharp/blob/master/License.txt
