@@ -28,6 +28,7 @@ tarballs/
 test-results/
 Thumbs.db
 .vs/
+.ionide/
 
 # Mac bundle stuff
 *.dmg
