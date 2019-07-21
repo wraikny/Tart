@@ -268,9 +268,8 @@ module DungeonBuilder =
 
         let corridors =
             corridorRects
-            |> List.indexed
-            |>> fun (i, r) ->
-                Space.init (SpaceID.Corridor i) r
+            |> mapi (fun i r ->
+                Space.init (SpaceID.Corridor i) r)
 
 
         let collidedSmallRooms =

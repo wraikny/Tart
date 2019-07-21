@@ -49,6 +49,9 @@ type VectorBuiltin = VectorBuiltin with
         }
 
 
+open FSharpPlus
+
+
 [<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
 module Vector =
     [<CompiledName "GetImpl">]
@@ -70,14 +73,10 @@ module Vector =
 
 
     [<CompiledName "Zero">]
-    let inline zero() : ^Vec =
-        let zero = LanguagePrimitives.GenericZero
-        init1(zero)
+    let inline zero() : ^Vec = init1(zero)
 
     [<CompiledName "One">]
-    let inline one() : ^Vec =
-        let one = LanguagePrimitives.GenericOne
-        init1(one)
+    let inline one() : ^Vec = init1(one)
 
     [<CompiledName "Dot">]
     let inline dot (a : ^Vec) (b : ^Vec) : ^a =

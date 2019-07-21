@@ -165,3 +165,4 @@ module Easing =
         =
         let v = calculate easing frame current
         startPoint + (endPoint - startPoint) *. v
+
