@@ -4,6 +4,8 @@
 open System.Collections
 open System.Linq
 
+open FSharpPlus
+
 /// 指定したフレーム数待機するコルーチンを生成する。
 [<CompiledName "WaitFrames">]
 let inline waitFrames n =
@@ -12,11 +14,11 @@ let inline waitFrames n =
 
 /// 複数のコルーチンを同時に実行するコルーチンを生成する。
 [<CompiledName "AsParallel">]
-let asParallel (coroutines : #seq<seq<unit>>) =
+let asParallel (coroutines : seq<seq<unit>>) =
     seq {
         let coroutines =
             (coroutines
-            |> Seq.map(fun c -> c.GetEnumerator() :> IEnumerator)
+            |>> fun c -> c.GetEnumerator() :> IEnumerator
             ).ToList()
 
         let mutable isContinue = true

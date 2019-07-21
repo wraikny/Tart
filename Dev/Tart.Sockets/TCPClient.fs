@@ -15,6 +15,8 @@ open wraikny.Tart.Sockets.Crypt
 open System.Security.Cryptography
 open System.Text
 
+open FSharpPlus
+
 
 type ClientBase<'SendMsg, 'RecvMsg> internal (encoder, decoder, socket) =
     let mutable socket : Socket = socket
@@ -118,7 +120,7 @@ type ClientBase<'SendMsg, 'RecvMsg> internal (encoder, decoder, socket) =
         async {
             let! length, recvSize = this.ReceiveOfSize(2)
             if recvSize = 0 then
-                return (Array.empty, 0)
+                return (empty, 0)
             else
                 let length = BitConverter.ToUInt16(length, 0)
                 return! this.ReceiveOfSize(length)
@@ -132,8 +134,8 @@ type ClientBase<'SendMsg, 'RecvMsg> internal (encoder, decoder, socket) =
 
     member internal this.SendWithHead(bytes) =
         async {
-            let length = bytes |> Array.length |> uint16 |> BitConverter.GetBytes
-            return! socket.AsyncSend(Array.append length bytes)
+            let length = bytes |> length |> uint16 |> BitConverter.GetBytes
+            return! socket.AsyncSend(length <|> bytes)
         }
 
     member internal this.EncryptedSendWithHead(bytes) =
@@ -206,7 +208,7 @@ type ClientBase<'SendMsg, 'RecvMsg> internal (encoder, decoder, socket) =
             this.DebugPrint(sprintf "IV: %A" aes.IV)
             this.DebugPrint(sprintf "Key: %A" aes.Key)
 
-            let encrypted = rsa.Encrypt(Array.append aes.IV aes.Key, false)
+            let encrypted = rsa.Encrypt(aes.IV <|> aes.Key, false)
 
             // 5a. Send encrypted iv and key
             do! this.SendWithHead(encrypted) |> Async.Ignore

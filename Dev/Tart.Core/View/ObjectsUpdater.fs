@@ -3,6 +3,7 @@
 open wraikny.Tart.Helper.Utils
 open System.Collections.Generic
 
+open FSharpPlus
 
 /// Interface of adding, removing and updating objects
 [<Interface>]
@@ -117,8 +118,8 @@ type ObjectsUpdater<'ViewModel, 'Object, 'ObjectViewModel
         let removedObjectIDs =
             objects
             |> Seq.map(fun x -> x.Key)
-            |> Seq.filter(existFlags.Contains >> not)
-            |> Seq.toList
+            |> filter(existFlags.Contains >> not)
+            |> toList
 
         for id in removedObjectIDs do
             this.Remove(id)

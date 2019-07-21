@@ -2,12 +2,17 @@
 
 open wraikny.Tart.Helper.Math
 
+open FSharpPlus
+
 [<Struct>]
-type Sphere< ^a, ^Vec> =
+type Sphere< 'a, 'Vec> =
     {
-        center : ^Vec
-        radius : ^a
+        center : 'Vec
+        radius : 'a
     }
+
+    static member inline Map((s : Sphere< _, _>, f : 'T -> 'U), _mthd : FSharpPlus.Control.Map) =
+        { center = map f s.center; radius = f s.radius }
 
 
 type ^a Sphere2 = Sphere< ^a, ^a Vec2 >

@@ -11,6 +11,8 @@ open wraikny.Tart.Helper.Utils
 open wraikny.Tart.Sockets
 open wraikny.Tart.Sockets.TCP
 
+open FSharpPlus
+
 
 let encoding = System.Text.Encoding.UTF8
 
@@ -139,9 +141,9 @@ let main() =
 
     let clients = [|for _ in 1..100 -> new TestClient(DebugDisplay = true) :> IClient<_>|]
 
-    clients |> Seq.iter(fun c -> c.StartAsync(ipEndpoint))
+    clients |> iter(fun c -> c.StartAsync(ipEndpoint))
 
-    while clients |> Seq.map(fun c -> c.IsConnected) |> Seq.fold (&&) true do
+    while clients |>> (fun c -> c.IsConnected) |> fold (&&) true do
         Console.WriteLine("Waiting connections ..")
         Thread.Sleep(100)
 
@@ -150,7 +152,7 @@ let main() =
 
     clients
     |> Seq.indexed
-    |> Seq.iter(fun (i, c) ->
+    |> iter(fun (i, c) ->
         c.Enqueue(CMsg <| sprintf "Hello from Client %d" i)
         Thread.Sleep(5)
     )
@@ -167,7 +169,7 @@ let main() =
     waiting()
 
 
-    clients |> Seq.iter(fun c -> c.Dispose())
+    clients |> iter(fun c -> c.Dispose())
 
     waiting()
     //server.Dispose()

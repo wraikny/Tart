@@ -6,6 +6,8 @@ open System.Linq
 open wraikny.Tart.Helper.Math
 open wraikny.Tart.Helper.Geometry
 
+open FSharpPlus
+
 
 [<Class>]
 type internal MovingRoom(rect : float32 Rect2, movingRate, rooms) =
@@ -56,7 +58,7 @@ type internal MovingRoom(rect : float32 Rect2, movingRate, rooms) =
         }
 
     member this.RectI
-        with get() : int Rect2 = this.RectF |> Rect.mapVec int
+        with get() : int Rect2 = this.RectF |>> (map int)
 
 
     member private this.IsCollidedWith(other : MovingRoom) =
@@ -87,4 +89,4 @@ type internal MovingRoom(rect : float32 Rect2, movingRate, rooms) =
 
 
     member private this.UpdatePosition(diff) =
-        position <- (position + diff) |> Vec2.map floor
+        position <- (position + diff) |>> floor

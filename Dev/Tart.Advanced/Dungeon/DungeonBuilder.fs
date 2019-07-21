@@ -1,10 +1,11 @@
 ﻿namespace wraikny.Tart.Advanced.Dungeon
 
 open System
-
 open wraikny.Tart.Helper.Math
 open wraikny.Tart.Helper.Geometry
 open wraikny.Tart.Helper.Collections
+
+open FSharpPlus
 
 type DungeonBuilder = {
     /// 乱数生成に用いるシード値
@@ -63,45 +64,45 @@ module private WithRandom =
 
             (w * r * cos(t), h * r * sin(t))
             |> Vec2.init
-            |> Vec2.map int
+            |>> int
 
         [for _ in 1..builder.parameter.roomCount -> ()]
-        |> List.map(fun () ->
+        |>> fun () ->
             let pos = getRandomPointInCircle()
 
             let size =
                 let min =
                     builder.parameter.minRoomSize
                     |> Vec2.init
-                    |> Vec2.map float32
+                    |>> float32
 
                 let max =
                     builder.parameter.maxRoomSize
                     |> Vec2.init
-                    |> Vec2.map float32
+                    |>> float32
 
                 let rand = builder |> getRandomValue
 
                 (min + (max - min) *. rand)
-                |> Vec2.map int
+                |>> int
 
             Rect.init (pos - size /. 2) size
-        )
+        
 
 
     open wraikny.Tart.Helper.Graph
         
         
     let getLargeRoomEdges (largeRooms : (int * int Rect2) list) (withRandom : WithRandom) : Edge<unit, float32> list =
-        let largeRoomsCount = largeRooms |> List.length
+        let largeRoomsCount = largeRooms |> length
         
         let largeRoomEdges =
             largeRooms
-            |> List.map(fun (id, rect) ->
-                let pos = rect.position |> Vec2.map float32
-                let size = rect.size |> Vec2.map float32
+            |>> fun (id, rect) ->
+                let pos = rect.position |>> float32
+                let size = rect.size |>> float32
                 Node.init (id, pos + size /. 2.0f)
-            )
+            
             |> Delaunay2.getNodesList
         
         let largeRoomsSpanningTree =
@@ -114,42 +115,40 @@ module private WithRandom =
         
                 let exclusiondSpanningTree =
                     largeRoomEdges
-                    |> List.filter(fun e ->
+                    |> filter(fun e ->
                         largeRoomsSpanningTree
-                        |> List.exists(fun e0 -> Edge.equal e e0)
+                        |> exists(fun e0 -> Edge.equal e e0)
                         |> not
                     )
         
                 let restoreCount =
-                    let count = List.length exclusiondSpanningTree |> float32
+                    let count = length exclusiondSpanningTree |> float32
                     count * withRandom.parameter.restoreEdgeRate |> int
         
                 yield!
                     exclusiondSpanningTree
-                    |> List.sortBy(fun _ -> withRandom.random.NextDouble() )
-                    |> List.take restoreCount
-            } |> List.ofSeq
+                    |> sortBy(fun _ -> withRandom.random.NextDouble() )
+                    |> take restoreCount
+            } |> toList
         
         largeRoomEdgesResult
-        |> List.map(
-            Edge.mapValues(ignore)
-        )
+        |>> map ignore
 
 
 [<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
 module DungeonBuilder =
     let private distributeRooms (rooms : int Rect2 list) (rate : float32) =
         let threshold =
-            let len = rooms |> List.length |> float32
+            let len = rooms |> length |> float32
             let sum =
                 rooms
-                |> List.map ( Rect.size >> (Vec2.map float32) )
-                |> List.fold (+) (Vector.zero())
+                |>> ( Rect.size >> (map float32) )
+                |> fold (+) (Vector.zero())
             sum *. (rate / len)
 
         rooms
         |> List.partition(fun rect ->
-            let size = rect.size |> Vec2.map float32
+            let size = rect.size |>> float32
             size.x >= threshold.x && size.y > threshold.y
         )
 
@@ -161,7 +160,7 @@ module DungeonBuilder =
         let roomsList = new List<MovingRoom>()
 
         for r in rooms do
-            let movingRoom = MovingRoom(r |> Rect.mapVec float32, movingRate, roomsList)
+            let movingRoom = MovingRoom(r |>> (map float32), movingRate, roomsList)
             roomsList.Add(movingRoom)
 
 
@@ -186,7 +185,7 @@ module DungeonBuilder =
         let isCollidedX = Rect.isCollidedAxis Vec2.x lurd1 lurd2
         let isCollidedY = Rect.isCollidedAxis Vec2.y lurd1 lurd2
 
-        let manhattanDist = (center1 - center2) |> Vec2.map abs
+        let manhattanDist = (center1 - center2) |>> abs
 
         let sizeDict =
             Vec2.init(
@@ -211,7 +210,7 @@ module DungeonBuilder =
                     yield f (sizeDict.x + Vec2.init(width, 0)) ({ middle with y = center.y})
                     yield f (sizeDict.y + Vec2.init(0, width)) ({ middle with x = center.x})
             }
-            |> Seq.toList
+            |> toList
 
 
     let private spacesToHashMap =
@@ -237,7 +236,7 @@ module DungeonBuilder =
 
 
         let largeRooms, smallRooms =
-            let toRoom kind = List.map(fun (i, r) -> Space.init (kind i) r)
+            let inline toRoom kind = map <| fun (i, r) -> Space.init (kind i) r
 
             largeRoomRectsIndexed |> toRoom SpaceID.Large
             , smallRoomRects |> List.indexed |> toRoom SpaceID.Small
@@ -265,21 +264,20 @@ module DungeonBuilder =
                     yield!
                         generateCorridors builder.corridorWidth (room1.rect, room2.rect)
             }
-            |> Seq.toList
+            |> toList
 
         let corridors =
             corridorRects
             |> List.indexed
-            |> List.map(fun (i, r) ->
+            |>> fun (i, r) ->
                 Space.init (SpaceID.Corridor i) r
-            )
 
 
         let collidedSmallRooms =
             smallRooms
-             |> List.filter(fun room ->
+             |> filter(fun room ->
                  corridorRects
-                 |> List.exists(fun cr ->
+                 |> exists(fun cr ->
                      room.rect
                      |> Rect.isCollided cr
                  )

@@ -2,6 +2,8 @@
 
 open wraikny.Tart.Helper.Math
 
+open FSharpPlus
+
 [<Struct>]
 type Triangle< 'a > =
     {
@@ -9,6 +11,9 @@ type Triangle< 'a > =
         p2 : 'a
         p3 : 'a
     }
+
+    static member Map((x: _ Triangle, f : 'T -> 'U), _mthd : FSharpPlus.Control.Map) =
+        { p1 = f x.p1; p2 = f x.p2; p3 = f x.p3 }
 
 
 type ^a Triangle2 = ^a Vec2 Triangle
@@ -52,10 +57,9 @@ module Triangle =
             for t in l do
             yield (s, t)
         }
-        |> Seq.map(fun (s, t) ->
+        |>> fun (s, t) ->
             (s a = t b)
-        )
-        |> Seq.fold (||) false
+        |> fold (||) false
 
 
     [<CompiledName "CircumscribedCircle">]

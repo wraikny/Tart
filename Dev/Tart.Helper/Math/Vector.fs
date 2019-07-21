@@ -23,7 +23,6 @@ type Vector< ^a, ^Vec, ^Ma, ^MVec
         Init1 : ^a -> ^Vec
         Dot : ^Vec -> ^Vec -> ^a
         Axes : unit -> (^Vec -> ^a) list
-        Map : (^a -> ^Ma) -> ^Vec -> ^MVec
     }
 
 
@@ -33,7 +32,6 @@ type VectorBuiltin = VectorBuiltin with
             Init1 = Vec2.init1
             Dot = Vec2.dot
             Axes = Vec2.axes
-            Map = Vec2.map
         }
     
     static member inline VectorImpl(_ : ^a Vec3): Vector< ^a, ^a Vec3, ^Ma, ^Ma Vec3 > =
@@ -41,7 +39,6 @@ type VectorBuiltin = VectorBuiltin with
             Init1 = Vec3.init1
             Dot = Vec3.dot
             Axes = Vec3.axes
-            Map = Vec3.map
         }
 
     static member inline VectorImpl(_ : ^a Vec4): Vector< ^a, ^a Vec4, ^Ma, ^Ma Vec4 > =
@@ -49,7 +46,6 @@ type VectorBuiltin = VectorBuiltin with
             Init1 = Vec4.init1
             Dot = Vec4.dot
             Axes = Vec4.axes
-            Map = Vec4.map
         }
 
 
@@ -57,8 +53,8 @@ type VectorBuiltin = VectorBuiltin with
 module Vector =
     [<CompiledName "GetImpl">]
     let inline getImpl
-        (builtin : ^Builtin)
-        (dummy : Vector< ^a, ^Vec, ^Ma, ^MVec > )
+        (_builtin : ^Builtin)
+        (_dummy : Vector< ^a, ^Vec, ^Ma, ^MVec > )
         : Vector< ^a, ^Vec, ^Ma, ^MVec >
         =
         (
@@ -94,12 +90,6 @@ module Vector =
         ( getImpl VectorBuiltin
             (Unchecked.defaultof<Vector< ^a, ^Vec, _, _ >>)
         ).Axes()
-
-    [<CompiledName "Map">]
-    let inline map (f : ^a -> ^Ma) (v : ^Vec) : ^MVec =
-        ( getImpl VectorBuiltin
-            (Unchecked.defaultof<Vector< ^a, ^Vec, ^Ma, ^MVec >>)
-        ).Map f v
 
     [<CompiledName "SquaredLength">]
     let inline squaredLength (v : ^Vec) : ^a =

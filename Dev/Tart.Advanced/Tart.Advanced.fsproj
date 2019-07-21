@@ -8,6 +8,7 @@
     <Compile Include="Dungeon\DungeonBuilder.fs" />
   </ItemGroup>
   <ItemGroup>
+    <PackageReference Include="FSharpPlus" Version="1.0.0" />
     <PackageReference Include="System.ValueTuple" Version="4.5.0" />
     <PackageReference Include="FSharp.Core" Version="4.6.2" />
   </ItemGroup>

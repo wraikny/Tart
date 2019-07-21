@@ -81,6 +81,9 @@ type ^a Vec4 =
             w = a.w / b
         }
 
+    static member inline Map((v: _ Vec4, f : 'T -> 'U), _mthd : FSharpPlus.Control.Map) =
+        {x = f v.x; y = f v.y; z = f v.z; w = f v.w }
+
 
 [<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
 module Vec4 =

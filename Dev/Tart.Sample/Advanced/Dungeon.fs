@@ -5,6 +5,8 @@ open wraikny.Tart.Helper.Geometry
 open wraikny.Tart.Helper.Math
 open wraikny.Tart.Helper.Collections
 
+open FSharpPlus
+
 let createScene builder =
     let dungeonModel =
         builder
@@ -13,11 +15,11 @@ let createScene builder =
 
     // printfn "%A" dungeonModel
     printfn "Seed: %d" builder.seed
-    printfn "Large: %d" <| (HashMap.toSeq >> Seq.length) dungeonModel.largeRooms
-    printfn "Small: %d" <| (HashMap.toSeq >> Seq.length) dungeonModel.smallRooms
-    printfn "Corridor: %d" <| (HashMap.toSeq >> Seq.length) dungeonModel.corridors
-    printfn "Edges: %d" <| (Seq.length) dungeonModel.largeRoomEdges
-    printfn "Cells: %d" <| (HashMap.toSeq >> Seq.length) dungeonModel.cells
+    printfn "Large: %d" <| (HashMap.toSeq >> length) dungeonModel.largeRooms
+    printfn "Small: %d" <| (HashMap.toSeq >> length) dungeonModel.smallRooms
+    printfn "Corridor: %d" <| (HashMap.toSeq >> length) dungeonModel.corridors
+    printfn "Edges: %d" <| length dungeonModel.largeRoomEdges
+    printfn "Cells: %d" <| (HashMap.toSeq >> length) dungeonModel.cells
 
     printfn "----------------------------------------"
     printfn "----------------------------------------"
@@ -37,7 +39,7 @@ let createScene builder =
     let n = 2.0f
 
     let create (r : int Vec2 Rect) =
-        let r = r |> Rect.mapVec (float32 >> (*) n)
+        let r = r |>> map (float32 >> (*) n)
         let rect =
             new asd.RectangleShape(
                 DrawingArea =
@@ -68,8 +70,8 @@ let createScene builder =
             dungeonModel.largeRooms |> HashMap.find n1
             , dungeonModel.largeRooms |> HashMap.find n2
         let p1, p2 =
-            s1.rect |> Rect.mapVec (float32 >> (*) n) |> Rect.centerPosition
-            , s2.rect |> Rect.mapVec (float32 >> (*) n) |> Rect.centerPosition
+            s1.rect |>> map(float32 >> (*) n) |> Rect.centerPosition
+            , s2.rect |>> map (float32 >> (*) n) |> Rect.centerPosition
 
         let line =
             new asd.LineShape(
@@ -83,11 +85,11 @@ let createScene builder =
 
     let camera() =
         let ws = asd.Engine.WindowSize
-        let posList = largeRooms |> List.map(fun (_, s) -> n .* Vec2.map float32 s.rect.position)
-        let minX = posList |> List.map Vec2.x |> List.min
-        let maxX = posList |> List.map Vec2.x |> List.max
-        let minY = posList |> List.map Vec2.y |> List.min
-        let maxY = posList |> List.map Vec2.y |> List.max
+        let posList = largeRooms |>> fun (_, s) -> n .* map float32 s.rect.position
+        let minX = posList |>> Vec2.x |> List.min
+        let maxX = posList |>> Vec2.x |> List.max
+        let minY = posList |>> Vec2.y |> List.min
+        let maxY = posList |>> Vec2.y |> List.max
 
         let w = maxX - minX
         let h = maxY - minY

@@ -1,10 +1,16 @@
 ﻿namespace wraikny.Tart.Helper.Graph
 
+open FSharpPlus
+
 [<Struct>]
-type Node<'V> = {
-    label : int
-    value : 'V
-}
+type Node<'V> =
+    {
+        label : int
+        value : 'V
+    }
+
+    static member Map((node: _ Node, f : 'T -> 'U), _mthd : FSharpPlus.Control.Map) =
+        { label = node.label; value = f node.value }
 
 [<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
 module Node =
@@ -14,13 +20,6 @@ module Node =
     [<CompiledName "Equal">]
     let equal (n1 : Node<'a>) (n2 : Node<'a>) =
         n1.label = n2.label
-
-    [<CompiledName "Map">]
-    let map f node =
-        {
-            label = node.label
-            value = f node
-        }
 
 
 [<Struct>]
@@ -32,6 +31,13 @@ type Edge< 'V, 'W
         node2 : Node<'V>
         weight : 'W
     }
+
+    static member Map((edge: Edge<_, _>, f : 'T -> 'U), _mthd : FSharpPlus.Control.Map) =
+        {
+            weight = edge.weight
+            node1 = edge.node1 |>> f
+            node2 = edge.node2 |>> f
+        }
 
 
 [<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
@@ -56,14 +62,6 @@ module Edge =
     [<CompiledName "Values">]
     let inline values edge =
         edge.node1.value, edge.node2.value
-
-    [<CompiledName "MapValues">]
-    let inline mapValues f edge =
-        {
-            weight = edge.weight
-            node1 = edge.node1 |> Node.map f
-            node2 = edge.node2 |> Node.map f
-        }
 
 
 

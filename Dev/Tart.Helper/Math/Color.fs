@@ -1,5 +1,7 @@
 ﻿module wraikny.Tart.Helper.Math.Color
 
+open FSharpPlus
+
 /// 0.0f ~ 1.0f
 let HSV2RGB_float32 (hsv : float32 Vec3) : float32 Vec3 =
     let h, s, v = hsv |> Vec3.xyz
@@ -52,6 +54,6 @@ let HSV2RGB_float32 (hsv : float32 Vec3) : float32 Vec3 =
 /// 0 ~ 255
 let HSV2RGB_byte (hsv : byte Vec3) : byte Vec3 =
     hsv
-    |> Vec3.map(float32 >> (fun a -> a / 255.0f))
+    |>> (float32 >> flip (/) 255.0f)
     |> HSV2RGB_float32
-    |> Vec3.map((*) 255.0f >> byte)
+    |>> ((*) 255.0f >> byte)

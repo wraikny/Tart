@@ -3,9 +3,8 @@
     <TargetFramework>netstandard2.0</TargetFramework>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="Extension.fs" />
     <Compile Include="Coroutine.fs" />
-    <Compile Include="Monad\Maybe.fs" />
-    <Compile Include="Monad\Either.fs" />
     <Compile Include="Math\Angle.fs" />
     <Compile Include="Math\Vec2.fs" />
     <Compile Include="Math\Vec3.fs" />
@@ -22,7 +21,6 @@
     <Compile Include="Graph\UnionFold.fs" />
     <Compile Include="Graph\SpanningTree.fs" />
     <Compile Include="Graph\Delaunay.fs" />
-    <Compile Include="Collections\Seq.fs" />
     <Compile Include="Collections\HashMap.fs" />
     <Compile Include="Collections\FixedSizeQueue.fs" />
     <Compile Include="Collections\Queue.fs" />
@@ -31,6 +29,7 @@
     <Compile Include="Utils\MsgQueue.fs" />
   </ItemGroup>
   <ItemGroup>
+    <PackageReference Include="FSharpPlus" Version="1.0.0" />
     <PackageReference Include="System.ValueTuple" Version="4.5.0" />
     <PackageReference Include="FSharp.Core" Version="4.6.2" />
   </ItemGroup>

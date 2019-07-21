@@ -61,6 +61,9 @@ type ^a Vec2 =
             y = a.y / b
         }
 
+    static member inline Map((v: _ Vec2, f : 'T -> 'U), _mthd : FSharpPlus.Control.Map) =
+        {x = f v.x; y = f v.y }
+
 
 [<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
 module Vec2 =
@@ -81,10 +84,6 @@ module Vec2 =
 
     [<CompiledName "XY">]
     let inline xy v = v.x, v.y
-
-    [<CompiledName "Map">]
-    let inline map (f : ^a -> ^b) (v : ^a Vec2) : ^b Vec2 =
-        {x = f v.x; y = f v.y }
 
     [<CompiledName "Dot">]
     let inline dot (a : ^a Vec2) (b : ^a Vec2) : ^a =

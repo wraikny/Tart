@@ -2,6 +2,8 @@
 
 open wraikny.Tart.Helper.Utils
 
+open FSharpPlus
+
 type internal PushMessage<'Msg> = 'Msg -> unit
 type internal Command<'Msg> = IEnvironment -> PushMessage<'Msg> -> unit
 
@@ -57,12 +59,12 @@ module Cmd =
         {
             commands =
                 cmds
-                |> List.map commands
-                |> List.concat
+                |>> commands
+                |> join
             viewMsgs =
                 cmds
-                |> List.map viewMsgs
-                |> List.concat
+                |>> viewMsgs
+                |> join
         }
 
 
@@ -71,11 +73,10 @@ module Cmd =
         {
             commands =
                 cmd.commands
-                |> List.map(fun c ->
+                |>> fun c ->
                     (fun env pushMsg ->
                         c env (f >> pushMsg)
                     )
-                )
 
             viewMsgs = cmd.viewMsgs
         }
@@ -84,5 +85,5 @@ module Cmd =
     let inline mapViewMsgs (f : 'a -> 'ViewMsg) (cmd : Cmd<'Msg, 'a>) : Cmd<'Msg, 'ViewMsg> =
         {
             commands = cmd.commands
-            viewMsgs = cmd.viewMsgs |> List.map f
+            viewMsgs = f <!> cmd.viewMsgs
         }

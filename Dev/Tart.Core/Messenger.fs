@@ -4,6 +4,7 @@ open System.Threading
 open wraikny.Tart.Helper.Collections
 open wraikny.Tart.Helper.Utils
 
+open FSharpPlus
 
 
 [<Class>]
@@ -63,7 +64,7 @@ type private Messenger<'Msg, 'ViewMsg, 'Model, 'ViewModel>
         member this.TryPopViewModel
             with get() =
                 modelQueue.TryDequeue()
-                |> Option.map corePrograms.view
+                |>> corePrograms.view
 
         member this.IsRunning
             with get() = this.IsRunning

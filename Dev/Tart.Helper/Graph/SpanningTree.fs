@@ -4,6 +4,8 @@ open wraikny.Tart.Helper.Math
 
 open System.Collections.Generic
 
+open FSharpPlus
+
 [<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
 module SpanningTree =
     [<CompiledName "Kruskal">]
@@ -13,7 +15,7 @@ module SpanningTree =
 
         let sortedEdges =
             edges
-            |> List.sortBy Edge.weight
+            |> sortBy Edge.weight
 
         let resultEdges = new List<Edge<_, _>>()
 
@@ -24,4 +26,4 @@ module SpanningTree =
 
         seq {
             for edge in resultEdges -> edge
-        } |> Seq.toList
+        } |> toList

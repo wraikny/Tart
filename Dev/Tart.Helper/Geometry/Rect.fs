@@ -2,12 +2,17 @@
 
 open wraikny.Tart.Helper.Math
 
+open FSharpPlus
+
 [<Struct>]
-type ^Vec Rect =
+type 'Vec Rect =
     {
-        position : ^Vec
-        size : ^Vec
+        position : 'Vec
+        size : 'Vec
     }
+
+    static member Map((r: _ Rect, f : 'T -> 'U), _mthd : FSharpPlus.Control.Map) =
+        {position = f r.position; size = f r.size }
 
 
 type ^a Rect2 = ^a Vec2 Rect
@@ -43,17 +48,6 @@ module Rect =
 
     [<CompiledName "Down">]
     let inline down r = r.position.y + r.size.y
-
-    [<CompiledName "Map">]
-    let inline map f rect =
-        {
-            position = rect.position |> f
-            size = rect.size |> f
-        }
-
-    [<CompiledName "MapVec">]
-    let inline mapVec f =
-        (Vector.map f) |> map 
 
     [<CompiledName "DiagonalPosition">]
     let inline diagonalPosition r : ^Vec
@@ -93,11 +87,10 @@ module Rect =
         =
         let lu, rd = get_LU_RD r
         Vector.axes()
-        |> List.map(fun axis ->
+        |>> fun axis ->
             (axis lu) <= (axis p)
             && (axis p) <= (axis rd)
-        )
-        |> List.fold (&&) true
+        |> fold (&&) true
 
     [<CompiledName "IsCollided">]
     let inline isCollided a b : bool
@@ -109,7 +102,7 @@ module Rect =
 
         let isCollided =
             Vector.axes()
-            |> List.map(fun axis -> isCollidedAxis axis aLURD bLURD)
-            |> List.fold (&&) true
+            |>> fun axis -> isCollidedAxis axis aLURD bLURD
+            |> fold (&&) true
 
         isCollided

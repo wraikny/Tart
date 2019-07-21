@@ -34,6 +34,8 @@ end
 module HashMap =
     open System.Linq
 
+    open FSharpPlus
+
     [<CompiledName "ContainsKey">]
     let inline containsKey key (hashMap : HashMap<_, _>) =
         hashMap.Dict.ContainsKey(key)
@@ -55,10 +57,10 @@ module HashMap =
         HashMap.CreateWithoutNew(dict)
 
     [<CompiledName "OfList">]
-    let inline ofList list = list |> Seq.ofList |> ofSeq
+    let inline ofList list = list |> toSeq |> ofSeq
 
     [<CompiledName "OfArray">]
-    let inline ofArray array = array |> Seq.ofArray |> ofSeq
+    let inline ofArray array = array |> toSeq |> ofSeq
 
     [<CompiledName "ToSeq">]
     let inline toSeq (hashMap : HashMap<'Key, 'T>) : seq<'Key * 'T> =
@@ -66,11 +68,11 @@ module HashMap =
 
     [<CompiledName "ToList">]
     let inline toList (hashMap : HashMap<'Key, 'T>) =
-        hashMap |> toSeq |> Seq.toList
+        hashMap |> toSeq |> toList
 
     [<CompiledName "ToArray">]
     let inline toArray (hashMap : HashMap<'Key, 'T>) =
-        hashMap |> toSeq |> Seq.toArray
+        hashMap |> toSeq |> toArray
 
     [<CompiledName "TryFind">]
     let inline tryFind key (hashMap : HashMap<_, _>) =

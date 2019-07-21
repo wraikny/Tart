@@ -48,8 +48,7 @@ type IClient<'Msg> = interface
     // abstract Send : 'Msg -> Async<unit>
 end
 
-
-open wraikny.Tart.Helper.Monad
+open FSharpPlus
 
 
 [<Struct>]
@@ -64,12 +63,12 @@ with
             | UserMsg msg ->
                 0uy, (encoder msg)
 
-        Array.append [|flag|] bytes
+        [|flag|] <|> bytes
 
     static member Decode(decoder, decrypted) =
         let flag, bytes = Array.splitAt 1 decrypted
-        maybe {
-            let! head = flag |> Array.tryHead
+        monad {
+            let! head = flag |> tryHead
             match head with
             | 0uy ->
                 let! msg = decoder bytes

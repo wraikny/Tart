@@ -5,6 +5,8 @@ open wraikny.Tart.Helper.Geometry
 open wraikny.Tart.Helper.Graph
 open wraikny.Tart.Helper.Collections
 
+open FSharpPlus
+
 [<Struct>]
 type SpaceID =
     | Large of large:int
@@ -75,18 +77,16 @@ module DungeonModel =
     let getSpaceAt coordinate dungeon =
         dungeon.cells
         |> HashMap.tryFind coordinate
-        |> Option.bind(fun id ->
-            tryFindSpace id dungeon
-        )
+        >>= flip tryFindSpace dungeon
 
 
     [<CompiledName "CellToCoordinate">]
     let inline cellToCoordinate (cellSize : float32 Vec2) (cell : int Vec2) : float32 Vec2 =
-        let cellf = cell |> Vec2.map float32
+        let cellf = cell |>> float32
         cellf * cellSize
 
 
     [<CompiledName "CoordinateToCell">]
     let inline coordinateToCell (cellSize : float32 Vec2) (coordinate : float32 Vec2) : int Vec2 =
         coordinate / cellSize
-        |> Vec2.map (floor >> int)
+        |>> (floor >> int)

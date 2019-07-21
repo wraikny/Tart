@@ -3,11 +3,14 @@
 open wraikny.Tart.Helper.Math
 
 [<Struct>]
-type ^Vec Line=
+type 'Vec Line=
     {
-        startPoint : ^Vec
-        endPoint : ^Vec
+        startPoint : 'Vec
+        endPoint : 'Vec
     }
+
+    static member inline Map((l: _ Line, f : 'T -> 'U), _mthd : FSharpPlus.Control.Map) =
+        {startPoint = f l.startPoint; endPoint = f l.endPoint }
 
 
 type ^a Line2 = ^a Vec2 Line
