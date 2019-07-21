@@ -19,6 +19,8 @@ writtenknown@gmail.com
   https://github.com/dotnet/fsharp/blob/master/License.txt
 * System.ValueTuple 4.5.0 : MIT (c) Microsoft Corporation.
   https://github.com/dotnet/corefx/blob/master/LICENSE.TXT
+* FSharpPlus 1.0.0 : Apache License 2.0 (c) fsprojects
+  https://github.com/fsprojects/FSharpPlus/blob/master/LICENSE.txt
 
 ## Caution
 This software includes the work that is distributed in the [Apache License 2.0](http://www.apache.org/licenses/LICENSE-2.0).  

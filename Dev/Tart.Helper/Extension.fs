@@ -3,6 +3,7 @@
 open FSharpPlus
 
 module Extension =
+    [<CompiledName "FilterMap">]
     let inline filterMap (f : ^a -> ^b option) xs =
         xs
         |>> f
