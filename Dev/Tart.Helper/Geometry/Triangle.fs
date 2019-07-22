@@ -12,8 +12,25 @@ type Triangle< 'a > =
         p3 : 'a
     }
 
-    static member Map((x: _ Triangle, f : 'T -> 'U), _mthd : FSharpPlus.Control.Map) =
-        { p1 = f x.p1; p2 = f x.p2; p3 = f x.p3 }
+    static member Init p1 p2 p3 = {
+        p1 = p1
+        p2 = p2
+        p3 = p3
+    }
+
+    /// Applicative
+    static member inline Return (k : 't) = Triangle< 't >.Init k k k
+    static member (<*>) (f, x : _ Triangle) = {
+        p1 = f.p1 x.p1
+        p2 = f.p2 x.p2
+        p3 = f.p3 x.p3
+    }
+
+    // --------------------------------------------------------------------------------
+
+    static member inline Zero (_ : 'T Triangle, _) = Triangle<'T>.Return zero
+
+    static member inline One (_ : 'T Triangle, _) = Triangle<'T>.Return one
 
 
 type ^a Triangle2 = ^a Vec2 Triangle
@@ -24,13 +41,8 @@ type ^a Triangle4 = ^a Vec4 Triangle
 [<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
 module Triangle =
     [<CompiledName "Init">]
-    let inline init(p1, p2, p3) : Triangle<_> =
-        { p1 = p1; p2 = p2; p3 = p3 }
+    let inline init p1 p2 p3 = Triangle<_>.Init p1 p2 p3
 
-    [<CompiledName "Zero">]
-    let inline zero() : Triangle< ^a> =
-        let zero = LanguagePrimitives.GenericZero
-        init(zero, zero, zero)
 
     [<CompiledName "P1">]
     let inline p1 t = t.p1
@@ -77,8 +89,8 @@ module Triangle =
             ( (x1 - x3) * (x2 * x2 - x1 * x1 + y2 * y2 - y1 * y1)
             + (x2 - x1) * (x3 * x3 - x1 * x1 + y3 * y3 - y1 * y1)) / c
 
-        let center = Vec2.init(x, y)
+        let center = Vec2.init x y
 
-        let r = Vector.length <| Vec2.init(center.x - x1, center.y - y1)
+        let r = Vector.length <| Vec2.init (center.x - x1) (center.y - y1)
 
-        Sphere.init(center, r)
+        Sphere.init center r

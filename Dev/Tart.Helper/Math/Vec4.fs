@@ -33,7 +33,6 @@ type ^a Vec4 =
         { x = f.x v.x; y = f.y v.y; z = f.z v.z; w = f.w v.w }
 
     static member inline private Map2 f (a : ^t Vec4) (b : ^t Vec4) : ^t Vec4 = map2 f a b
-    static member inline private Map2' f a b = Vec4<_>.Map2 f (Vec4<_>.Return a) b
 
     // --------------------------------------------------------------------------------
 
@@ -50,14 +49,23 @@ type ^a Vec4 =
     static member inline (*) (a, b) = Vec4<_>.Map2 (*) a b
     static member inline (/) (a, b) = Vec4<_>.Map2 (/) a b
 
-    static member inline ( .* ) (a, b) = Vec4<_>.Map2' (*) a b
-    static member inline ( *. ) (a, b) = Vec4<_>.Map2' (flip (*)) b a
-
-    static member inline ( ./ ) (a, b) = Vec4<_>.Map2' (/) a b
-    static member inline ( /. ) (a, b) = Vec4<_>.Map2' (flip (/)) b a
-
 
 [<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
 module Vec4 =
     [<CompiledName "Init">]
     let inline init x y z w : ^a Vec4 = Vec4<_>.Init x y z w
+
+    [<CompiledName "X">]
+    let inline x v = v.x
+
+    [<CompiledName "Y">]
+    let inline y v = v.y
+
+    [<CompiledName "Z">]
+    let inline z v = v.z
+
+    [<CompiledName "W">]
+    let inline w v = v.w
+
+    [<CompiledName "Axes">]
+    let inline axes() = [x; y; z; w]

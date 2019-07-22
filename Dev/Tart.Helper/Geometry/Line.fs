@@ -2,33 +2,43 @@
 
 open wraikny.Tart.Helper.Math
 
+open FSharpPlus
+
 [<Struct>]
-type 'Vec Line=
+type 'Vec Line =
     {
         startPoint : 'Vec
         endPoint : 'Vec
     }
 
-    static member inline Map((l: _ Line, f : 'T -> 'U), _mthd : FSharpPlus.Control.Map) =
-        {startPoint = f l.startPoint; endPoint = f l.endPoint }
+    static member inline Init startPoint endPoint = {
+        startPoint = startPoint
+        endPoint = endPoint
+    }
+
+    /// Applicative
+    static member inline Return (k : ^t) = Line< ^t >.Init k k
+    static member inline (<*>) (f, x : _ Line) = {
+        startPoint = f.startPoint x.startPoint
+        endPoint = f.endPoint x.endPoint
+    }
+
+    // --------------------------------------------------------------------------------
+
+    static member inline Zero (_ : 'T Line, _) = Line<'T>.Return zero
+    
+    static member inline One (_ : 'T Line, _) = Line<'T>.Return one
 
 
 type ^a Line2 = ^a Vec2 Line
 type ^a Line3 = ^a Vec3 Line
 type ^a Line4 = ^a Vec4 Line
 
-open FSharpPlus
-
 
 [<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
 module Line =
     [<CompiledName "Init">]
-    let inline init(s, e) =
-        { startPoint = s; endPoint = e; }
-
-    [<CompiledName "Zero">]
-    let inline zero() =
-        init(zero, zero)
+    let inline init s e = Line<_>.Init s e
 
     [<CompiledName "StartPoint">]
     let inline startPoint l = l.startPoint

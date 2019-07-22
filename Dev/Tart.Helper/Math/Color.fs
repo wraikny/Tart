@@ -1,10 +1,11 @@
 ﻿module wraikny.Tart.Helper.Math.Color
 
+open wraikny.Tart.Helper.Math.Vec3
 open FSharpPlus
 
 /// 0.0f ~ 1.0f
 let HSV2RGB_float32 (hsv : float32 Vec3) : float32 Vec3 =
-    let h, s, v = hsv |> Vec3.xyz
+    let { Vec3.x=h; y=s; z=v } = hsv
     let r, g, b = v, v, v
 
     let h = h * 6.0f
@@ -49,7 +50,7 @@ let HSV2RGB_float32 (hsv : float32 Vec3) : float32 Vec3 =
                 1.0f - s
             )
 
-    Vec3.init(r, g, b)
+    Vec3.init r g b
 
 /// 0 ~ 255
 let HSV2RGB_byte (hsv : byte Vec3) : byte Vec3 =

@@ -9,13 +9,13 @@ type Node<'V> =
         value : 'V
     }
 
-    static member Map((node: _ Node, f : 'T -> 'U), _mthd : FSharpPlus.Control.Map) =
+    static member Map(node: _ Node, f : 'T -> 'U) =
         { label = node.label; value = f node.value }
 
 [<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
 module Node =
     [<CompiledName "Init">]
-    let init (label, value) = { label = label; value = value }
+    let init label value = { label = label; value = value }
 
     [<CompiledName "Equal">]
     let equal (n1 : Node<'a>) (n2 : Node<'a>) =
@@ -32,7 +32,7 @@ type Edge< 'V, 'W
         weight : 'W
     }
 
-    static member Map((edge: Edge<_, _>, f : 'T -> 'U), _mthd : FSharpPlus.Control.Map) =
+    static member Map(edge: Edge<_, _>, f : 'T -> 'U) =
         {
             weight = edge.weight
             node1 = edge.node1 |>> f
@@ -70,8 +70,8 @@ open wraikny.Tart.Helper.Geometry
 
 type NodeTriangle(node1, node2, node3) =
 
-    let triangle = Triangle.init(node1.value, node2.value, node3.value)
-    let labelTriangle = Triangle.init(node1.label, node2.label, node3.label)
+    let triangle = Triangle.init node1.value node2.value node3.value
+    let labelTriangle = Triangle.init node1.label node2.label node3.label
 
     let edges =
         let createEdge (a : Node<float32 Vec2>) (b : Node<float32 Vec2>) =

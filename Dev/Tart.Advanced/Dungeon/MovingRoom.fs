@@ -7,6 +7,7 @@ open wraikny.Tart.Helper.Math
 open wraikny.Tart.Helper.Geometry
 
 open FSharpPlus
+open FSharpPlus.Math.Applicative
 
 
 [<Class>]
@@ -22,7 +23,7 @@ type internal MovingRoom(rect : float32 Rect2, movingRate, rooms) =
 
     member this.Position with get() = position
     member this.RightDown with get() = position + size
-    member this.Center with get() = position + size /. 2.0f
+    member this.Center with get() = position + size ./ 2.0f
 
     member val IsMoving = true with get, set
 
@@ -79,10 +80,10 @@ type internal MovingRoom(rect : float32 Rect2, movingRate, rooms) =
 
         let dx, dy = getDiff Vec2.x, getDiff Vec2.y
 
-        let diff = Vec2.init <| if abs dx < abs dy then (dx, 0.0f) else (0.0f, dy)
+        let diff =  uncurry Vec2.init <| if abs dx < abs dy then (dx, 0.0f) else (0.0f, dy)
         // let diff = Vec2.init(dx, dy)
 
-        let diff = diff *. movingRate
+        let diff = diff .* movingRate
 
         this.UpdatePosition(diff)
         // this.UpdatePosition(this.Center |> Vec2.normalize)

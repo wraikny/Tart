@@ -1,18 +1,34 @@
 ﻿namespace wraikny.Tart.Helper.Geometry
 
 open wraikny.Tart.Helper.Math
+open wraikny.Tart.Helper.Extension
 
 open FSharpPlus
 
 [<Struct>]
 type Sphere< 'a, 'Vec> =
     {
-        center : 'Vec
         radius : 'a
+        center : 'Vec
     }
 
-    static member inline Map((s : Sphere< _, _>, f : 'T -> 'U), _mthd : FSharpPlus.Control.Map) =
-        { center = map f s.center; radius = f s.radius }
+    static member Init center radius = {
+        radius = radius
+        center = center
+    }
+
+    /// Applicative
+    static member inline Return (k : 't) = Sphere<'t, _>.Init (pure' k) k
+    static member (<*>) (f, x : Sphere<_, _>) = {
+        radius = f.radius x.radius
+        center = f.center x.center
+    }
+
+    // --------------------------------------------------------------------------------
+
+    static member inline Zero (_ : Sphere< 'a, 'Vec>, _) = Sphere< 'a, 'Vec>.Return zero
+
+    static member inline One (_ : Sphere< 'a, 'Vec>, _) = Sphere< 'a, 'Vec>.Return one
 
 
 type ^a Sphere2 = Sphere< ^a, ^a Vec2 >
@@ -23,13 +39,7 @@ type ^a Sphere4 = Sphere< ^a, ^a Vec4 >
 [<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
 module Sphere =
     [<CompiledName "Init">]
-    let inline init(c, r) =
-        { center = c; radius = r; }
-
-    [<CompiledName "Zero">]
-    let inline zero() =
-        let zero : ^a = LanguagePrimitives.GenericZero
-        init(Vector.zero(), zero)
+    let init (c : '``Vec<'a>``) (r : 'a) = Sphere< 'a, '``Vec<'a>`` >.Init c r
 
     [<CompiledName "Center">]
     let inline center c = c.center

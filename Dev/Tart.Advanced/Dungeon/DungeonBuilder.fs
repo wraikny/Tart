@@ -6,6 +6,7 @@ open wraikny.Tart.Helper.Geometry
 open wraikny.Tart.Helper.Collections
 
 open FSharpPlus
+open FSharpPlus.Math.Applicative
 
 type DungeonBuilder = {
     /// 乱数生成に用いるシード値
@@ -63,7 +64,7 @@ module private WithRandom =
             let r = if u > 1.0f then 2.0f - u else u
 
             (w * r * cos(t), h * r * sin(t))
-            |> Vec2.init
+            |> uncurry Vec2.init
             |>> int
 
         [for _ in 1..builder.parameter.roomCount -> ()]
@@ -73,20 +74,20 @@ module private WithRandom =
             let size =
                 let min =
                     builder.parameter.minRoomSize
-                    |> Vec2.init
+                    |> uncurry Vec2.init
                     |>> float32
 
                 let max =
                     builder.parameter.maxRoomSize
-                    |> Vec2.init
+                    |> uncurry Vec2.init
                     |>> float32
 
                 let rand = builder |> getRandomValue
 
-                (min + (max - min) *. rand)
+                (min + (max - min) .* rand)
                 |>> int
 
-            Rect.init (pos - size /. 2) size
+            Rect.init (pos - size ./ 2) size
         
 
 
@@ -101,7 +102,7 @@ module private WithRandom =
             |>> fun (id, rect) ->
                 let pos = rect.position |>> float32
                 let size = rect.size |>> float32
-                Node.init (id, pos + size /. 2.0f)
+                Node.init id (pos + size ./ 2.0f)
             
             |> Delaunay2.getNodesList
         
@@ -143,8 +144,8 @@ module DungeonBuilder =
             let sum =
                 rooms
                 |>> ( Rect.size >> (map float32) )
-                |> fold (+) (Vector.zero())
-            sum *. (rate / len)
+                |> sum
+            sum .* (rate / len)
 
         rooms
         |> List.partition(fun rect ->
@@ -177,7 +178,7 @@ module DungeonBuilder =
     let private generateCorridors (width) (rect1 : int Rect2, rect2 : int Rect2) : int Rect2 list =
         
         let center1, center2 = Rect.centerPosition rect1, Rect.centerPosition rect2
-        let middle = (center1 + center2) /. 2
+        let middle = (center1 + center2) ./ 2
 
         let lurd1 = rect1 |> Rect.get_LU_RD
         let lurd2 = rect2 |> Rect.get_LU_RD
@@ -188,13 +189,12 @@ module DungeonBuilder =
         let manhattanDist = (center1 - center2) |>> abs
 
         let sizeDict =
-            Vec2.init(
-                Vec2.init(manhattanDist.x, width)
-                , Vec2.init(width, manhattanDist.y)
-            )
+            Vec2.init
+                ( Vec2.init manhattanDist.x width )
+                ( Vec2.init width manhattanDist.y )
 
         let createCorridorAt size pos =
-            Rect.init (pos - size /. 2) size
+            Rect.init (pos - size ./ 2) size
 
 
         if isCollidedX && isCollidedY then
@@ -207,8 +207,8 @@ module DungeonBuilder =
             seq {
                 let f = createCorridorAt
                 for center in [center1; center2 ] do
-                    yield f (sizeDict.x + Vec2.init(width, 0)) ({ middle with y = center.y})
-                    yield f (sizeDict.y + Vec2.init(0, width)) ({ middle with x = center.x})
+                    yield f (sizeDict.x + Vec2.init width 0) ({ middle with y = center.y})
+                    yield f (sizeDict.y + Vec2.init 0 width) ({ middle with x = center.x})
             }
             |> toList
 
@@ -290,7 +290,7 @@ module DungeonBuilder =
                     seq {
                         for dx in 0..(size.x - 1) do
                         for dy in 0..(size.y - 1) do
-                            yield ( lu + Vec2.init(dx, dy), space.id )
+                            yield ( lu + Vec2.init dx dy, space.id )
                     }) spaces
 
             seq {

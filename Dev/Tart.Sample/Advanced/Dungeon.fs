@@ -6,6 +6,7 @@ open wraikny.Tart.Helper.Math
 open wraikny.Tart.Helper.Collections
 
 open FSharpPlus
+open FSharpPlus.Math.Applicative
 
 let createScene builder =
     let dungeonModel =
@@ -85,7 +86,7 @@ let createScene builder =
 
     let camera() =
         let ws = asd.Engine.WindowSize
-        let posList = largeRooms |>> fun (_, s) -> n .* map float32 s.rect.position
+        let posList = largeRooms |>> fun (_, s) -> n *. map float32 s.rect.position
         let minX = posList |>> Vec2.x |> List.min
         let maxX = posList |>> Vec2.x |> List.max
         let minY = posList |>> Vec2.y |> List.min

@@ -30,7 +30,6 @@ type ^a Vec3 =
     static member inline (<*>) (f, v : _ Vec3) = { x = f.x v.x; y = f.y v.y; z = f.z v.z }
     
     static member inline private Map2 f (a : ^t Vec3) (b : ^t Vec3) : ^t Vec3 = map2 f a b
-    static member inline private Map2' f a b = Vec3<_>.Map2 f (Vec3<_>.Return a) b
     
     // --------------------------------------------------------------------------------
     
@@ -46,15 +45,21 @@ type ^a Vec3 =
     static member inline (-) (a, b) = Vec3<_>.Map2 (-) a b
     static member inline (*) (a, b) = Vec3<_>.Map2 (*) a b
     static member inline (/) (a, b) = Vec3<_>.Map2 (/) a b
-    
-    static member inline ( .* ) (a, b) = Vec3<_>.Map2' (*) a b
-    static member inline ( *. ) (a, b) = Vec3<_>.Map2' (flip (*)) b a
-    
-    static member inline ( ./ ) (a, b) = Vec3<_>.Map2' (/) a b
-    static member inline ( /. ) (a, b) = Vec3<_>.Map2' (flip (/)) b a
 
 
 [<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
 module Vec3 =
     [<CompiledName "Init">]
     let inline init x y z : ^a Vec3 = Vec3<_>.Init x y z
+
+    [<CompiledName "X">]
+    let inline x v = v.x
+
+    [<CompiledName "Y">]
+    let inline y v = v.y
+
+    [<CompiledName "Z">]
+    let inline z v = v.z
+
+    [<CompiledName "Axes">]
+    let inline axes() =[x; y; z]

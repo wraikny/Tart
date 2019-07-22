@@ -5,33 +5,46 @@
 open FSharpPlus
 
 [<Struct>]
-type Vector< ^a, ^``Vec<'a>`` > = internal Vector of ^a * ^``Vec<'a>``
+type Vector< ^a, ^``Vec<'a>``> = {
+    Axes : unit -> (^``Vec<'a>`` -> ^a) list
+}
 
 
-module VectorBuiltin =
-    [<CompiledName "Impl">]
-    let inline impl(_ : 'a) (v : '``Vec<'a>``) =
-        curry Vector (Unchecked.defaultof< 'a >) v
+//module VectorBuiltin =
+//    [<CompiledName "Impl">]
+//    let inline impl(_ : 'a) (v : '``Vec<'a>``) =
+//        curry Vector (Unchecked.defaultof< 'a >) v
 
 
 type VectorBuiltin = VectorBuiltin with
-    static member inline VectorImpl(v : _ Vec2) =
-        VectorBuiltin.impl v.x v
+    static member inline VectorImpl(v : _ Vec2) = {
+        Axes = Vec2.axes
+    }
     
-    static member inline VectorImpl(v : _ Vec3) =
-        VectorBuiltin.impl v.x v
+    static member inline VectorImpl(v : _ Vec3) ={
+        Axes = Vec3.axes
+    }
 
-    static member inline VectorImpl(v : _ Vec4) =
-        VectorBuiltin.impl v.x v
+    static member inline VectorImpl(v : _ Vec4) ={
+        Axes = Vec4.axes
+    }
 
 
+// #nowarn "0064"
 [<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
 module Vector =
     [<CompiledName "GetImpl">]
-    let inline getImpl (_ : ^Builtin) (_ : Vector< ^a, ^Va > ) =
+    let inline private getImpl' (_ : ^Builtin) (_ : Vector< ^a, ^Va > ) =
         ((^Builtin or ^Va) : (static member VectorImpl : ^Va -> Vector< ^a, ^Va >) Unchecked.defaultof<_>)
+         
+    let inline getImpl v = getImpl' VectorBuiltin v
 
-    let inline private constraint' v = getImpl VectorBuiltin v |> ignore
+    let inline constraint' v = getImpl v |> ignore
+
+    [<CompiledName "Axes">]
+    let inline axes() : (^``Vec<'a>`` -> ^a) list =
+        (getImpl Unchecked.defaultof<Vector< ^a, ^``Vec<'a>`` >>).Axes()
+        
 
     [<CompiledName "Dot">]
     let inline dot (a : ^``Vec<'a>``) (b : ^``Vec<'a>``) : ^a =
@@ -46,12 +59,14 @@ module Vector =
     [<CompiledName "Length">]
     let inline length (v : ^``Vec<'a>``) : ^a =
         constraint' (Unchecked.defaultof<Vector< ^a, ^``Vec<'a>`` >>)
-        sqrt <| squaredLength v
+        FSharp.Core.Operators.sqrt (squaredLength v)
 
     [<CompiledName "Normalize">]
     let inline normalize (v : ^``Vec<'a>``) : ^``Vec<'a>`` =
         constraint' (Unchecked.defaultof<Vector< ^a, ^``Vec<'a>`` >>)
         v /. length v
+
+    // -----------------------------------------
 
     [<CompiledName "X">]
     let inline x (a : ^``Vec<'a>``) : ^a =

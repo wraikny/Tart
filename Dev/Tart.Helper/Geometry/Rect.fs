@@ -11,8 +11,23 @@ type 'Vec Rect =
         size : 'Vec
     }
 
-    static member Map((r: _ Rect, f : 'T -> 'U), _mthd : FSharpPlus.Control.Map) =
-        {position = f r.position; size = f r.size }
+    static member Init position size = {
+        position = position
+        size = size
+    }
+
+    /// Applicative
+    static member inline Return (k : 't) = Rect< 't >.Init k k
+    static member (<*>) (f, x : _ Rect) = {
+        position = f.position x.position
+        size = f.size x.size
+    }
+
+    // --------------------------------------------------------------------------------
+
+    static member inline Zero (_ : 'T Rect, _) = Rect<'T>.Return zero
+
+    static member inline One (_ : 'T Rect, _) = Rect<'T>.Return one
 
 
 type ^a Rect2 = ^a Vec2 Rect
@@ -23,13 +38,7 @@ type ^a Rect4 = ^a Vec4 Rect
 [<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
 module Rect =
     [<CompiledName "Init">]
-    let inline init position size =
-        { position = position; size = size }
-
-    [<CompiledName "Zero">]
-    let inline zero() =
-        let zero = Vector.zero()
-        init zero zero
+    let inline init position size = Rect<_>.Init position size
 
     [<CompiledName "Position">]
     let inline position r = r.position
@@ -50,53 +59,44 @@ module Rect =
     let inline down r = r.position.y + r.size.y
 
     [<CompiledName "DiagonalPosition">]
-    let inline diagonalPosition r : ^Vec
-        when (VectorBuiltin or ^Vec) :
-            (static member VectorImpl : ^Vec -> Vector< ^a, ^Vec, ^Ma, ^MVec >)
-        =
+    let inline diagonalPosition r : '``Vec<'a>`` =
+        Vector.constraint' (Unchecked.defaultof<Vector< 'a, '``Vec<'a>`` >>)
+
         r.position + r.size
 
     [<CompiledName "CenterPosition">]
-    let inline centerPosition r : ^Vec
-        when (VectorBuiltin or ^Vec) :
-            (static member VectorImpl : ^Vec -> Vector< ^a, ^Vec, ^Ma, ^MVec >)
-        =
-        let one = LanguagePrimitives.GenericOne
+    let inline centerPosition r : '``Vec<'a>`` =
+        Vector.constraint' (Unchecked.defaultof<Vector< 'a, '``Vec<'a>`` >>)
+
         let two = one + one
-        r.position + r.size /. two
+        r.position + r.size / two
 
     [<CompiledName "Get_LU_RD">]
-    let inline get_LU_RD r : (^Vec * ^Vec)
-        when (VectorBuiltin or ^Vec) :
-            (static member VectorImpl : ^Vec -> Vector< ^a, ^Vec, ^Ma, ^MVec >)
-        =
+    let inline get_LU_RD r : ('``Vec<'a>`` * '``Vec<'a>``) =
+        Vector.constraint' (Unchecked.defaultof<Vector< 'a, '``Vec<'a>`` >>)
         r.position, diagonalPosition r
 
 
     [<CompiledName "IsCollidedAxis">]
-    let inline isCollidedAxis(axis : ^Vec -> ^a) (aLU, aRD) (bLU, bRD) : bool
-        when (VectorBuiltin or ^Vec) :
-            (static member VectorImpl : ^Vec -> Vector< ^a, ^Vec, ^Ma, ^MVec >)
-        =
+    let inline isCollidedAxis(axis : '``Vec<'a>`` -> 'a) (aLU, aRD) (bLU, bRD) : bool =
+        Vector.constraint' (Unchecked.defaultof<Vector< 'a, '``Vec<'a>`` >>)
         not (axis aRD < axis bLU || axis bRD < axis aLU)
 
     [<CompiledName "IsInside">]
-    let inline isInside p r : bool
-        when (VectorBuiltin or ^Vec) :
-            (static member VectorImpl : ^Vec -> Vector< ^a, ^Vec, ^Ma, ^MVec >)
-        =
+    let inline isInside (p : '``Vec<'a>``) r : bool =
+        Vector.constraint' (Unchecked.defaultof<Vector< 'a, '``Vec<'a>`` >>)
+
         let lu, rd = get_LU_RD r
-        Vector.axes()
-        |>> fun axis ->
-            (axis lu) <= (axis p)
-            && (axis p) <= (axis rd)
+        
+        zip (toSeq lu) (toSeq rd)
+        |> zip (toSeq p)
+        |>> fun (p', (lu', rd')) ->
+            lu' <= p' && p' <= rd'
         |> fold (&&) true
 
     [<CompiledName "IsCollided">]
-    let inline isCollided a b : bool
-        when (VectorBuiltin or ^Vec) :
-            (static member VectorImpl : ^Vec -> Vector< ^a, ^Vec, ^Ma, ^MVec >)
-        =
+    let inline isCollided (a : '``Vec<'a>`` Rect) (b : '``Vec<'a>`` Rect) : bool =
+        Vector.constraint' (Unchecked.defaultof<Vector< 'a, '``Vec<'a>`` >>)
         let aLURD = get_LU_RD a
         let bLURD = get_LU_RD b
 

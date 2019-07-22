@@ -19,15 +19,15 @@ module Delaunay2 =
         let bottom = center.y - radius
 
         let x1 = center.x - sqrt3 * radius
-        let p1 = Vec2.init(x1, bottom)
+        let p1 = Vec2.init x1 bottom
 
         let x2 = center.x + sqrt3 * radius
-        let p2 = Vec2.init(x2, bottom)
+        let p2 = Vec2.init x2 bottom
 
         let y3 = center.y + 2.0f * radius
-        let p3 = Vec2.init(center.x, y3)
+        let p3 = Vec2.init center.x y3
 
-        Triangle.init(p1, p2, p3)
+        Triangle.init p1 p2 p3
 
     open System.Collections.Generic
     open System.Linq
@@ -51,8 +51,8 @@ module Delaunay2 =
 
         let range =
             {
-                position = Vec2.init(minX, minY)
-                size = Vec2.init(maxX - minX, maxY - minY)
+                position = Vec2.init minX minY
+                size = Vec2.init (maxX - minX) (maxY - minY)
             }
 
         let hugeTriangle = getHugeTriangle range
@@ -63,9 +63,9 @@ module Delaunay2 =
             trianglesSet.Add( NodeTriangle(nodes) )
 
         let hugeTriangleNodes =
-            let node1 = Node.init (-1, hugeTriangle.p1)
-            let node2 = Node.init (-2, hugeTriangle.p2)
-            let node3 = Node.init (-3, hugeTriangle.p3)
+            let node1 = Node.init -1 hugeTriangle.p1
+            let node2 = Node.init -2 hugeTriangle.p2
+            let node3 = Node.init -3 hugeTriangle.p3
 
             (node1, node2, node3)
 
