@@ -6,7 +6,6 @@ open wraikny.Tart.Helper.Geometry
 open wraikny.Tart.Helper.Collections
 
 open FSharpPlus
-open FSharpPlus.Math.Applicative
 
 type DungeonBuilder = {
     /// 乱数生成に用いるシード値

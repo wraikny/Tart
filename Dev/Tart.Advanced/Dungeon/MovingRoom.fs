@@ -7,7 +7,6 @@ open wraikny.Tart.Helper.Math
 open wraikny.Tart.Helper.Geometry
 
 open FSharpPlus
-open FSharpPlus.Math.Applicative
 
 
 [<Class>]

@@ -6,7 +6,6 @@ open wraikny.Tart.Helper.Math
 open wraikny.Tart.Helper.Collections
 
 open FSharpPlus
-open FSharpPlus.Math.Applicative
 
 let createScene builder =
     let dungeonModel =

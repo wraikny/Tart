@@ -1,7 +1,7 @@
 namespace wraikny.Tart.Helper.Math
 
-open wraikny.Tart.Helper.Extension
 open FSharpPlus
+open FSharpPlus.Math.Applicative
 
 [<Struct>]
 type ^a Vec2 =
@@ -15,33 +15,34 @@ type ^a Vec2 =
 
     static member inline Init x y = { x = x; y = y }
 
+    static member inline Axes() : ('t Vec2 -> 't) list =
+        [ Vec2<'t>.X; Vec2<'t>.Y ]
+
     /// Foldable
-    static member inline ToSeq v =
-        seq {
-            yield v.x
-            yield v.y
-        }
+    static member inline ToSeq (v : 't Vec2) =
+        Vec2<'t>.Axes() |>> (|>) v |> toSeq
 
     /// Applicative
-    static member inline Return (k : ^t) = Vec2< ^t >.Init k k
-    static member inline (<*>) (f, v : _ Vec2) = { x = f.x v.x; y = f.y v.y }
-
-    static member inline private Map2 f (a : ^t Vec2) (b : ^t Vec2) : ^t Vec2 = map2 f a b
+    static member inline Return (k : 't) = Vec2<'t>.Init k k
+    static member inline (<*>) (f, v : 't Vec2) = Vec2<'t>.Init (f.x v.x) (f.y v.y)
 
     // --------------------------------------------------------------------------------
 
-    static member inline Zero (_ : 'T Vec2, _) = Vec2<'T>.Return zero
+    static member inline Zero (_ : 't Vec2, _) = Vec2<'t>.Return zero
 
-    static member inline One (_ : 'T Vec2, _) = Vec2<'T>.Return one
+    static member inline One (_ : 't Vec2, _) = Vec2<'t>.Return one
 
     static member inline Abs (v : _ Vec2) = abs <!> v
 
-    static member inline (~-) (v : _ Vec2)= (~-) <!> v
-
-    static member inline (+) (a, b) = Vec2<_>.Map2 (+) a b
-    static member inline (-) (a, b) = Vec2<_>.Map2 (-) a b
-    static member inline (*) (a, b) = Vec2<_>.Map2 (*) a b
-    static member inline (/) (a, b) = Vec2<_>.Map2 (/) a b
+    static member inline (~-) (v) = -.v
+    static member inline (+) (a, b) = a .+. b
+    static member inline (-) (a, b) = a .-. b
+    static member inline (*) (a, b) = a .*. b
+    static member inline (/) (a, b) = a ./. b
+    static member inline ( .* ) (a, b) = a .* b
+    static member inline ( *. ) (a, b) = a *. b
+    static member inline ( ./ ) (a, b) = a ./ b
+    static member inline ( /. ) (a, b) = a /. b
 
 
 [<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
@@ -54,9 +55,6 @@ module Vec2 =
 
     [<CompiledName "Y">]
     let inline y v = v.y
-
-    [<CompiledName "Axes">]
-    let inline axes() = [x; y]
 
     [<CompiledName "Angle">]
     let inline angle(v : ^a Vec2) : ^a =
