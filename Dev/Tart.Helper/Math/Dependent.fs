@@ -224,6 +224,8 @@ module Vector =
     let inline yw v = (wy v).MapArray(rev)
 
     let inline zw v = (wz v).MapArray(rev)
+
+    // -------------------------------------
     
     open FSharpPlus.Math.Applicative
 
@@ -252,7 +254,7 @@ module private Test =
     let _v1 = VectorImpl.Init 1
     let _v1_x = _v1 |> Vector.x
     let _v1_0 = _v1.Item Peano.x
-    // let v1_1 = Vector1<_>.Item(v1, Peano.y)
+    // let v1_1 = _v1.Item(Peano.y) // Compile Error
 
     let _v2 = Vector2.init 1 2
     let _v2_x = _v2.Item Peano.x
