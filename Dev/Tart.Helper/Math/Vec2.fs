@@ -1,5 +1,8 @@
 namespace wraikny.Tart.Helper.Math
 
+open wraikny.Tart.Helper.Extension
+open FSharpPlus
+
 [<Struct>]
 type ^a Vec2 =
     {
@@ -7,87 +10,51 @@ type ^a Vec2 =
         y : ^a
     }
 
-    static member inline (~-) (a : ^b Vec2) : ^b Vec2 =
-        {
-            x = -a.x
-            y = -a.y
+    static member inline X v = v.x
+    static member inline Y v = v.y
+
+    static member inline Init x y = { x = x; y = y }
+
+    /// Foldable
+    static member inline ToSeq v =
+        seq {
+            yield v.x
+            yield v.y
         }
 
-    static member inline (+) (a : ^b Vec2, b : ^b Vec2) : ^b Vec2 =
-        {
-            x = a.x + b.x
-            y = a.y + b.y
-        }
+    /// Applicative
+    static member inline Return (k : ^t) = Vec2< ^t >.Init k k
+    static member inline (<*>) (f, v : _ Vec2) = { x = f.x v.x; y = f.y v.y }
 
-    static member inline (-) (a : ^b Vec2, b : ^b Vec2) : ^b Vec2 =
-        {
-            x = a.x - b.x
-            y = a.y - b.y
-        }
+    static member inline private Map2 f (a : ^t Vec2) (b : ^t Vec2) : ^t Vec2 = map2 f a b
+    static member inline private Map2' f a b = Vec2<_>.Map2 f (Vec2<_>.Return a) b
 
-    static member inline (*) (a : ^b Vec2, b : ^b Vec2) : ^b Vec2 =
-        {
-            x = a.x * b.x
-            y = a.y * b.y
-        }
+    // --------------------------------------------------------------------------------
 
-    static member inline ( .* ) (a : ^b, b : ^b Vec2) : ^b Vec2 =
-        {
-            x = a * b.x
-            y = a * b.y
-        }
+    static member inline Zero (_ : 'T Vec2, _) = Vec2<'T>.Return zero
 
-    static member inline ( *. ) (a : ^b Vec2, b : ^b) : ^b Vec2 =
-        {
-            x = a.x * b
-            y = a.y * b
-        }
+    static member inline One (_ : 'T Vec2, _) = Vec2<'T>.Return one
 
-    static member inline (/) (a : ^b Vec2, b : ^b Vec2) : ^b Vec2 =
-        {
-            x = a.x / b.x
-            y = a.y / b.y
-        }
+    static member inline Abs (v : _ Vec2) = abs <!> v
 
-    static member inline (./) (a : ^b, b : ^b Vec2) : ^b Vec2 =
-        {
-            x = a / b.x
-            y = a / b.y
-        }
+    static member inline (~-) (v : _ Vec2)= (~-) <!> v
 
-    static member inline (/.) (a : ^b Vec2, b : ^b) : ^b Vec2 =
-        {
-            x = a.x / b
-            y = a.y / b
-        }
+    static member inline (+) (a, b) = Vec2<_>.Map2 (+) a b
+    static member inline (-) (a, b) = Vec2<_>.Map2 (-) a b
+    static member inline (*) (a, b) = Vec2<_>.Map2 (*) a b
+    static member inline (/) (a, b) = Vec2<_>.Map2 (/) a b
 
-    static member inline Map((v: _ Vec2, f : 'T -> 'U), _mthd : FSharpPlus.Control.Map) =
-        {x = f v.x; y = f v.y }
+    static member inline ( .* ) (a, b) = Vec2<_>.Map2' (*) a b
+    static member inline ( *. ) (a, b) = Vec2<_>.Map2' (flip (*)) b a
+
+    static member inline ( ./ ) (a, b) = Vec2<_>.Map2' (/) a b
+    static member inline ( /. ) (a, b) = Vec2<_>.Map2' (flip (/)) b a
 
 
 [<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
 module Vec2 =
     [<CompiledName "Init">]
-    let inline init(x, y) : ^a Vec2 =
-        { x = x; y = y }
-
-    let inline internal init1 x = init(x, x)
-
-    [<CompiledName "X">]
-    let inline x v = v.x
-
-    [<CompiledName "Y">]
-    let inline y v = v.y
-
-    [<CompiledName "Axes">]
-    let inline axes() : (^a Vec2 -> ^a) list = [x; y]
-
-    [<CompiledName "XY">]
-    let inline xy v = v.x, v.y
-
-    [<CompiledName "Dot">]
-    let inline dot (a : ^a Vec2) (b : ^a Vec2) : ^a =
-        a.x * b.x + a.y * b.y
+    let inline init x y = Vec2<_>.Init x y
 
     [<CompiledName "Angle">]
     let inline angle(v : ^a Vec2) : ^a =

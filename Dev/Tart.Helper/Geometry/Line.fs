@@ -17,6 +17,8 @@ type ^a Line2 = ^a Vec2 Line
 type ^a Line3 = ^a Vec3 Line
 type ^a Line4 = ^a Vec4 Line
 
+open FSharpPlus
+
 
 [<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
 module Line =
@@ -26,7 +28,6 @@ module Line =
 
     [<CompiledName "Zero">]
     let inline zero() =
-        let zero = Vector.zero()
         init(zero, zero)
 
     [<CompiledName "StartPoint">]

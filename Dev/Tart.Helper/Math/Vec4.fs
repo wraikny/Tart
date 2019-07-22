@@ -1,5 +1,8 @@
 ﻿namespace wraikny.Tart.Helper.Math
 
+open wraikny.Tart.Helper.Extension
+open FSharpPlus
+
 [<Struct>]
 type ^a Vec4 =
     {
@@ -9,112 +12,52 @@ type ^a Vec4 =
         w : ^a
     }
 
-    static member inline (~-) a =
-        {
-            x = -a.x
-            y = -a.y
-            z = -a.z
-            w = -a.w
+    static member inline X v = v.x
+    static member inline Y v = v.y
+    static member inline Z v = v.z
+    static member inline W v = v.w
+
+    static member inline Init x y z w = { x = x; y = y; z = z; w = w }
+
+    /// Foldable
+    static member inline ToSeq v =
+        seq {
+            yield v.x
+            yield v.y
+            yield v.z
         }
 
-    static member inline (+) (a : ^b Vec4, b : ^b Vec4) : ^b Vec4 =
-        {
-            x = a.x + b.x
-            y = a.y + b.y
-            z = a.z + b.z
-            w = a.w + b.w
-        }
+    /// Applicative
+    static member inline Return (k : ^t) = Vec4< ^t >.Init k k k k
+    static member inline (<*>) (f, v : _ Vec4) =
+        { x = f.x v.x; y = f.y v.y; z = f.z v.z; w = f.w v.w }
 
-    static member inline (-) (a : ^b Vec4, b : ^b Vec4) : ^b Vec4 =
-        {
-            x = a.x - b.x
-            y = a.y - b.y
-            z = a.z - b.z
-            w = a.w - b.w
-        }
+    static member inline private Map2 f (a : ^t Vec4) (b : ^t Vec4) : ^t Vec4 = map2 f a b
+    static member inline private Map2' f a b = Vec4<_>.Map2 f (Vec4<_>.Return a) b
 
-    static member inline (*) (a : ^b Vec4, b : ^b Vec4) : ^b Vec4 =
-        {
-            x = a.x * b.x
-            y = a.y * b.y
-            z = a.z * b.z
-            w = a.w * b.w
-        }
+    // --------------------------------------------------------------------------------
 
-    static member inline ( .* ) (a : ^b, b : ^b Vec4) : ^b Vec4 =
-        {
-            x = a * b.x
-            y = a * b.y
-            z = a * b.z
-            w = a * b.w
-        }
+    static member inline Zero (_ : 'T Vec4, _) = Vec4<'T>.Return zero
 
-    static member inline ( *. ) (a : ^b Vec4, b : ^b) : ^b Vec4 =
-        {
-            x = a.x * b
-            y = a.y * b
-            z = a.z * b
-            w = a.w * b
-        }
+    static member inline One (_ : 'T Vec4, _) = Vec4<'T>.Return one
 
-    static member inline (/) (a : ^b Vec4, b : ^b Vec4) : ^b Vec4 =
-        {
-            x = a.x / b.x
-            y = a.y / b.y
-            z = a.z / b.z
-            w = a.w / b.w
-        }
+    static member inline Abs (v : _ Vec4) = abs <!> v
 
-    static member inline (./) (a : ^b, b : ^b Vec4) : ^b Vec4 =
-        {
-            x = a / b.x
-            y = a / b.y
-            z = a / b.z
-            w = a / b.w
-        }
+    static member inline (~-) (v : _ Vec4)= (~-) <!> v
 
-    static member inline (/.) (a : ^b Vec4, b : ^b) : ^b Vec4 =
-        {
-            x = a.x / b
-            y = a.y / b
-            z = a.z / b
-            w = a.w / b
-        }
+    static member inline (+) (a, b) = Vec4<_>.Map2 (+) a b
+    static member inline (-) (a, b) = Vec4<_>.Map2 (-) a b
+    static member inline (*) (a, b) = Vec4<_>.Map2 (*) a b
+    static member inline (/) (a, b) = Vec4<_>.Map2 (/) a b
 
-    static member inline Map((v: _ Vec4, f : 'T -> 'U), _mthd : FSharpPlus.Control.Map) =
-        {x = f v.x; y = f v.y; z = f v.z; w = f v.w }
+    static member inline ( .* ) (a, b) = Vec4<_>.Map2' (*) a b
+    static member inline ( *. ) (a, b) = Vec4<_>.Map2' (flip (*)) b a
+
+    static member inline ( ./ ) (a, b) = Vec4<_>.Map2' (/) a b
+    static member inline ( /. ) (a, b) = Vec4<_>.Map2' (flip (/)) b a
 
 
 [<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
 module Vec4 =
     [<CompiledName "Init">]
-    let inline init(x, y, z, w) : ^a Vec4 =
-        { x = x; y = y; z = z; w = w }
-
-    let inline internal init1 x = init(x, x, x, x)
-
-    [<CompiledName "X">]
-    let inline x v = v.x
-
-    [<CompiledName "Y">]
-    let inline y v = v.y
-
-    [<CompiledName "Z">]
-    let inline z v = v.z
-
-    [<CompiledName "W">]
-    let inline w v = v.w
-
-    [<CompiledName "Axes">]
-    let inline axes() : (^a Vec4 -> ^a) list = [x; y; z; w]
-
-    [<CompiledName "XYZW">]
-    let inline xyzw (v : ^a Vec4) = v.x, v.y, v.z, v.w
-
-    [<CompiledName "Map">]
-    let inline map (f : ^a -> ^b) (v : ^a Vec4) : ^b Vec4 =
-        {x = f v.x; y = f v.y; z = f v.z; w = f v.w }
-
-    [<CompiledName "Dot">]
-    let inline dot (a : ^a Vec4) (b : ^a Vec4) : ^a =
-        a.x * b.x + a.y * b.y + a.z * b.z + a.w * b.w
+    let inline init x y z w : ^a Vec4 = Vec4<_>.Init x y z w

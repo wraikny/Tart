@@ -1,5 +1,8 @@
 ﻿namespace wraikny.Tart.Helper.Math
 
+open wraikny.Tart.Helper.Extension
+open FSharpPlus
+
 [<Struct>]
 type ^a Vec3 =
     {
@@ -8,96 +11,50 @@ type ^a Vec3 =
         z : ^a
     }
 
-    static member inline (~-) (a : ^b Vec3) : ^b Vec3 =
-        {
-            x = -a.x
-            y = -a.y
-            z = -a.z
-        }
+    static member inline X v = v.x
+    static member inline Y v = v.y
+    static member inline Z v = v.z
 
-    static member inline (+) (a : ^b Vec3, b : ^b Vec3) : ^b Vec3 =
-        {
-            x = a.x + b.x
-            y = a.y + b.y
-            z = a.z + b.z
+    static member inline Init x y z = { x = x; y = y; z = z }
+    
+    /// Foldable
+    static member inline ToSeq v =
+        seq {
+            yield v.x
+            yield v.y
+            yield v.z
         }
-
-    static member inline (-) (a : ^b Vec3, b : ^b Vec3) : ^b Vec3 =
-        {
-            x = a.x - b.x
-            y = a.y - b.y
-            z = a.z - b.z
-        }
-
-    static member inline (*) (a : ^b Vec3, b : ^b Vec3) : ^b Vec3 =
-        {
-            x = a.x * b.x
-            y = a.y * b.y
-            z = a.z * b.z
-        }
-
-    static member inline ( .* ) (a : ^b, b : ^b Vec3) : ^b Vec3 =
-        {
-            x = a * b.x
-            y = a * b.y
-            z = a * b.z
-        }
-
-    static member inline ( *. ) (a : ^b Vec3, b : ^b) : ^b Vec3 =
-        {
-            x = a.x * b
-            y = a.y * b
-            z = a.z * b
-        }
-
-    static member inline (/) (a : ^b Vec3, b : ^b Vec3) : ^b Vec3 =
-        {
-            x = a.x / b.x
-            y = a.y / b.y
-            z = a.z / b.z
-        }
-
-    static member inline (./) (a : ^b, b : ^b Vec3) : ^b Vec3 =
-        {
-            x = a / b.x
-            y = a / b.y
-            z = a / b.z
-        }
-
-    static member inline (/.) (a : ^b Vec3, b : ^b) : ^b Vec3 =
-        {
-            x = a.x / b
-            y = a.y / b
-            z = a.z / b
-        }
-
-    static member inline Map((v: _ Vec3, f : 'T -> 'U), _mthd : FSharpPlus.Control.Map) =
-        {x = f v.x; y = f v.y; z = f v.z }
+    
+    /// Applicative
+    static member inline Return (k : ^t) = Vec3< ^t >.Init k k k
+    static member inline (<*>) (f, v : _ Vec3) = { x = f.x v.x; y = f.y v.y; z = f.z v.z }
+    
+    static member inline private Map2 f (a : ^t Vec3) (b : ^t Vec3) : ^t Vec3 = map2 f a b
+    static member inline private Map2' f a b = Vec3<_>.Map2 f (Vec3<_>.Return a) b
+    
+    // --------------------------------------------------------------------------------
+    
+    static member inline Zero (_ : 'T Vec3, _) = Vec3<'T>.Return zero
+    
+    static member inline One (_ : 'T Vec3, _) = Vec3<'T>.Return one
+    
+    static member inline Abs (v : _ Vec3) = abs <!> v
+    
+    static member inline (~-) (v : _ Vec3)= (~-) <!> v
+    
+    static member inline (+) (a, b) = Vec3<_>.Map2 (+) a b
+    static member inline (-) (a, b) = Vec3<_>.Map2 (-) a b
+    static member inline (*) (a, b) = Vec3<_>.Map2 (*) a b
+    static member inline (/) (a, b) = Vec3<_>.Map2 (/) a b
+    
+    static member inline ( .* ) (a, b) = Vec3<_>.Map2' (*) a b
+    static member inline ( *. ) (a, b) = Vec3<_>.Map2' (flip (*)) b a
+    
+    static member inline ( ./ ) (a, b) = Vec3<_>.Map2' (/) a b
+    static member inline ( /. ) (a, b) = Vec3<_>.Map2' (flip (/)) b a
 
 
 [<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
 module Vec3 =
     [<CompiledName "Init">]
-    let inline init(x, y, z) : ^a Vec3 =
-        { x = x; y = y; z = z }
-
-    let inline internal init1 x = init(x, x, x)
-
-    [<CompiledName "X">]
-    let inline x v = v.x
-
-    [<CompiledName "Y">]
-    let inline y v = v.y
-
-    [<CompiledName "Z">]
-    let inline z v = v.z
-
-    [<CompiledName "Axes">]
-    let inline axes() : (^a Vec3 -> ^a) list = [x; y; z]
-
-    [<CompiledName "XYZ">]
-    let inline xyz (v : ^a Vec3) = v.x, v.y, v.z
-
-    [<CompiledName "Dot">]
-    let inline dot (a : ^a Vec3) (b : ^a Vec3) : ^a =
-        a.x * b.x + a.y * b.y + a.z * b.z
+    let inline init x y z : ^a Vec3 = Vec3<_>.Init x y z
