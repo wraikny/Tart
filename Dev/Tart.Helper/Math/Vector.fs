@@ -1,5 +1,7 @@
 ﻿namespace wraikny.Tart.Helper.Math
 
+#nowarn "0064"
+
 // https://7colou.red/blog/2018/02-14-fsharp-typeclasses/index.html
 
 open FSharpPlus
@@ -31,7 +33,6 @@ type VectorBuiltin = VectorBuiltin with
     }
 
 
-// #nowarn "0064"
 [<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
 module Vector =
     [<CompiledName "GetImpl">]
