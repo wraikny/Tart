@@ -3,6 +3,7 @@
 // https://7colou.red/blog/2018/02-14-fsharp-typeclasses/index.html
 
 open FSharpPlus
+open FSharpPlus.Math.Applicative
 
 [<Struct>]
 type Vector< ^a, ^``Vec<'a>``> = {
@@ -64,7 +65,7 @@ module Vector =
     [<CompiledName "Normalize">]
     let inline normalize (v : ^``Vec<'a>``) : ^``Vec<'a>`` =
         constraint' (Unchecked.defaultof<Vector< ^a, ^``Vec<'a>`` >>)
-        v /. length v
+        v ./ length v
 
     // -----------------------------------------
 

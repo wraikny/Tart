@@ -5,7 +5,9 @@ open wraikny.Tart.Helper.Math
 open FSharpPlus
 
 module BinarySearch =
-    let inline binarySearch zero two count predicate current target =
+    let inline binarySearch count predicate (current : 'a) (target : 'a) : 'a =
+        let two : 'a = one + one
+
         let rec search count diffSum current target =
             if count <= 0 then diffSum
             else
@@ -17,16 +19,4 @@ module BinarySearch =
                 else
                     search (count - 1) diffSum current middle
 
-        search count zero current target
-
-
-    let inline generic count predicate current target =
-        let two = one + one
-        binarySearch zero two
-            count predicate current target
-
-
-    let inline vector count predicate current target =
-        let two = one + one
-        binarySearch zero two
-            count predicate current target
+        search count (zero : 'a) current target
