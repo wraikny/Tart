@@ -12,6 +12,7 @@
     <Compile Include="Extension.fs" />
     <Compile Include="Coroutine.fs" />
     <Compile Include="Math\Angle.fs" />
+    <Compile Include="Math\Dependent.fs" />
     <Compile Include="Math\Vec2.fs" />
     <Compile Include="Math\Vec3.fs" />
     <Compile Include="Math\Vec4.fs" />
