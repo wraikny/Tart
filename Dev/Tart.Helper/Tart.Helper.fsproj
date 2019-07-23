@@ -31,7 +31,7 @@
     <Compile Include="Collections\HashMap.fs" />
     <Compile Include="Collections\FixedSizeQueue.fs" />
     <Compile Include="Collections\Queue.fs" />
-    <Compile Include="Utils\LockObject.fs" />
+    <Compile Include="Utils\Utils.fs" />
     <Compile Include="Utils\MsgQueue.fs" />
   </ItemGroup>
   <ItemGroup>

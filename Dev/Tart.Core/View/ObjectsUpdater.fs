@@ -6,10 +6,6 @@ open System
 
 open FSharpPlus
 
-type IUpdatee<'ViewModel> = interface
-    abstract Update : 'ViewModel -> unit
-end
-
 /// ViewModel record to updatin objects
 type UpdaterViewModel<'ViewModel> = (uint32 * 'ViewModel) list
 

@@ -15,10 +15,15 @@ type LockObject<'T>(value : 'T) =
                 value <- value_
 
 
-[<AbstractClass; Sealed>]
-type StaticLock private() =
-    static member private _lockObj = System.Object()
+//[<AbstractClass; Sealed>]
+//type StaticLock private() =
+//    static member private _lockObj = System.Object()
 
-    static member Lock f =
-        lock StaticLock._lockObj <|
-            fun _ -> f()
+//    static member Lock f =
+//        lock StaticLock._lockObj <|
+//            fun _ -> f()
+
+
+type IUpdatee<'a> = interface
+    abstract Update : 'a -> unit
+end
