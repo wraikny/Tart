@@ -7,8 +7,11 @@ module Async =
     let perform (msg : 'a -> 'Msg) (a : Async<'a>) : Cmd<'Msg, _> =
         Cmd.singleCommand (fun _ pushMsg ->
             async {
-                let! r = a
-                pushMsg (msg r)
+                try
+                    let! r = a
+                    pushMsg (msg r)
+                with e ->
+                    System.Console.WriteLine(e)
             }
             |> Async.Start
         )
