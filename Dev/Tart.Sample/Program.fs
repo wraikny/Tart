@@ -78,14 +78,14 @@ module Program =
 
     [<EntryPoint>]
     let main _ = 
-        Sockets.TCP.main()
-        //try
-        //    // counter()
-        //    // Advanced.Dungeon.generate()
+        // Sockets.TCP.main()
+        try
+             counter()
+             Advanced.Dungeon.generate()
 
-        //    Sockets.TCP.main()
-        //with e ->
-        //    printfn "\nError Occured:\n%A" e
+            //Sockets.TCP.main()
+        with e ->
+            printfn "\nError Occured:\n%A" e
 
         Console.ReadLine() |> ignore
         0

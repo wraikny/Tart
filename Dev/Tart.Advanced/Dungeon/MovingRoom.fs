@@ -58,7 +58,7 @@ type internal MovingRoom(rect : float32 Rect2, movingRate, rooms) =
         }
 
     member this.RectI
-        with get() : int Rect2 = this.RectF |>> (map int)
+        with get() : int Rect2 = this.RectF |>> map int
 
 
     member private this.IsCollidedWith(other : MovingRoom) =

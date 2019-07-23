@@ -21,6 +21,7 @@
     <Compile Include="View\ObjectsUpdater.fs" />
   </ItemGroup>
   <ItemGroup>
+    <PackageReference Include="System.Reactive" Version="4.1.5" />
     <PackageReference Include="System.ValueTuple" Version="4.5.0" />
     <PackageReference Include="FSharp.Core" Version="4.6.2" />
   </ItemGroup>

@@ -1,5 +1,7 @@
 ﻿namespace wraikny.Tart.Core
 
+open System
+open System.Reactive
 open System.Threading
 open wraikny.Tart.Helper.Collections
 open wraikny.Tart.Helper.Utils
@@ -23,9 +25,11 @@ type private Messenger<'Msg, 'ViewMsg, 'Model, 'ViewModel>
 
     let mutable port : IMsgQueue<'ViewMsg> option = None
 
-    let observable = new Observable<'Msg>()
+    let subject = new Subjects.Subject<'Msg>()
 
     override this.OnPopMsg(msg) =
+        subject.OnNext(msg)
+
         let newModel, cmd = corePrograms.update msg lastModel
         
         cmd |> Cmd.execute this port environment
@@ -33,8 +37,6 @@ type private Messenger<'Msg, 'ViewMsg, 'Model, 'ViewModel>
         modelQueue.Enqueue(newModel)
 
         lastModel <- newModel
-
-        observable.Notify(msg)
 
 
     member this.InitModel() =
@@ -46,14 +48,15 @@ type private Messenger<'Msg, 'ViewMsg, 'Model, 'ViewModel>
 
         lastModel <- model
         lastModelExist <- true
-
-
-    interface IObservable<'Msg> with
-        member this.Add(o) = (observable :> IObservable<_>).Add(o)
-        member this.Clear() = (observable :> IObservable<_>).Clear()
     
 
     interface IMessenger<'Msg, 'ViewMsg, 'ViewModel> with
+        member __.Subscribe(observer) = subject.Subscribe(observer)
+
+        member this.Dispose() =
+            this.Stop()
+            subject.Dispose()
+
         member this.SleepTime
             with get() = this.SleepTime
             and  set(value) = this.SleepTime <- value
@@ -81,14 +84,13 @@ type private Messenger<'Msg, 'ViewMsg, 'Model, 'ViewModel>
                 (this :> IMessenger<_, _, _>).StartAsync()
                 false
 
-        member this.Stop() =
-            this.Stop()
+        member this.Stop() = this.Stop()
 
 
 [<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
 module Messenger =
     [<CompiledName "CreateMessenger">]
-    let createMessenger (environment : Environment) (corePrograms) =
+    let createMessenger (environment : wraikny.Tart.Core.Environment) (corePrograms) =
         (new Messenger<_, _, _, _>(environment :> IEnvironment, corePrograms))
         :> IMessenger<_, _, _>
 

@@ -48,7 +48,7 @@ module private WithRandom =
     let init (parameter : DungeonBuilder) : WithRandom =
         {
             parameter = parameter
-            random = new Random(parameter.seed)
+            random = Random(parameter.seed)
         }
 
     let getRandomValue (builder) =
@@ -66,8 +66,7 @@ module private WithRandom =
             |> uncurry Vec2.init
             |>> int
 
-        [for _ in 1..builder.parameter.roomCount -> ()]
-        |>> fun () ->
+        [for _ in 1..builder.parameter.roomCount ->
             let pos = getRandomPointInCircle()
 
             let size =
@@ -87,6 +86,7 @@ module private WithRandom =
                 |>> int
 
             Rect.init (pos - size ./ 2) size
+        ]
         
 
 
@@ -157,18 +157,18 @@ module DungeonBuilder =
 
 
     let private moveRooms (rooms : int Rect2 list) movingRate : int Rect2 list =
-        let roomsList = new List<MovingRoom>()
+        let roomsList = List<MovingRoom>()
 
         for r in rooms do
-            let movingRoom = MovingRoom(r |>> (map float32), movingRate, roomsList)
+            let movingRoom = MovingRoom(r |>> map float32, movingRate, roomsList)
             roomsList.Add(movingRoom)
 
 
-        let mutable count = 0.0f
+        let mutable count = 1.0f
         while roomsList.Exists(fun r -> r.IsMoving) do
             count <- count + 1.0f
 
-            for r in roomsList do r.Update(1.0f + count)
+            for r in roomsList do r.Update(count)
 
 
         [ for r in roomsList -> r.RectI ]

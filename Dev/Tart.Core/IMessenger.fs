@@ -1,13 +1,14 @@
 ﻿namespace wraikny.Tart.Core
 
 open wraikny.Tart.Helper.Utils
-
+open System
 
 /// Telling msg and viewModel, between modelLoop(async) and view(mainThread).
 [<Interface>]
 type IMessenger<'Msg, 'ViewMsg, 'ViewModel> =
     inherit IMsgQueue<'Msg>
     inherit IObservable<'Msg>
+    inherit IDisposable
 
     /// Sleeping time in every updating
     abstract SleepTime : uint32 with get, set

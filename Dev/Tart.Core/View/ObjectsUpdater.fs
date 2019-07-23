@@ -2,27 +2,29 @@
 
 open wraikny.Tart.Helper.Utils
 open System.Collections.Generic
+open System
 
 open FSharpPlus
 
+type IUpdatee<'ViewModel> = interface
+    abstract Update : 'ViewModel -> unit
+end
+
+/// ViewModel record to updatin objects
+type UpdaterViewModel<'ViewModel> = (uint32 * 'ViewModel) list
+
 /// Interface of adding, removing and updating objects
 [<Interface>]
-type IObjectsUpdater =
+type IUpdater<'ViewModel> =
+    // inherit IObserver<UpdaterViewModel<'ViewModel>>
     abstract EnabledUpdating : bool with get, set
     abstract EnabledPooling : bool with get, set
 
 
 
-/// ViewModel record to updatin objects
-type UpdaterViewModel<'ObjectViewModel> =
-    {
-        objects : (uint32 * 'ObjectViewModel) list
-    }
-
-
 [<Struct>]
 type ObjectsParent<'Object, 'ObjectViewModel
-    when 'Object :> IObserver<'ObjectViewModel>
+    when 'Object :> IUpdatee<'ObjectViewModel>
     > = {
     create : unit -> 'Object
     add : 'Object -> unit
@@ -33,8 +35,8 @@ type ObjectsParent<'Object, 'ObjectViewModel
 
 /// Class of adding, removing and updating objects
 [<Class>]
-type ObjectsUpdater<'ViewModel, 'Object, 'ObjectViewModel
-    when 'Object :> IObserver<'ObjectViewModel>
+type ObjectsUpdater<'Object, 'ObjectViewModel
+    when 'Object :> IUpdatee<'ObjectViewModel>
     >(parent) =
     let objects = new Dictionary<uint32, 'Object>()
     let existFlags = new HashSet<uint32>()
@@ -46,7 +48,7 @@ type ObjectsUpdater<'ViewModel, 'Object, 'ObjectViewModel
     let mutable enabledUpdating = true
     let mutable enabledPooling = true
 
-    interface IObjectsUpdater with
+    interface IUpdater<'ObjectViewModel> with
         member this.EnabledUpdating
             with get() = enabledUpdating
             and set(value) =
@@ -67,14 +69,14 @@ type ObjectsUpdater<'ViewModel, 'Object, 'ObjectViewModel
 
     /// Update objects on ViewModel
     member this.Update(viewModel : UpdaterViewModel<_>) =
-        if (this :> IObjectsUpdater).EnabledUpdating then
+        if (this :> IUpdater<_>).EnabledUpdating then
             this.UpdateObjects(viewModel)
         else
             this.AddObjects(viewModel)
 
 
     member private this.Create() =
-        if (this :> IObjectsUpdater).EnabledPooling then
+        if (this :> IUpdater<_>).EnabledPooling then
             try objectPooling.Pop()
             with | :? System.InvalidOperationException -> parent.create()
         else
@@ -84,7 +86,7 @@ type ObjectsUpdater<'ViewModel, 'Object, 'ObjectViewModel
     member private this.Remove(id : uint32) =
         let object = objects.Item(id)
         objects.Remove(id) |> ignore
-        if (this :> IObjectsUpdater).EnabledPooling then
+        if (this :> IUpdater<_>).EnabledPooling then
             parent.remove(object)
             objectPooling.Push(object)
         else
@@ -93,7 +95,7 @@ type ObjectsUpdater<'ViewModel, 'Object, 'ObjectViewModel
 
     /// Add objects on ViewModel
     member private this.AddObjects (viewModel) =
-        for (id, objectViewModel) in viewModel.objects do
+        for (id, objectViewModel) in viewModel do
             if not <| objects.ContainsKey(id) then
                 let object : 'Object = this.Create()
                 object.Update(objectViewModel)
@@ -103,7 +105,7 @@ type ObjectsUpdater<'ViewModel, 'Object, 'ObjectViewModel
 
     /// Add, Update, Remove objects on ViewModel
     member private this.UpdateObjects (viewModel) =
-        for (id, objectViewModel) in viewModel.objects do
+        for (id, objectViewModel) in viewModel do
             objects.TryGetValue(id) |> function
             | true, result ->
                 result.Update(objectViewModel)

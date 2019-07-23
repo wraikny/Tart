@@ -13,19 +13,19 @@ type Vector< 'a, '``Vec<'a>``> = Vector of 'a * '``Vec<'a>``
 
 [<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
 module VectorBuiltin =
-    let inline impl<'a, '``Vec<'a>``> =
-        Vector Unchecked.defaultof<'a * '``Vec<'a>``>
+    let inline impl (v : ^``Vec<'a>``) =
+        Vector ( (^``Vec<'a>`` : (static member X : ^``Vec<'a>`` -> ^a) v), v)
 
 
 type VectorBuiltin = VectorBuiltin with
-    static member inline VectorImpl(_ : 'a Vec2) =
-        VectorBuiltin.impl<'a, 'a Vec2>
+    static member inline VectorImpl(v : 'a Vec2) =
+        VectorBuiltin.impl v
     
-    static member inline VectorImpl(_ : 'a Vec3) =
-        VectorBuiltin.impl<'a, 'a Vec3>
+    static member inline VectorImpl(v : 'a Vec3) =
+        VectorBuiltin.impl v
 
-    static member inline VectorImpl(_ : 'a Vec4) =
-        VectorBuiltin.impl<'a, 'a Vec4>
+    static member inline VectorImpl(v : 'a Vec4) =
+        VectorBuiltin.impl v
 
 
 [<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]

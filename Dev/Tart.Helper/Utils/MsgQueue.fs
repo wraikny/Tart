@@ -74,23 +74,19 @@ type MsgQueueAsync<'Msg>() =
         this.IsRunning <- true
 
         async {
-            while this.IsRunning do
-                this.TryDequeue() |> function
-                | Some msg ->
-                    this.OnPopMsg(msg)
-                | None ->
-                    let sleepTime, doSleep = _sleepTime.Value
-                    if doSleep then
-                        Thread.Sleep(int sleepTime)
+            try
+                while this.IsRunning do
+                    this.TryDequeue() |> function
+                    | Some msg ->
+                        this.OnPopMsg(msg)
+                    | None ->
+                        let sleepTime, doSleep = _sleepTime.Value
+                        if doSleep then
+                            Thread.Sleep(int sleepTime)
+            with e ->
+                System.Console.WriteLine(e)
+                raise e
         } |> Async.Start
 
     member this.Stop() =
-        let running = this.IsRunning
-        if running then
-            this.IsRunning <- false
-        else
-            raise <| InvalidOperationException()
-
-    interface IDisposable with
-        member this.Dispose() =
-            this.IsRunning <- false
+        this.IsRunning <- false
