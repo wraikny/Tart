@@ -11,21 +11,10 @@ open FSharpPlus.Math.Applicative
 type Vector< 'a, '``Vec<'a>``> = Vector of 'a * '``Vec<'a>``
 
 
-[<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
-module VectorBuiltin =
-    let inline impl (v : ^``Vec<'a>``) =
-        Vector ( (^``Vec<'a>`` : (static member X : ^``Vec<'a>`` -> ^a) v), v)
-
-
 type VectorBuiltin = VectorBuiltin with
-    static member inline VectorImpl(v : 'a Vec2) =
-        VectorBuiltin.impl v
-    
-    static member inline VectorImpl(v : 'a Vec3) =
-        VectorBuiltin.impl v
-
-    static member inline VectorImpl(v : 'a Vec4) =
-        VectorBuiltin.impl v
+    static member inline VectorImpl(v : 'a Vec2) = Vector(v.x, v)
+    static member inline VectorImpl(v : 'a Vec3) = Vector(v.x, v)
+    static member inline VectorImpl(v : 'a Vec4) = Vector(v.x, v)
 
 
 [<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
