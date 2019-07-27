@@ -20,3 +20,12 @@ module Extension =
         (a : '``Applicative<'a>``)
         (b : '``Applicative<'b>``)
         : '``Applicative<'v>`` = f <!> a <*> b
+
+    [<CompiledName "Indexed">]
+    let inline indexed (source : '``Functor<'a>``) : '``Functor<int * 'a>`` =
+        let mutable i = -1
+        source
+        |>> (fun x ->
+            i <- i + 1
+            (i, x)
+        )
