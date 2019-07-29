@@ -7,8 +7,8 @@ open System.Linq
 open FSharpPlus
 
 /// 指定したフレーム数待機するコルーチンを生成する。
-[<CompiledName "WaitFrames">]
-let inline waitFrames n =
+[<CompiledName "Sleep">]
+let inline sleep n =
     seq { for _ in 1..n -> () }
 
 
