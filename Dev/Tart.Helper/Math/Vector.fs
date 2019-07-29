@@ -65,22 +65,22 @@ module Vector =
     [<CompiledName "X">]
     let inline x (a : ^``Vec<'a>``) : ^a =
         constraint' (Unchecked.defaultof<Vector< ^a, ^``Vec<'a>`` >>)
-        (^``Vec<'a>`` : (static member X : ^``Vec<'a>`` -> ^a) a)
+        (^``Vec<'a>`` : (member x : ^a) a)
 
     [<CompiledName "Y">]
     let inline y (a : ^``Vec<'a>``) : ^a =
         constraint' (Unchecked.defaultof<Vector< ^a, ^``Vec<'a>`` >>)
-        (^``Vec<'a>`` : (static member Y : ^``Vec<'a>`` -> ^a) a)
+        (^``Vec<'a>`` : (member y : ^a) a)
 
     [<CompiledName "Z">]
     let inline z (a : ^``Vec<'a>``) : ^a =
         constraint' (Unchecked.defaultof<Vector< ^a, ^``Vec<'a>`` >>)
-        (^``Vec<'a>`` : (static member Z : ^``Vec<'a>`` -> ^a) a)
+        (^``Vec<'a>`` : (member z : ^a) a)
 
     [<CompiledName "W">]
     let inline w (a : ^``Vec<'a>``) : ^a =
         constraint' (Unchecked.defaultof<Vector< ^a, ^``Vec<'a>`` >>)
-        (^``Vec<'a>`` : (static member W : ^``Vec<'a>`` -> ^a) a)
+        (^``Vec<'a>`` : (member w : ^a) a)
 
     // -----------------------------------------
 

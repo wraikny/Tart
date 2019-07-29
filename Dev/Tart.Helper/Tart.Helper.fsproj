@@ -11,7 +11,7 @@
   <ItemGroup>
     <Compile Include="Extension.fs" />
     <Compile Include="Coroutine.fs" />
-    <Compile Include="Math\Angle.fs" />
+    <Compile Include="Math\Utils.fs" />
     <Compile Include="Math\Dependent.fs" />
     <Compile Include="Math\Vec2.fs" />
     <Compile Include="Math\Vec3.fs" />
@@ -19,7 +19,6 @@
     <Compile Include="Math\Vector.fs" />
     <Compile Include="Math\Color.fs" />
     <Compile Include="Math\Easing.fs" />
-    <Compile Include="Math\Utils.fs" />
     <Compile Include="Geometry\Line.fs" />
     <Compile Include="Geometry\Rect.fs" />
     <Compile Include="Geometry\Sphere.fs" />
@@ -34,6 +33,7 @@
     <Compile Include="Utils\Utils.fs" />
     <Compile Include="Utils\MsgQueue.fs" />
   </ItemGroup>
+  <ItemGroup />
   <ItemGroup>
     <PackageReference Include="FSharpPlus" Version="1.0.0" />
     <PackageReference Include="System.Reactive" Version="4.1.5" />

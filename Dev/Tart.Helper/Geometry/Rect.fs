@@ -80,7 +80,7 @@ module Rect =
     [<CompiledName "IsCollidedAxis">]
     let inline isCollidedAxis(axis : '``Vec<'a>`` -> 'a) (aLU, aRD) (bLU, bRD) : bool =
         Vector.constraint' (Unchecked.defaultof<Vector< 'a, '``Vec<'a>`` >>)
-        not (axis aRD < axis bLU || axis bRD < axis aLU)
+        Utils.inCollision (axis aLU, axis aRD) (axis bLU, axis bRD)
 
     [<CompiledName "IsInside">]
     let inline isInside (p : '``Vec<'a>``) r : bool =

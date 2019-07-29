@@ -11,16 +11,16 @@ type ^a Vec4 =
         z : ^a
         w : ^a
     }
-
-    static member inline X v = v.x
-    static member inline Y v = v.y
-    static member inline Z v = v.z
-    static member inline W v = v.w
-
+    
     static member inline Init x y z w = { x = x; y = y; z = z; w = w }
 
     static member inline Axes() : ('t Vec4 -> 't) list =
-        [ Vec4<'t>.X; Vec4<'t>.Y; Vec4<'t>.Z; Vec4<'t>.W ]
+        [
+            fun v -> v.x
+            fun v -> v.y
+            fun v -> v.z
+            fun v -> v.w
+        ]
 
     /// Foldable
     static member inline ToSeq (v : 't Vec4) =

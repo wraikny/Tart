@@ -9,14 +9,13 @@ type ^a Vec2 =
         x : ^a
         y : ^a
     }
-
-    static member inline X v = v.x
-    static member inline Y v = v.y
-
     static member inline Init x y = { x = x; y = y }
 
     static member inline Axes() : ('t Vec2 -> 't) list =
-        [ Vec2<'t>.X; Vec2<'t>.Y ]
+        [
+            fun v -> v.x
+            fun v -> v.y
+        ]
 
     /// Foldable
     static member inline ToSeq (v : 't Vec2) =

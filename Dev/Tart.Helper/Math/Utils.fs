@@ -1,8 +1,22 @@
-﻿namespace wraikny.Tart.Helper.Math.Utils
+﻿namespace wraikny.Tart.Helper.Math
 
-open wraikny.Tart.Helper.Math
+// open wraikny.Tart.Helper
 
 open FSharpPlus
+
+module Utils =
+    let inCollision (aLeft : 'a, aRight : 'a) (bLeft, bRight) =
+        not (aRight < bLeft || bRight < aLeft)
+
+
+module Angle =
+    [<CompiledName "Pi">]
+    let pi = float32 System.Math.PI
+
+    [<CompiledName "DegreeToRadian">]
+    let inline degreeToRadian degree =
+        degree * System.Math.PI / 180.0
+
 
 module BinarySearch =
     let inline binarySearch count predicate (current : 'a) (target : 'a) : 'a =

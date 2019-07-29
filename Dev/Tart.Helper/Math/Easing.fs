@@ -37,7 +37,6 @@ type Easing =
 
 
 open System
-open wraikny.Tart.Helper.Math
 
 
 [<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
