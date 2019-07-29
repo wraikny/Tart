@@ -1,17 +1,12 @@
-module wraikny.Tart.Tests
+module wraikny.Tart.Tests.Main
 
 open Expecto
 
 [<EntryPoint>]
 let main argv =
-    try
-        let x = Tests.runTestsInAssembly defaultConfig argv
-
-        ()
-    with e ->
-        printfn "%A" e
+    let x = Tests.runTestsInAssembly defaultConfig argv
 
     printfn "Enter..."
     System.Console.ReadLine() |> ignore
 
-    0
+    x

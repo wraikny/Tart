@@ -40,7 +40,7 @@ module Vector =
     let inline dot (a : ^``Vec<'a>``) (b : ^``Vec<'a>``) : ^a =
         constraint' (Unchecked.defaultof<Vector< ^a, ^``Vec<'a>`` >>)
 
-        a * b |> fold ( + ) zero
+        (a * b) |> sum
 
     [<CompiledName "SquaredLength">]
     let inline squaredLength (v : ^``Vec<'a>``) : ^a =
