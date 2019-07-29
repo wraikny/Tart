@@ -1,12 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
+    <OutputType>Library</OutputType>
     <TargetFramework>netstandard2.0</TargetFramework>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <NoWarn>3186;</NoWarn>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-    <NoWarn>3186;</NoWarn>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Extension.fs" />
@@ -32,12 +27,7 @@
     <Compile Include="Collections\Queue.fs" />
     <Compile Include="Utils\Utils.fs" />
     <Compile Include="Utils\MsgQueue.fs" />
+
   </ItemGroup>
-  <ItemGroup />
-  <ItemGroup>
-    <PackageReference Include="FSharpPlus" Version="1.0.0" />
-    <PackageReference Include="System.Reactive" Version="4.1.5" />
-    <PackageReference Include="System.ValueTuple" Version="4.5.0" />
-    <PackageReference Include="FSharp.Core" Version="4.6.2" />
-  </ItemGroup>
+  <Import Project="..\..\.paket\Paket.Restore.targets" />
 </Project>
