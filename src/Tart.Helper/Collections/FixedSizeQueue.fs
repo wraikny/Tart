@@ -34,6 +34,17 @@ type FixedSizeQueue<'T> private(queue, limit) =
             this.Lock <| fun _ ->
                 queue.Count
 
+    /// Clear queue with lock
+    member public this.Clear() =
+        this.Lock <| fun _ ->
+            queue.Clear()
+
+    /// Get Enumeartor with lock
+    member this.GetEnumerator() =
+        this.Lock <| fun _ ->
+            (new List<'T>(queue)).GetEnumerator()
+            :> IEnumerator<'T>
+
     interface IQueue<'T> with
         /// Enqueue and dequeue while count > limit with lock
         member this.Enqueue(o : 'T) =
@@ -58,15 +69,3 @@ type FixedSizeQueue<'T> private(queue, limit) =
         member this.GetEnumerator() =
             this.GetEnumerator()
             :> System.Collections.IEnumerator
-  
-    /// Clear queue with lock
-    member public this.Clear() =
-        this.Lock <| fun _ ->
-            queue.Clear()
-
-
-    /// Get Enumeartor with lock
-    member this.GetEnumerator() =
-        this.Lock <| fun _ ->
-            (new List<'T>(queue)).GetEnumerator()
-            :> IEnumerator<'T>
