@@ -9,13 +9,15 @@ open FSharpPlus
 /// ViewModel record to updatin objects
 type UpdaterViewModel<'ViewModel> = (uint32 * 'ViewModel) list
 
-/// Interface of adding, removing and updating objects
-[<Interface>]
-type IUpdater<'ViewModel> =
-    // inherit IObserver<UpdaterViewModel<'ViewModel>>
-    abstract EnabledUpdating : bool with get, set
-    abstract EnabledPooling : bool with get, set
-
+[<Struct>]
+type UpdatingOption =
+    | Adding
+    | Updating
+    | UpdatingWithPooling
+with
+    member x.EnabledUpdating = x |> function
+        | Updating | UpdatingWithPooling -> true
+        | Adding -> false
 
 
 [<Struct>]
@@ -41,40 +43,27 @@ type ObjectsUpdater<'Object, 'ObjectViewModel
 
     let objectPooling = new Stack<'Object>()
 
-    let mutable enabledUpdating = true
-    let mutable enabledPooling = true
+    let mutable updatingOption = UpdatingWithPooling
 
-    interface IUpdater<'ObjectViewModel> with
-        member this.EnabledUpdating
-            with get() = enabledUpdating
-            and set(value) =
-                if not value then
-                    objectPooling.Clear()
-                    enabledPooling <- false
-
-                enabledUpdating <- value
-
-        member __.EnabledPooling
-            with get() = enabledPooling
-            and set(value) =
-                if not value then
-                    objectPooling.Clear()
-
-                enabledPooling <- value
+    member __.UpdatingOption
+        with get() = updatingOption
+        and  set(x) =
+            updatingOption <- x
+            if x <> UpdatingWithPooling then
+                objectPooling.Clear()
 
 
     /// Update objects on ViewModel
     member this.Update(viewModel : UpdaterViewModel<_>) =
-        if (this :> IUpdater<_>).EnabledUpdating then
+        if updatingOption.EnabledUpdating then
             this.UpdateObjects(viewModel)
         else
             this.AddObjects(viewModel)
 
 
     member private this.Create() =
-        if (this :> IUpdater<_>).EnabledPooling then
-            try objectPooling.Pop()
-            with | :? System.InvalidOperationException -> parent.create()
+        if (updatingOption = UpdatingWithPooling) && objectPooling.Count > 0 then
+            objectPooling.Pop()
         else
             parent.create()
 
@@ -82,7 +71,7 @@ type ObjectsUpdater<'Object, 'ObjectViewModel
     member private this.Remove(id : uint32) =
         let object = objects.Item(id)
         objects.Remove(id) |> ignore
-        if (this :> IUpdater<_>).EnabledPooling then
+        if (updatingOption = UpdatingWithPooling) then
             parent.remove(object)
             objectPooling.Push(object)
         else
@@ -106,7 +95,7 @@ type ObjectsUpdater<'Object, 'ObjectViewModel
             | true, result ->
                 result.Update(objectViewModel)
             | false, _ ->
-                let object : 'Object = parent.create()
+                let object : 'Object = this.Create()
                 object.Update(objectViewModel)
                 objects.Add(id, object)
                 parent.add(object)
