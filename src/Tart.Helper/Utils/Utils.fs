@@ -24,6 +24,21 @@ type LockObject<'T>(value : 'T) =
 //            fun _ -> f()
 
 
-type IUpdatee<'a> = interface
+type IUpdatee<'a> =
     abstract Update : 'a -> unit
-end
+
+
+open System.Collections.Generic
+
+type IEnqueue<'T> =
+    abstract Enqueue : 'T -> unit
+
+
+type IDequeue<'T> =
+    abstract TryDequeue : unit -> 'T option
+
+
+type IQueue<'T> =
+    inherit IEnqueue<'T>
+    inherit IDequeue<'T>
+    inherit IReadOnlyCollection<'T>

@@ -2,8 +2,11 @@
 
 open System.Collections.Generic
 
+
+open wraikny.Tart.Helper.Utils
+
 /// Fixed Size (automatically dequeue) and Thread Safe (with lock)
-type FixedSizeQueue<'T> private(queue, limit) = class
+type FixedSizeQueue<'T> private(queue, limit) =
     let queue : Queue<'T> = queue
     let limit : int = limit
     let _lock = System.Object()
@@ -31,23 +34,30 @@ type FixedSizeQueue<'T> private(queue, limit) = class
             this.Lock <| fun _ ->
                 queue.Count
 
-    
-    /// Enqueue and dequeue while count > limit with lock
-    member public this.Enqueue(o : 'T) =
-        this.Lock <| fun _ ->
-            queue.Enqueue(o)
-            while queue.Count > this.Limit do
-                queue.Dequeue() |> ignore
+    interface IQueue<'T> with
+        /// Enqueue and dequeue while count > limit with lock
+        member this.Enqueue(o : 'T) =
+            this.Lock <| fun _ ->
+                queue.Enqueue(o)
+                while queue.Count > this.Limit do
+                    queue.Dequeue() |> ignore
 
 
-    /// Dequeue with lock
-    member public this.TryDequeue() =
-        this.Lock <| fun _ ->
-            if queue.Count > 0 then
-                Some <| queue.Dequeue()
-            else
-                None
+        /// Dequeue with lock
+        member this.TryDequeue() =
+            this.Lock <| fun _ ->
+                if queue.Count > 0 then
+                    Some <| queue.Dequeue()
+                else
+                    None
 
+        member this.Count with get() = this.Count 
+
+        member this.GetEnumerator() = this.GetEnumerator()
+
+        member this.GetEnumerator() =
+            this.GetEnumerator()
+            :> System.Collections.IEnumerator
   
     /// Clear queue with lock
     member public this.Clear() =
@@ -60,15 +70,3 @@ type FixedSizeQueue<'T> private(queue, limit) = class
         this.Lock <| fun _ ->
             (new List<'T>(queue)).GetEnumerator()
             :> IEnumerator<'T>
-
-
-    interface IReadOnlyCollection<'T> with
-        member this.Count with get() = this.Count 
-
-        member this.GetEnumerator() = this.GetEnumerator()
-
-        member this.GetEnumerator() =
-            this.GetEnumerator()
-            :> System.Collections.IEnumerator
-
-end

@@ -6,18 +6,18 @@ open System
 /// Telling msg and viewModel, between modelLoop(async) and view(mainThread).
 [<Interface>]
 type IMessenger<'Msg, 'ViewMsg, 'ViewModel> =
-    inherit IMsgQueue<'Msg>
-    inherit IObservable<'Msg>
+    inherit IEnqueue<'Msg>
     inherit IDisposable
+
+    abstract Msg : IObservable<'Msg> with get
+    abstract ViewModel : IObservable<'ViewModel> with get
+    abstract ViewMsg : IObservable<'ViewMsg> with get
+
+    /// Pull ViewModel and ViewMsgs to update view objects in main thread
+    abstract NotifyView : unit -> unit
 
     /// Sleeping time in every updating
     abstract SleepTime : uint32 with get, set
-
-    /// Set Port to Messenger
-    abstract SetPort : #Port<'Msg, 'ViewMsg> -> unit
-
-    /// Thread safe getter of ViewModel
-    abstract TryPopViewModel : 'ViewModel option
 
     /// Thread safe getter of isRunning flag
     abstract IsRunning : bool with get

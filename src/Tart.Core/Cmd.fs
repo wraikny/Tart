@@ -34,19 +34,16 @@ module Cmd =
 
 
     let inline internal execute
-        (messenger : #IMsgQueue<'Msg>)
-        (port : #IMsgQueue<'ViewMsg> option)
+        (msgQueue : #IEnqueue<'Msg>)
+        (viewMsgQueue : #IEnqueue<'ViewMsg>)
         (env : #IEnvironment)
         (cmd : Cmd<'Msg, 'ViewMsg>) =
         for c in cmd.commands do
-            c env <| fun msg -> messenger.Enqueue msg
+            c env <| fun msg -> msgQueue.Enqueue msg
 
         
-        port |> function
-        | None -> ()
-        | Some(port) ->
-            for msg in cmd.viewMsgs do
-                port.Enqueue(msg)
+        for msg in cmd.viewMsgs do
+            viewMsgQueue.Enqueue(msg)
 
 
     /// Empty command

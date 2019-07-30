@@ -5,24 +5,29 @@ open System.Reactive
 
 open wraikny.Tart.Helper.Utils
 
-type Notifier<'Msg, 'ViewMsg, 'ViewModel>(messenger) =
+open FSharpPlus
 
-    let subject = new Subjects.Subject<'ViewModel>()
+type Notifier<'T>(queue : IDequeue<'T>) =
+    let subject = new Subjects.Subject<'T>()
 
-    member val Messenger : IMessenger<'Msg, 'ViewMsg, 'ViewModel> = messenger with get
+    member __.Pull() =
+        queue.TryDequeue()
+        |> iter subject.OnNext
 
-    member this.Pull() =
-        this.Messenger.TryPopViewModel |> function
-        | Some viewModel ->
-            subject.OnNext(viewModel)
-            true
-        | None ->
-            false
+    member __.PullAll() =
+        let rec loop () =
+            queue.TryDequeue() |> function
+            | Some x ->
+                subject.OnNext x
+                loop()
+            | None -> ()
+
+        loop ()
 
     member __.Subscribe(observer) = subject.Subscribe(observer)
     member __.Dispose() = subject.Dispose()
 
-    interface IObservable<'ViewModel> with
+    interface IObservable<'T> with
         member this.Subscribe(observer) = this.Subscribe(observer)
 
     interface IDisposable with
