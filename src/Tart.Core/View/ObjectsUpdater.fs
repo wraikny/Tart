@@ -68,7 +68,7 @@ type ObjectsUpdater<'Object, 'ObjectViewModel
             parent.create()
 
 
-    member private this.Remove(id : uint32) =
+    member this.Remove(id : uint32) =
         let object = objects.Item(id)
         objects.Remove(id) |> ignore
         if (updatingOption = UpdatingWithPooling) then
