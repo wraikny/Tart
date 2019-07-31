@@ -1,4 +1,4 @@
-﻿namespace wraikny.Tart.Sockets
+﻿namespace wraikny.Tart.Socket
 
 open System
 open System.Net
@@ -12,7 +12,7 @@ type ClientID = uint32
 
 type IServer<'Msg> = interface
     inherit IDisposable
-    inherit IMsgQueue<'Msg>
+    inherit IEnqueue<'Msg>
 
     abstract IsAccepting : bool with get
     abstract IsMessaging : bool with get
@@ -26,7 +26,7 @@ end
 
 type IClientHandler<'Msg> = interface
     inherit IDisposable
-    inherit IMsgQueue<'Msg>
+    inherit IEnqueue<'Msg>
 
     abstract IsConnected : bool with get
 
@@ -37,7 +37,7 @@ end
 
 type IClient<'Msg> = interface
     inherit IDisposable
-    inherit IMsgQueue<'Msg>
+    inherit IEnqueue<'Msg>
 
     abstract ClientId : ClientID with get
 

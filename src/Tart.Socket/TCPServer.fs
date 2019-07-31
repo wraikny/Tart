@@ -1,4 +1,4 @@
-﻿namespace wraikny.Tart.Sockets.TCP
+﻿namespace wraikny.Tart.Socket.TCP
 
 open System
 open System.Linq
@@ -8,7 +8,7 @@ open System.Net.Sockets
 open System.Collections.Generic
 
 open wraikny.Tart.Helper.Utils
-open wraikny.Tart.Sockets
+open wraikny.Tart.Socket
 
 
 open System.Security.Cryptography
@@ -30,8 +30,8 @@ type ServerBase<'SendMsg, 'RecvMsg>(encoder, decoder, endpoint) =
     let encoder : 'SendMsg -> byte [] = encoder
     let decoder : byte[] -> 'RecvMsg option = decoder
 
-    let receiveQueue = new MsgQueue<ClientID * 'RecvMsg>()
-    let sendQueue = new MsgQueue<'SendMsg>()
+    let receiveQueue = new MsgQueue<ClientID * 'RecvMsg>() :> IQueue<_>
+    let sendQueue = new MsgQueue<'SendMsg>() :> IQueue<_>
 
 
     let mutable cancelAccepting = null
@@ -109,7 +109,7 @@ type ServerBase<'SendMsg, 'RecvMsg>(encoder, decoder, endpoint) =
         (lock _lockObj <| fun _ -> clients.TryGetValue(id))
         |> function
         | true, client ->
-            (client :> IMsgQueue<_>).Enqueue(msg)
+            (client :> IEnqueue<_>).Enqueue(msg)
             true
         | _ ->
             false
@@ -177,7 +177,7 @@ type ServerBase<'SendMsg, 'RecvMsg>(encoder, decoder, endpoint) =
                 let client = i.Value
                 for r in client.Receive() do
                     this.DebugPrint(sprintf "Received message %A from %A" r i.Key)
-                    (receiveQueue :> IMsgQueue<_>).Enqueue(i.Key,  r)
+                    receiveQueue.Enqueue(i.Key,  r)
         }
 
 
@@ -304,9 +304,8 @@ type ServerBase<'SendMsg, 'RecvMsg>(encoder, decoder, endpoint) =
             this.DebugPrint("Stopped Messaging")
 
 
-    interface IMsgQueue<'SendMsg> with
-        member this.Enqueue(msg) =
-            (sendQueue :> IMsgQueue<_>).Enqueue(msg)
+    interface IEnqueue<'SendMsg> with
+        member this.Enqueue(msg) = sendQueue.Enqueue(msg)
 
     interface IDisposable with
         member this.Dispose() =

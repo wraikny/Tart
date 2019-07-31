@@ -1,4 +1,4 @@
-﻿namespace wraikny.Tart.Sockets.TCP
+﻿namespace wraikny.Tart.Socket.TCP
 
 open System
 open System.Linq
@@ -8,8 +8,8 @@ open System.Net.Sockets
 open System.Collections.Generic
 
 open wraikny.Tart.Helper.Utils
-open wraikny.Tart.Sockets
-open wraikny.Tart.Sockets.Crypt
+open wraikny.Tart.Socket
+open wraikny.Tart.Socket.Crypt
 
 
 open System.Security.Cryptography
@@ -25,8 +25,8 @@ type ClientBase<'SendMsg, 'RecvMsg> internal (encoder, decoder, socket) =
     let encoder = encoder
     let decoder = decoder
 
-    let sendQueue = new MsgQueue<'SendMsg>()
-    let recvQueue = new MsgQueue<'RecvMsg>()
+    let sendQueue = new MsgQueue<'SendMsg>() :> IQueue<_>
+    let recvQueue = new MsgQueue<'RecvMsg>() :> IQueue<_>
 
     let _lockObj = Object()
 
@@ -101,7 +101,7 @@ type ClientBase<'SendMsg, 'RecvMsg> internal (encoder, decoder, socket) =
 
     member internal this.Receive() =
         let rec loop xs =
-            recvQueue.TryDequeue() |> function
+            (recvQueue :> IDequeue<_>).TryDequeue() |> function
             | Some(x) ->
                 loop (x::xs)
             | None -> xs
@@ -235,7 +235,7 @@ type ClientBase<'SendMsg, 'RecvMsg> internal (encoder, decoder, socket) =
 
     member private this.DispatchSend() =
         let rec loop() = async {
-            match sendQueue.TryDequeue() with
+            match (sendQueue :> IDequeue<_>).TryDequeue() with
             | Some msg ->
                 do! this.SendMsgAsync(msg)
 
@@ -261,7 +261,7 @@ type ClientBase<'SendMsg, 'RecvMsg> internal (encoder, decoder, socket) =
                     match socketMsg with
                     | UserMsg recvMsg ->
                         this.DebugPrint(sprintf "Receive: %A" recvMsg)
-                        (recvQueue :> IMsgQueue<_>).Enqueue(recvMsg)
+                        (recvQueue :> IQueue<_>).Enqueue(recvMsg)
 
                 | None -> ()
     }
@@ -322,10 +322,13 @@ type ClientBase<'SendMsg, 'RecvMsg> internal (encoder, decoder, socket) =
         // member this.SendSync(msg) = this.Send(msg)
         member this.SendMsgAsync(msg) = this.SendMsgAsync(msg)
 
-    interface IMsgQueue<'SendMsg> with
+    interface IEnqueue<'SendMsg> with
         member this.Enqueue(msg) =
-            (sendQueue :> IMsgQueue<_>).Enqueue(msg)
-
+            sendQueue.Enqueue(msg)
+            
+    interface IDequeue<'RecvMsg> with
+        member __.TryDequeue() =
+            recvQueue.TryDequeue()
 
     interface IDisposable with
         member this.Dispose() =

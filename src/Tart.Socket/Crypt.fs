@@ -1,4 +1,4 @@
-﻿module wraikny.Tart.Sockets.Crypt
+﻿module wraikny.Tart.Socket.Crypt
 
 open System.Security.Cryptography
 open System.Text

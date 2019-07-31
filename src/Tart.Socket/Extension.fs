@@ -1,5 +1,5 @@
 ﻿[<AutoOpen>]
-module wraikny.Tart.Sockets.Extension
+module wraikny.Tart.Socket.Extension
 
 open System.Net.Sockets
 
