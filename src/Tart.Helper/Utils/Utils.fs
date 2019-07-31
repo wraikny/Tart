@@ -1,5 +1,13 @@
 ﻿namespace wraikny.Tart.Helper.Utils
 
+module Bytes =
+    let inline encode (x : ^a) =
+        (^a : (member Encode : unit -> byte []) x)
+    
+    let inline decode (bytes : byte []) : ^a option =
+        (^a : (static member Decode : _ -> _) bytes)
+
+
 [<Class>]
 type LockObject<'T>(value : 'T) =
     let mutable value = value
@@ -13,15 +21,6 @@ type LockObject<'T>(value : 'T) =
         and set(value_) =
             lock _lock <| fun _ ->
                 value <- value_
-
-
-//[<AbstractClass; Sealed>]
-//type StaticLock private() =
-//    static member private _lockObj = System.Object()
-
-//    static member Lock f =
-//        lock StaticLock._lockObj <|
-//            fun _ -> f()
 
 
 type IUpdatee<'a> =
