@@ -45,26 +45,33 @@ type ServerBase<'SendMsg, 'RecvMsg>(encoder, decoder, endpoint) =
 
     // member val MaxClients : uint16 option = None with get, set
 
-    abstract OnPopReceiveMsgAsync : ClientID * 'RecvMsg -> Async<unit>
-    abstract OnPopSendMsgAsync : MsgTarget * 'SendMsg -> Async<unit>
 
+    abstract OnPopRecvMsg : ClientID * 'RecvMsg -> Async<unit>
+    abstract OnPopSendMsg : MsgTarget * 'SendMsg -> Async<unit>
 
-    abstract OnConnectedClient : ClientID * IClientHandler<'SendMsg> -> unit
-    default __.OnConnectedClient (_, _) = ()
+    abstract OnConnected : ClientID * IClientHandler<'SendMsg> -> unit
+    default __.OnConnected (_, _) = ()
 
-    abstract OnClientFailedToSend : ClientID * IClientHandler<'SendMsg> * 'SendMsg -> Async<unit>
-    default __.OnClientFailedToSend(_, _, _) = async{ () }
+    abstract OnDisconnected : ClientID -> unit
+    default __.OnDisconnected (_) = ()
 
-    abstract OnClientFailedToReceive : ClientID * IClientHandler<'SendMsg> -> Async<unit>
-    default __.OnClientFailedToReceive(_, _) = async{ () }
+    abstract OnFailedToSend : ClientID * IClientHandler<'SendMsg> * 'SendMsg -> Async<unit>
+    default __.OnFailedToSend(_, _, _) = async{ () }
+
+    abstract OnFailedToReceive : ClientID * IClientHandler<'SendMsg> -> Async<unit>
+    default __.OnFailedToReceive(_, _) = async{ () }
     
 
     member private server.CreateClient(s, clientId) =
         { new ClientBase<_, _>(encoder, decoder, s, DebugDisplay = false) with
+
+            override __.OnDisconnected() = server.OnDisconnected(clientId)
+
             override client.OnFailedToSend(msg) =
-                server.OnClientFailedToSend(clientId, client :> IClientHandler<_>, msg)
+                server.OnFailedToSend(clientId, client :> IClientHandler<_>, msg)
+
             override client.OnFailedToReceive() =
-                server.OnClientFailedToReceive(clientId, client :> IClientHandler<_>)
+                server.OnFailedToReceive(clientId, client :> IClientHandler<_>)
         }
 
 
@@ -161,7 +168,7 @@ type ServerBase<'SendMsg, 'RecvMsg>(encoder, decoder, endpoint) =
         let rec loop() = async {
             match receiveQueue.TryDequeue() with
             | Some(msg) ->
-                do! this.OnPopReceiveMsgAsync(msg)
+                do! this.OnPopRecvMsg(msg)
             | None -> ()
             return! loop()
         }
@@ -186,7 +193,7 @@ type ServerBase<'SendMsg, 'RecvMsg>(encoder, decoder, endpoint) =
             match sendQueue.TryDequeue() with
             | Some(msg) ->
                 this.DebugPrint(sprintf "Pop SendMsg: %A" msg)
-                do! this.OnPopSendMsgAsync(msg)
+                do! this.OnPopSendMsg(msg)
                 return! loop()
             | None -> ()
         }
@@ -248,7 +255,7 @@ type ServerBase<'SendMsg, 'RecvMsg>(encoder, decoder, endpoint) =
 
                     nextClientID <- nextClientID + LanguagePrimitives.GenericOne
 
-                this.OnConnectedClient(nextClientID, client)
+                this.OnConnected(nextClientID, client)
                 
                 return! loop()
             }
@@ -323,3 +330,5 @@ type ServerBase<'SendMsg, 'RecvMsg>(encoder, decoder, endpoint) =
                 // clientsCount <- 0us
 
             this.DebugPrint("Clients Cleared")
+
+

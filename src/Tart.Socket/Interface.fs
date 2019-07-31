@@ -11,7 +11,9 @@ type ClientID = uint32
 
 type MsgTarget =
     | Everyone
+    | Client of ClientID
     | Clients of ClientID list
+
 
 type IServer<'Msg> = interface
     inherit IDisposable
