@@ -9,10 +9,13 @@ open wraikny.Tart.Helper.Utils
 // [<Struct>]
 type ClientID = uint32
 
+type MsgTarget =
+    | Everyone
+    | Clients of ClientID list
 
 type IServer<'Msg> = interface
     inherit IDisposable
-    inherit IEnqueue<'Msg>
+    inherit IEnqueue<MsgTarget * 'Msg>
 
     abstract IsAccepting : bool with get
     abstract IsMessaging : bool with get

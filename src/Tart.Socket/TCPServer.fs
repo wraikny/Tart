@@ -31,7 +31,7 @@ type ServerBase<'SendMsg, 'RecvMsg>(encoder, decoder, endpoint) =
     let decoder : byte[] -> 'RecvMsg option = decoder
 
     let receiveQueue = new MsgQueue<ClientID * 'RecvMsg>() :> IQueue<_>
-    let sendQueue = new MsgQueue<'SendMsg>() :> IQueue<_>
+    let sendQueue = new MsgQueue<MsgTarget * 'SendMsg>() :> IQueue<_>
 
 
     let mutable cancelAccepting = null
@@ -45,12 +45,12 @@ type ServerBase<'SendMsg, 'RecvMsg>(encoder, decoder, endpoint) =
 
     // member val MaxClients : uint16 option = None with get, set
 
+    abstract OnPopReceiveMsgAsync : ClientID * 'RecvMsg -> Async<unit>
+    abstract OnPopSendMsgAsync : MsgTarget * 'SendMsg -> Async<unit>
+
 
     abstract OnConnectedClient : ClientID * IClientHandler<'SendMsg> -> unit
     default __.OnConnectedClient (_, _) = ()
-
-    abstract OnPopReceiveMsgAsync : ClientID * 'RecvMsg -> Async<unit>
-    abstract OnPopSendMsgAsync : 'SendMsg -> Async<unit>
 
     abstract OnClientFailedToSend : ClientID * IClientHandler<'SendMsg> * 'SendMsg -> Async<unit>
     default __.OnClientFailedToSend(_, _, _) = async{ () }
@@ -304,7 +304,7 @@ type ServerBase<'SendMsg, 'RecvMsg>(encoder, decoder, endpoint) =
             this.DebugPrint("Stopped Messaging")
 
 
-    interface IEnqueue<'SendMsg> with
+    interface IEnqueue<MsgTarget * 'SendMsg> with
         member this.Enqueue(msg) = sendQueue.Enqueue(msg)
 
     interface IDisposable with
