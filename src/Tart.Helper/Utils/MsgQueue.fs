@@ -33,6 +33,10 @@ type MsgQueueAsync<'Msg>() =
 
     let mutable _sleepTime = new LockObject<_>(5u, true)
 
+    let onErrorEvent = new Event<exn>()
+
+    member __.OnError with get() = onErrorEvent.Publish
+
     member this.SleepTime
         with get() =  fst _sleepTime.Value
         and set(value) =
@@ -66,8 +70,7 @@ type MsgQueueAsync<'Msg>() =
                         if doSleep then
                             Thread.Sleep(int sleepTime)
             with e ->
-                System.Console.WriteLine(e)
-                raise e
+                onErrorEvent.Trigger(e)
         } |> Async.Start
 
     member this.Stop() =

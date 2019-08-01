@@ -30,3 +30,5 @@ type IMessenger<'Msg, 'ViewMsg, 'ViewModel> =
 
     /// Stop asynchronous main loop
     abstract Stop : unit -> unit
+
+    abstract OnError : IEvent<exn> with get

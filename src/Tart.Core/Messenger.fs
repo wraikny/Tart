@@ -94,6 +94,8 @@ type private Messenger<'Msg, 'ViewMsg, 'Model, 'ViewModel>
 
         member __.Stop() = msgQueue.Stop()
 
+        member __.OnError with get() = msgQueue.OnError
+
 
 [<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
 module Messenger =
