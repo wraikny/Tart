@@ -49,6 +49,10 @@ type ClientBase<'SendMsg, 'RecvMsg> internal (encoder, decoder, socket) =
     [<Literal>]
     let AesKeySize = 128 // select from { 128bit, 192bit, 256bit }
 
+    member __.OnReceiveMsg with get() = onReceiveMsg.Publish
+    member __.OnDisconnected with get() = onDisconnected.Publish
+    member __.OnError with get() = onError.Publish
+
     member __.ClientId
         with get() = clientId
         and  internal set(value) = clientId <- value
@@ -70,10 +74,6 @@ type ClientBase<'SendMsg, 'RecvMsg> internal (encoder, decoder, socket) =
     member internal this.Cancel
         with get() = cancel
         and  set(value) = cancel <- value
-
-    member __.OnReceiveMsg with get() = onReceiveMsg.Publish
-    member __.OnDisconnected with get() = onDisconnected.Publish
-    member __.OnError with get() = onError.Publish
 
     member internal __.CallOnErrorEvent(e) = onError.Trigger(e)
 
@@ -414,7 +414,7 @@ type Client<'SendMsg, 'RecvMsg>(encoder, decoder) =
 
 
     
-    interface IClient<'SendMsg> with
+    interface IClient<'SendMsg, 'RecvMsg> with
         member this.ClientId with get() = this.ClientId.Value
 
         member this.IsConnected with get() = this.IsConnected
@@ -448,6 +448,10 @@ type Client<'SendMsg, 'RecvMsg>(encoder, decoder) =
             |> fun a -> Async.Start(a, this.Cancel.Token)
 
             this.DebugPrint("Started")
+
+        member __.OnReceiveMsg with get() = base.OnReceiveMsg
+        member __.OnDisconnected with get() = base.OnDisconnected
+        member __.OnError with get() = base.OnError
 
         // member this.Disconnect() = this.Disconnect()
 

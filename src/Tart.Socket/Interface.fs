@@ -15,20 +15,6 @@ type MsgTarget =
     | Clients of ClientID list
 
 
-type IServer<'Msg> = interface
-    inherit IDisposable
-    inherit IEnqueue<MsgTarget * 'Msg>
-
-    abstract IsAccepting : bool with get
-    abstract IsMessaging : bool with get
-
-    abstract StartAcceptingAsync : unit -> unit
-    abstract StopAccepting : unit -> unit
-
-    abstract StartMessagingAsync : unit -> unit
-    abstract StopMessaging : unit -> unit
-end
-
 type IClientHandler<'Msg> = interface
     inherit IDisposable
     inherit IEnqueue<'Msg>
@@ -40,15 +26,39 @@ type IClientHandler<'Msg> = interface
 end
 
 
-type IClient<'Msg> = interface
+type IServer<'SendMsg, 'RecvMsg> = interface
     inherit IDisposable
-    inherit IEnqueue<'Msg>
+    inherit IEnqueue<MsgTarget * 'SendMsg>
+
+    abstract IsAccepting : bool with get
+    abstract IsMessaging : bool with get
+
+    abstract StartAcceptingAsync : unit -> unit
+    abstract StopAccepting : unit -> unit
+
+    abstract StartMessagingAsync : unit -> unit
+    abstract StopMessaging : unit -> unit
+
+    abstract OnClientConnected : IEvent<ClientID * IClientHandler<'SendMsg>> with get
+    abstract OnClientDisconnected : IEvent<ClientID> with get
+    abstract OnReceiveMsg : IEvent<ClientID * 'RecvMsg> with get
+    abstract OnError : IEvent<exn> with get
+end
+
+
+type IClient<'SendMsg, 'RecvMsg> = interface
+    inherit IDisposable
+    inherit IEnqueue<'SendMsg>
 
     abstract ClientId : ClientID with get
 
     abstract IsConnected : bool with get
 
     abstract StartAsync : IPEndPoint -> unit
+
+    abstract OnReceiveMsg : IEvent<'RecvMsg> with get
+    abstract OnDisconnected : IEvent<unit> with get
+    abstract OnError : IEvent<exn> with get
 
     // abstract Send : 'Msg -> Async<unit>
 end

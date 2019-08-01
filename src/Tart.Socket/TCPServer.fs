@@ -16,8 +16,7 @@ open System.Text
 
 
 
-[<AbstractClass>]
-type ServerBase<'SendMsg, 'RecvMsg>(encoder, decoder, endpoint) =
+type Server<'SendMsg, 'RecvMsg>(encoder, decoder, endpoint) =
     let mutable nextClientID : ClientID = LanguagePrimitives.GenericZero
 
     let _lockObj = Object()
@@ -39,37 +38,25 @@ type ServerBase<'SendMsg, 'RecvMsg>(encoder, decoder, endpoint) =
 
     let mutable _debugDisplay = false
 
+    let onClientConnectedEvent = new Event<ClientID * IClientHandler<'SendMsg>>()
+    let onClientDisconenctedEvent = new Event<ClientID>()
+    let onReceiveMsgEvent = new Event<ClientID * 'RecvMsg>()
     let onErrorEvent = new Event<exn>()
 
     new (encoder, decoder, port, ?ipAddress) =
         let ipAddress = defaultArg ipAddress IPAddress.Any
-        new ServerBase<_, _>(encoder, decoder, IPEndPoint(ipAddress, port))
+        new Server<_, _>(encoder, decoder, IPEndPoint(ipAddress, port))
 
     // member val MaxClients : uint16 option = None with get, set
-
-    member __.OnError with get() = onErrorEvent.Publish
-
-    abstract OnPopRecvMsg : ClientID * 'RecvMsg -> Async<unit>
-    abstract OnPopSendMsg : MsgTarget * 'SendMsg -> Async<unit>
-
-    abstract OnConnected : ClientID * IClientHandler<'SendMsg> -> unit
-    default __.OnConnected (_, _) = ()
-
-    abstract OnDisconnected : ClientID -> unit
-    default __.OnDisconnected (_) = ()
-
-    abstract OnFailedToSend : ClientID * IClientHandler<'SendMsg> * 'SendMsg -> Async<unit>
-    default __.OnFailedToSend(_, _, _) = async{ () }
-
-    abstract OnFailedToReceive : ClientID * IClientHandler<'SendMsg> -> Async<unit>
-    default __.OnFailedToReceive(_, _) = async{ () }
     
 
     member private server.CreateClient(s, clientId) =
         let client = new ClientBase<_, _>(encoder, decoder, s, DebugDisplay = false)
         client.OnDisconnected.Add(fun () ->
             server.DebugPrint(sprintf "Disconnected of %d" clientId)
-            server.OnDisconnected clientId
+
+            onClientDisconenctedEvent.Trigger(clientId)
+
             server.RemoveClient(clientId) |> ignore
         )
         client.OnReceiveMsg.Add(fun r ->
@@ -179,7 +166,7 @@ type ServerBase<'SendMsg, 'RecvMsg>(encoder, decoder, endpoint) =
         let rec loop() = async {
             match receiveQueue.TryDequeue() with
             | Some(msg) ->
-                do! this.OnPopRecvMsg(msg)
+                onReceiveMsgEvent.Trigger(msg)
             | None -> ()
             return! loop()
         }
@@ -199,9 +186,17 @@ type ServerBase<'SendMsg, 'RecvMsg>(encoder, decoder, endpoint) =
     member private this.AsyncPopSendMsg() =
         let rec loop() = async {
             match sendQueue.TryDequeue() with
-            | Some(msg) ->
-                this.DebugPrint(sprintf "Pop SendMsg: %A" msg)
-                do! this.OnPopSendMsg(msg)
+            | Some(target, msg) ->
+                this.DebugPrint(sprintf "Pop SendMsg To %A: %A" target msg)
+                target |> function
+                | Everyone -> ()
+                | Client(clientId) ->
+                    this.TryGetClient(clientId)
+                    |> Option.iter(fun c -> c.Enqueue(msg))
+                | Clients(clientIds) ->
+                    for clientId in clientIds do
+                        this.TryGetClient(clientId)
+                        |> Option.iter(fun c -> c.Enqueue(msg))
                 return! loop()
             | None -> ()
         }
@@ -219,10 +214,10 @@ type ServerBase<'SendMsg, 'RecvMsg>(encoder, decoder, endpoint) =
         }
 
 
-    member private this.IServer with get() = this :> IServer<_>
+    member private this.IServer with get() = this :> IServer<_, _>
 
 
-    interface IServer<'SendMsg> with
+    interface IServer<'SendMsg, 'RecvMsg> with
         member this.IsAccepting with get() = not (isNull cancelAccepting)
 
         member this.IsMessaging with get() = not (isNull cancelMessaging)
@@ -269,7 +264,7 @@ type ServerBase<'SendMsg, 'RecvMsg>(encoder, decoder, endpoint) =
 
                             nextClientID <- nextClientID + LanguagePrimitives.GenericOne
 
-                        this.OnConnected(clientId, client)
+                        onClientConnectedEvent.Trigger(clientId, client :> IClientHandler<_>)
                     with e ->
                         this.DebugPrint(sprintf "Client of %d failed encrypting: %A" clientId e)
                         onErrorEvent.Trigger(e)
@@ -341,6 +336,12 @@ type ServerBase<'SendMsg, 'RecvMsg>(encoder, decoder, endpoint) =
             cancelMessaging <- null
 
             this.DebugPrint("Stopped Messaging")
+
+        member __.OnClientConnected with get() = onClientConnectedEvent.Publish
+        member __.OnClientDisconnected with get() = onClientDisconenctedEvent.Publish
+
+        member __.OnReceiveMsg with get() = onReceiveMsgEvent.Publish
+        member __.OnError with get() = onErrorEvent.Publish
 
 
     interface IEnqueue<MsgTarget * 'SendMsg> with
