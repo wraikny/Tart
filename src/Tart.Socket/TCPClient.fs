@@ -102,7 +102,7 @@ type ClientBase<'SendMsg, 'RecvMsg> internal (encoder, decoder, socket) =
                 | None -> return ()
             with e ->
                 this.CallOnErrorEvent(e)
-
+                (this :> IDisposable).Dispose()
         }
 
         loop()
@@ -298,6 +298,7 @@ type ClientBase<'SendMsg, 'RecvMsg> internal (encoder, decoder, socket) =
                 failwith "ReceiveSize <= 1"
         with e ->
             this.CallOnErrorEvent(e)
+            (this :> IDisposable).Dispose()
     }
 
 
@@ -378,6 +379,9 @@ type Client<'SendMsg, 'RecvMsg>(encoder, decoder) =
 
     let onConnected = new Event<unit>()
 
+    let mutable isHandlingRecvMsgs = true
+    let _isHandlingRecvMsgsLockObj = new System.Object()
+
     member __.OnConnected with get() = onConnected.Publish
 
     member private this.DebugPrint(s) =
@@ -419,6 +423,10 @@ type Client<'SendMsg, 'RecvMsg>(encoder, decoder) =
 
         member this.IsConnected with get() = this.IsConnected
 
+        member __.IsHandlingRecvMsgs
+            with get() = lock _isHandlingRecvMsgsLockObj <| fun() -> isHandlingRecvMsgs
+            and set(x) = lock _isHandlingRecvMsgsLockObj <| fun() -> isHandlingRecvMsgs <- x
+
         member this.StartAsync(ipEndpoint) =
             this.DebugPrint("Start")
 
@@ -430,14 +438,14 @@ type Client<'SendMsg, 'RecvMsg>(encoder, decoder) =
 
                     return! [|
                         async {
-                            let dispatch = this.Dispatch()
                             while true do
-                                do! dispatch
+                                do! this.Dispatch()
                                 Thread.Sleep(5)
                         }
                         async {
                             while true do
-                                do! this.Receive()
+                                if (this :> IClient<_, _>).IsHandlingRecvMsgs then
+                                    do! this.Receive()
                                 Thread.Sleep(5)
                         }
                     |] |> Async.Parallel |> Async.Ignore

@@ -56,6 +56,8 @@ type IClient<'SendMsg, 'RecvMsg> = interface
 
     abstract StartAsync : IPEndPoint -> unit
 
+    abstract IsHandlingRecvMsgs : bool with get, set
+
     abstract OnReceiveMsg : IEvent<'RecvMsg> with get
     abstract OnDisconnected : IEvent<unit> with get
     abstract OnError : IEvent<exn> with get
