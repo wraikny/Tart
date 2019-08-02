@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>Library</OutputType>
     <TargetFramework>netstandard2.0</TargetFramework>
@@ -9,12 +9,12 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Notifier.fs" />
     <Compile Include="Environment.fs" />
     <Compile Include="Cmd.fs" />
     <Compile Include="CoreProgram.fs" />
     <Compile Include="Port.fs" />
     <Compile Include="IMessenger.fs" />
-    <Compile Include="Notifier.fs" />
     <Compile Include="Messenger.fs" />
     <Compile Include="Libraries/Random.fs" />
     <Compile Include="Libraries/Async.fs" />

@@ -1,4 +1,4 @@
-﻿namespace wraikny.Tart.Sockets.TCP
+﻿namespace wraikny.Tart.Socket.TCP
 
 open System
 open System.Linq
@@ -8,7 +8,7 @@ open System.Net.Sockets
 open System.Collections.Generic
 
 open wraikny.Tart.Helper.Utils
-open wraikny.Tart.Sockets
+open wraikny.Tart.Socket
 
 
 open System.Security.Cryptography
@@ -16,8 +16,7 @@ open System.Text
 
 
 
-[<AbstractClass>]
-type ServerBase<'SendMsg, 'RecvMsg>(encoder, decoder, endpoint) =
+type Server<'SendMsg, 'RecvMsg>(encoder, decoder, endpoint) =
     let mutable nextClientID : ClientID = LanguagePrimitives.GenericZero
 
     let _lockObj = Object()
@@ -30,8 +29,8 @@ type ServerBase<'SendMsg, 'RecvMsg>(encoder, decoder, endpoint) =
     let encoder : 'SendMsg -> byte [] = encoder
     let decoder : byte[] -> 'RecvMsg option = decoder
 
-    let receiveQueue = new MsgQueue<ClientID * 'RecvMsg>()
-    let sendQueue = new MsgQueue<'SendMsg>()
+    let receiveQueue = new MsgQueue<ClientID * 'RecvMsg>() :> IQueue<_>
+    let sendQueue = new MsgQueue<MsgTarget * 'SendMsg>() :> IQueue<_>
 
 
     let mutable cancelAccepting = null
@@ -39,33 +38,39 @@ type ServerBase<'SendMsg, 'RecvMsg>(encoder, decoder, endpoint) =
 
     let mutable _debugDisplay = false
 
+    let onClientConnectedEvent = new Event<ClientID * IClientHandler<'SendMsg>>()
+    let onClientDisconenctedEvent = new Event<ClientID>()
+    let onReceiveMsgEvent = new Event<ClientID * 'RecvMsg>()
+    let onErrorEvent = new Event<exn>()
+
     new (encoder, decoder, port, ?ipAddress) =
         let ipAddress = defaultArg ipAddress IPAddress.Any
-        new ServerBase<_, _>(encoder, decoder, IPEndPoint(ipAddress, port))
+        new Server<_, _>(encoder, decoder, IPEndPoint(ipAddress, port))
 
     // member val MaxClients : uint16 option = None with get, set
-
-
-    abstract OnConnectedClient : ClientID * IClientHandler<'SendMsg> -> unit
-    default __.OnConnectedClient (_, _) = ()
-
-    abstract OnPopReceiveMsgAsync : ClientID * 'RecvMsg -> Async<unit>
-    abstract OnPopSendMsgAsync : 'SendMsg -> Async<unit>
-
-    abstract OnClientFailedToSend : ClientID * IClientHandler<'SendMsg> * 'SendMsg -> Async<unit>
-    default __.OnClientFailedToSend(_, _, _) = async{ () }
-
-    abstract OnClientFailedToReceive : ClientID * IClientHandler<'SendMsg> -> Async<unit>
-    default __.OnClientFailedToReceive(_, _) = async{ () }
     
 
     member private server.CreateClient(s, clientId) =
-        { new ClientBase<_, _>(encoder, decoder, s, DebugDisplay = false) with
-            override client.OnFailedToSend(msg) =
-                server.OnClientFailedToSend(clientId, client :> IClientHandler<_>, msg)
-            override client.OnFailedToReceive() =
-                server.OnClientFailedToReceive(clientId, client :> IClientHandler<_>)
-        }
+        let client = new ClientBase<_, _>(encoder, decoder, s, DebugDisplay = false)
+        client.OnDisconnected.Add(fun () ->
+            server.DebugPrint(sprintf "Disconnected of %d" clientId)
+
+            onClientDisconenctedEvent.Trigger(clientId)
+
+            server.RemoveClient(clientId) |> ignore
+        )
+        client.OnReceiveMsg.Add(fun r ->
+            server.DebugPrint(sprintf "Received message %A from %A" r clientId)
+            receiveQueue.Enqueue(clientId,  r)
+        )
+        client.OnError.Add(fun e ->
+            Console.WriteLine("Error occured in client od {0}", clientId)
+            server.DebugPrint(string e)
+            onErrorEvent.Trigger(e)
+            server.RemoveClient(clientId) |> ignore
+        )
+        client
+
 
 
     member this.Clients
@@ -88,12 +93,12 @@ type ServerBase<'SendMsg, 'RecvMsg>(encoder, decoder, endpoint) =
         with get() = _debugDisplay
         and  set(value) = _debugDisplay <- value
 
-    member inline private this.DebugPrint(s) =
+    member private this.DebugPrint(s) =
         if this.DebugDisplay then
             Console.WriteLine(sprintf "[wraikny.Tart.Sockets.TCP.ServerBase] %A" s)
 
 
-    member this.RemoveClient(clientId) =
+    member this.RemoveClient(clientId) : bool =
         lock _lockObj <| fun _ ->
             clients.TryGetValue(clientId) |> function
             | true, client ->
@@ -109,7 +114,7 @@ type ServerBase<'SendMsg, 'RecvMsg>(encoder, decoder, endpoint) =
         (lock _lockObj <| fun _ -> clients.TryGetValue(id))
         |> function
         | true, client ->
-            (client :> IMsgQueue<_>).Enqueue(msg)
+            (client :> IEnqueue<_>).Enqueue(msg)
             true
         | _ ->
             false
@@ -161,7 +166,7 @@ type ServerBase<'SendMsg, 'RecvMsg>(encoder, decoder, endpoint) =
         let rec loop() = async {
             match receiveQueue.TryDequeue() with
             | Some(msg) ->
-                do! this.OnPopReceiveMsgAsync(msg)
+                onReceiveMsgEvent.Trigger(msg)
             | None -> ()
             return! loop()
         }
@@ -174,19 +179,24 @@ type ServerBase<'SendMsg, 'RecvMsg>(encoder, decoder, endpoint) =
             let clientsList = lock _lockObj <| fun _ -> clients.ToList()
 
             for i in clientsList do
-                let client = i.Value
-                for r in client.Receive() do
-                    this.DebugPrint(sprintf "Received message %A from %A" r i.Key)
-                    (receiveQueue :> IMsgQueue<_>).Enqueue(i.Key,  r)
+                do! i.Value.Receive()
         }
 
 
     member private this.AsyncPopSendMsg() =
         let rec loop() = async {
             match sendQueue.TryDequeue() with
-            | Some(msg) ->
-                this.DebugPrint(sprintf "Pop SendMsg: %A" msg)
-                do! this.OnPopSendMsgAsync(msg)
+            | Some(target, msg) ->
+                this.DebugPrint(sprintf "Pop SendMsg To %A: %A" target msg)
+                target |> function
+                | Everyone -> ()
+                | Client(clientId) ->
+                    this.TryGetClient(clientId)
+                    |> Option.iter(fun c -> c.Enqueue(msg))
+                | Clients(clientIds) ->
+                    for clientId in clientIds do
+                        this.TryGetClient(clientId)
+                        |> Option.iter(fun c -> c.Enqueue(msg))
                 return! loop()
             | None -> ()
         }
@@ -204,10 +214,10 @@ type ServerBase<'SendMsg, 'RecvMsg>(encoder, decoder, endpoint) =
         }
 
 
-    member private this.IServer with get() = this :> IServer<_>
+    member private this.IServer with get() = this :> IServer<_, _>
 
 
-    interface IServer<'SendMsg> with
+    interface IServer<'SendMsg, 'RecvMsg> with
         member this.IsAccepting with get() = not (isNull cancelAccepting)
 
         member this.IsMessaging with get() = not (isNull cancelMessaging)
@@ -218,7 +228,7 @@ type ServerBase<'SendMsg, 'RecvMsg>(encoder, decoder, endpoint) =
 
             this.DebugPrint("Start Accepting")
 
-
+            try
             listener <- new Socket(AddressFamily.InterNetworkV6, SocketType.Stream, ProtocolType.Tcp)
             
             listener.Bind(endpoint)
@@ -227,36 +237,51 @@ type ServerBase<'SendMsg, 'RecvMsg>(encoder, decoder, endpoint) =
             this.DebugPrint(sprintf "Start Listening at %A" endpoint)
 
             let rec loop() = async {
-                //match this.MaxClients with
-                //| Some(x) when x <= (lock _lockObj <| fun _ -> clientsCount) ->
-                //    this.DebugPrint("Clients Count is over MaxClients.")
-                //    Thread.Sleep(1000)
-                //    return! loop()
-                //| _ ->
+                try
+                    this.DebugPrint("Accepting..")
+                    //match this.MaxClients with
+                    //| Some(x) when x <= (lock _lockObj <| fun _ -> clientsCount) ->
+                    //    this.DebugPrint("Clients Count is over MaxClients.")
+                    //    Thread.Sleep(1000)
+                    //    return! loop()
+                    //| _ ->
+                    let clientId = nextClientID
 
-                let! socket = listener.AsyncAccept()
-                let client = this.CreateClient(socket, nextClientID)
-                do! client.InitCryptOfServer()
+                    let! socket = listener.AsyncAccept()
+                    
+                    try
+                        let client = this.CreateClient(socket, clientId)
 
-                do! client.EncryptedSendWithHead(BitConverter.GetBytes(nextClientID)) |> Async.Ignore
+                        do! client.InitCryptOfServer()
 
-                lock _lockObj <| fun _ ->
-                    clients.Add(nextClientID, client )
-                    // clientsCount <- clientsCount + 1us
+                        do! client.EncryptedSendWithHead(BitConverter.GetBytes(clientId)) |> Async.Ignore
 
-                    this.DebugPrint(sprintf "Accepted client (id: %A)" nextClientID)
+                        lock _lockObj <| fun _ ->
+                            clients.Add(clientId, client )
+                            // clientsCount <- clientsCount + 1us
 
-                    nextClientID <- nextClientID + LanguagePrimitives.GenericOne
+                            this.DebugPrint(sprintf "Accepted client (id: %A)" clientId)
 
-                this.OnConnectedClient(nextClientID, client)
+                            nextClientID <- nextClientID + LanguagePrimitives.GenericOne
+
+                        onClientConnectedEvent.Trigger(clientId, client :> IClientHandler<_>)
+                    with e ->
+                        this.DebugPrint(sprintf "Client of %d failed encrypting: %A" clientId e)
+                        onErrorEvent.Trigger(e)
                 
-                return! loop()
+                    return! loop()
+                with e ->
+                    this.DebugPrint(string e)
+                    onErrorEvent.Trigger(e)
             }
                 
             cancelAccepting <- new CancellationTokenSource()
 
             loop()
             |> fun a -> Async.Start(a, cancelAccepting.Token)
+            with e ->
+                this.DebugPrint(e.ToString())
+                onErrorEvent.Trigger(e)
 
 
         member this.StopAccepting() =
@@ -264,12 +289,15 @@ type ServerBase<'SendMsg, 'RecvMsg>(encoder, decoder, endpoint) =
                 raise <| InvalidOperationException()
 
             this.DebugPrint("Stopping Accepting")
+            try
+                cancelAccepting.Cancel()
+                cancelAccepting <- null
 
-            cancelAccepting.Cancel()
-            cancelAccepting <- null
-
-            listener.Close()
-            listener <- null
+                listener.Close()
+                listener <- null
+            with e ->
+                this.DebugPrint(e.ToString())
+                onErrorEvent.Trigger(e)
             
             this.DebugPrint("Stopped Accepting")
 
@@ -281,14 +309,20 @@ type ServerBase<'SendMsg, 'RecvMsg>(encoder, decoder, endpoint) =
             this.DebugPrint("Start Messaging")
 
             cancelMessaging <- new CancellationTokenSource()
-
-            [|
-                this.AsyncClientsDispatch()
-                this.AsyncServerDispatch()
-                this.AsyncPopReceiveMsg()
-            |]
-            |> Async.Parallel
-            |> Async.Ignore
+            async {
+                try
+                    return!
+                        [|
+                            this.AsyncClientsDispatch()
+                            this.AsyncServerDispatch()
+                            this.AsyncPopReceiveMsg()
+                        |]
+                        |> Async.Parallel
+                        |> Async.Ignore
+                with e ->
+                    this.DebugPrint(string e)
+                    onErrorEvent.Trigger(e)
+            }
             |> fun a -> Async.Start(a, cancelMessaging.Token)
 
 
@@ -303,10 +337,15 @@ type ServerBase<'SendMsg, 'RecvMsg>(encoder, decoder, endpoint) =
 
             this.DebugPrint("Stopped Messaging")
 
+        member __.OnClientConnected with get() = onClientConnectedEvent.Publish
+        member __.OnClientDisconnected with get() = onClientDisconenctedEvent.Publish
 
-    interface IMsgQueue<'SendMsg> with
-        member this.Enqueue(msg) =
-            (sendQueue :> IMsgQueue<_>).Enqueue(msg)
+        member __.OnReceiveMsg with get() = onReceiveMsgEvent.Publish
+        member __.OnError with get() = onErrorEvent.Publish
+
+
+    interface IEnqueue<MsgTarget * 'SendMsg> with
+        member this.Enqueue(msg) = sendQueue.Enqueue(msg)
 
     interface IDisposable with
         member this.Dispose() =
@@ -324,3 +363,5 @@ type ServerBase<'SendMsg, 'RecvMsg>(encoder, decoder, endpoint) =
                 // clientsCount <- 0us
 
             this.DebugPrint("Clients Cleared")
+
+

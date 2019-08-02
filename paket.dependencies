@@ -1,6 +1,8 @@
 source https://www.nuget.org/api/v2
 
 framework: auto-detect
+nuget Expecto
+nuget Expecto.FsCheck
 nuget FSharp.Core
 nuget FSharpPlus
 nuget System.Reactive

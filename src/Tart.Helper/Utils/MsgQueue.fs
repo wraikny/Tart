@@ -1,42 +1,24 @@
 ﻿namespace wraikny.Tart.Helper.Utils
-
-/// Telling msg
-type IMsgQueue<'T> = interface
-    /// Add Msg
-    abstract Enqueue : 'T -> unit
-end
-
+    
+open System.Collections.Generic
 open System.Collections.Concurrent
 
 
 type MsgQueue<'T>() =
     let queue = new ConcurrentQueue<'T>()
 
-    member __.TryDequeue() : 'T option =
-        queue.TryDequeue() |> function
-        | true, result -> Some result
-        | false, _ -> None
+    interface IQueue<'T> with
+        member __.TryDequeue() : 'T option =
+            queue.TryDequeue() |> function
+            | true, result -> Some result
+            | false, _ -> None
 
-    interface IMsgQueue<'T> with
         member __.Enqueue(msg) = queue.Enqueue(msg)
 
-
-
-[<AbstractClass>]
-type MsgQueueSync<'Msg>() =
-    inherit MsgQueue<'Msg>()
-
-    abstract OnPopMsg : 'Msg -> unit
-
-    member public this.Update() =
-        let rec update () =
-            this.TryDequeue() |> function
-            | Some(msg) ->
-                this.OnPopMsg(msg)
-                update ()
-            | None -> ()
-
-        update ()
+        member __.Count with get() = queue.Count
+        member this.GetEnumerator() = queue.GetEnumerator()
+        member this.GetEnumerator() =
+            queue.GetEnumerator() :> System.Collections.IEnumerator
 
 
 open System
@@ -50,6 +32,10 @@ type MsgQueueAsync<'Msg>() =
     let isRunning = new LockObject<_>(false)
 
     let mutable _sleepTime = new LockObject<_>(5u, true)
+
+    let onErrorEvent = new Event<exn>()
+
+    member __.OnError with get() = onErrorEvent.Publish
 
     member this.SleepTime
         with get() =  fst _sleepTime.Value
@@ -76,7 +62,7 @@ type MsgQueueAsync<'Msg>() =
         async {
             try
                 while this.IsRunning do
-                    this.TryDequeue() |> function
+                    (this :> IDequeue<_>).TryDequeue() |> function
                     | Some msg ->
                         this.OnPopMsg(msg)
                     | None ->
@@ -84,8 +70,7 @@ type MsgQueueAsync<'Msg>() =
                         if doSleep then
                             Thread.Sleep(int sleepTime)
             with e ->
-                System.Console.WriteLine(e)
-                raise e
+                onErrorEvent.Trigger(e)
         } |> Async.Start
 
     member this.Stop() =

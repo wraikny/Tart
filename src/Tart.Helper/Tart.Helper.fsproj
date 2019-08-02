@@ -22,11 +22,11 @@
     <Compile Include="Graph\UnionFold.fs" />
     <Compile Include="Graph\SpanningTree.fs" />
     <Compile Include="Graph\Delaunay.fs" />
+    <Compile Include="Utils\Utils.fs" />
+    <Compile Include="Utils\MsgQueue.fs" />
     <Compile Include="Collections\HashMap.fs" />
     <Compile Include="Collections\FixedSizeQueue.fs" />
     <Compile Include="Collections\Queue.fs" />
-    <Compile Include="Utils\Utils.fs" />
-    <Compile Include="Utils\MsgQueue.fs" />
 
   </ItemGroup>
   <Import Project="..\..\.paket\Paket.Restore.targets" />

@@ -1,4 +1,4 @@
-﻿namespace wraikny.Tart.Sockets
+﻿namespace wraikny.Tart.Socket
 
 open System
 open System.Net
@@ -9,10 +9,26 @@ open wraikny.Tart.Helper.Utils
 // [<Struct>]
 type ClientID = uint32
 
+type MsgTarget =
+    | Everyone
+    | Client of ClientID
+    | Clients of ClientID list
 
-type IServer<'Msg> = interface
+
+type IClientHandler<'Msg> = interface
     inherit IDisposable
-    inherit IMsgQueue<'Msg>
+    inherit IEnqueue<'Msg>
+
+    abstract IsConnected : bool with get
+
+    abstract SendMsgAsync : 'Msg -> Async<unit>
+    // abstract SendSync : 'Msg -> unit
+end
+
+
+type IServer<'SendMsg, 'RecvMsg> = interface
+    inherit IDisposable
+    inherit IEnqueue<MsgTarget * 'SendMsg>
 
     abstract IsAccepting : bool with get
     abstract IsMessaging : bool with get
@@ -22,28 +38,29 @@ type IServer<'Msg> = interface
 
     abstract StartMessagingAsync : unit -> unit
     abstract StopMessaging : unit -> unit
-end
 
-type IClientHandler<'Msg> = interface
-    inherit IDisposable
-    inherit IMsgQueue<'Msg>
-
-    abstract IsConnected : bool with get
-
-    abstract SendMsgAsync : 'Msg -> Async<unit>
-    // abstract SendSync : 'Msg -> unit
+    abstract OnClientConnected : IEvent<ClientID * IClientHandler<'SendMsg>> with get
+    abstract OnClientDisconnected : IEvent<ClientID> with get
+    abstract OnReceiveMsg : IEvent<ClientID * 'RecvMsg> with get
+    abstract OnError : IEvent<exn> with get
 end
 
 
-type IClient<'Msg> = interface
+type IClient<'SendMsg, 'RecvMsg> = interface
     inherit IDisposable
-    inherit IMsgQueue<'Msg>
+    inherit IEnqueue<'SendMsg>
 
     abstract ClientId : ClientID with get
 
     abstract IsConnected : bool with get
 
     abstract StartAsync : IPEndPoint -> unit
+
+    abstract IsHandlingRecvMsgs : bool with get, set
+
+    abstract OnReceiveMsg : IEvent<'RecvMsg> with get
+    abstract OnDisconnected : IEvent<unit> with get
+    abstract OnError : IEvent<exn> with get
 
     // abstract Send : 'Msg -> Async<unit>
 end

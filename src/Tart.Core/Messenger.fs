@@ -11,80 +11,90 @@ open FSharpPlus
 
 [<Class>]
 type private Messenger<'Msg, 'ViewMsg, 'Model, 'ViewModel>
-    (environment, corePrograms) =
-    inherit MsgQueueAsync<'Msg>()
-
-    let corePrograms : CoreProgram<_, _, _, _> = corePrograms
-
-    let environment : IEnvironment = environment
-
-    let mutable lastModel = Unchecked.defaultof<'Model>
-    let mutable lastModelExist = false
-
-    let modelQueue = new FixedSizeQueue<'Model>(1)
-
-    let mutable port : IMsgQueue<'ViewMsg> option = None
+    (environment : IEnvironment, corePrograms : CoreProgram<_, _, _, _>) =
+    // inherit MsgQueueAsync<'Msg>()
 
     let subject = new Subjects.Subject<'Msg>()
 
-    override this.OnPopMsg(msg) =
-        subject.OnNext(msg)
+    let mutable lastModelExist = false
+    let mutable lastModel = Unchecked.defaultof<'Model>
 
-        let newModel, cmd = corePrograms.update msg lastModel
-        
-        cmd |> Cmd.execute this port environment
-        
-        modelQueue.Enqueue(newModel)
+    let modelQueue = new FixedSizeQueue<'Model>(1)
+    let viewMsgQueue = new MsgQueue<'ViewMsg>()
 
-        lastModel <- newModel
+    let msgQueue =
+        { new MsgQueueAsync<'Msg>() with
+            override x.OnPopMsg(msg) =
+                subject.OnNext(msg)
+                
+                let newModel, cmd = corePrograms.update msg lastModel
+                        
+                cmd |> Cmd.execute x viewMsgQueue environment
+                        
+                (modelQueue :> IEnqueue<_>).Enqueue(newModel)
+                
+                lastModel <- newModel
+        }
+
+    let viewModelNotifier =
+        new Notifier<'ViewModel>(
+            { new IDequeue<'ViewModel> with
+                member __.TryDequeue() =
+                    (modelQueue :> IDequeue<_>).TryDequeue()
+                    |>> corePrograms.view
+            })
+
+    let viewMsgNotifier = new Notifier<'ViewMsg>(viewMsgQueue)
 
 
     member this.InitModel() =
         let model, cmd = corePrograms.init
         
-        cmd |> Cmd.execute this port environment
+        cmd |> Cmd.execute msgQueue viewMsgQueue environment
         
-        modelQueue.Enqueue(model)
+        (modelQueue :> IEnqueue<_>).Enqueue(model)
 
         lastModel <- model
         lastModelExist <- true
     
 
     interface IMessenger<'Msg, 'ViewMsg, 'ViewModel> with
-        member __.Subscribe(observer) = subject.Subscribe(observer)
+        member __.Enqueue(msg) = (msgQueue :> IEnqueue<_>).Enqueue(msg)
 
-        member this.Dispose() =
-            this.Stop()
+        member __.Msg with get() = subject :> IObservable<_>
+        member __.ViewModel with get() = viewModelNotifier :> IObservable<_>
+        member __.ViewMsg with get() = viewMsgNotifier :> IObservable<_>
+
+        member __.NotifyView() =
+            viewMsgNotifier.PullAll()
+            viewModelNotifier.Pull()
+
+        member __.Dispose() =
+            msgQueue.Stop()
             subject.Dispose()
 
-        member this.SleepTime
-            with get() = this.SleepTime
-            and  set(value) = this.SleepTime <- value
+        member __.SleepTime
+            with get() = msgQueue.SleepTime
+            and  set(value) = msgQueue.SleepTime <- value
 
-        member __.SetPort(port_) =
-            port <- Some (port_ :> IMsgQueue<'ViewMsg>)
-
-        member this.TryPopViewModel
-            with get() =
-                modelQueue.TryDequeue()
-                |>> corePrograms.view
-
-        member this.IsRunning
-            with get() = this.IsRunning
+        member __.IsRunning
+            with get() = msgQueue.IsRunning
 
         member this.StartAsync() =
             this.InitModel()
-            this.StartAsync()
+            msgQueue.StartAsync()
 
         member this.ResumeAsync() =
             if lastModelExist then
-                this.StartAsync()
+                msgQueue.StartAsync()
                 true
             else
                 (this :> IMessenger<_, _, _>).StartAsync()
                 false
 
-        member this.Stop() = this.Stop()
+        member __.Stop() = msgQueue.Stop()
+
+        member __.OnError with get() = msgQueue.OnError
 
 
 [<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
