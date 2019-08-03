@@ -30,12 +30,12 @@ type IMessenger<'Msg, 'ViewMsg> =
     abstract OnError : IEvent<exn> with get
 
 
-///// Telling msg and viewModel, between modelLoop(async) and view(mainThread).
-//[<Interface>]
-//type IMessenger<'Msg, 'ViewMsg, 'ViewModel> =
-//    inherit IMessenger<'Msg, 'ViewMsg>
+/// Telling msg and viewModel, between modelLoop(async) and view(mainThread).
+[<Interface>]
+type IMessenger<'Msg, 'ViewMsg, 'ViewModel> =
+    inherit IMessenger<'Msg, 'ViewMsg>
 
-//    abstract ViewModel : IObservable<'ViewModel> with get
+    abstract ViewModel : IObservable<'ViewModel> with get
 
-//    /// Pull ViewModel and ViewMsgs to update view objects in main thread
-//    abstract NotifyView : unit -> unit
+    /// Pull ViewModel and ViewMsgs to update view objects in main thread
+    abstract NotifyView : unit -> unit

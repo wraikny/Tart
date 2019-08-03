@@ -58,13 +58,14 @@ type Messenger<'Msg, 'ViewMsg, 'Model, 'ViewModel>
         lastModel <- model
         lastModelExist <- true
     
-    member __.NotifyView() =
-        viewMsgNotifier.PullAll()
-        viewModelNotifier.Pull()
 
-    member __.ViewModel with get() = viewModelNotifier :> IObservable<_>
+    interface IMessenger<'Msg, 'ViewMsg, 'ViewModel> with
+        member __.NotifyView() =
+            viewMsgNotifier.PullAll()
+            viewModelNotifier.Pull()
 
-    interface IMessenger<'Msg, 'ViewMsg> with
+        member __.ViewModel with get() = viewModelNotifier :> IObservable<_>
+
         member __.Enqueue(msg) = (msgQueue :> IEnqueue<_>).Enqueue(msg)
 
         member __.Msg with get() = msgEvent.Publish :> IObservable<_>
@@ -106,7 +107,7 @@ module Messenger =
     [<CompiledName "Create">]
     let create (environment : wraikny.Tart.Core.IEnvironment) (corePrograms) =
         (new Messenger<_, _, _, _>(environment, corePrograms))
-        //:> IMessenger<_, _, _>
+        :> IMessenger<_, _, _>
 
 
     [<CompiledName "Build">]
