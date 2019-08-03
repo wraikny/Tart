@@ -21,14 +21,10 @@ type Messenger<'Msg, 'ViewMsg, 'Model, 'ViewModel>
 
     let modelQueue = new FixedSizeQueue<'Model>(1)
     let viewMsgQueue = new MsgQueue<'ViewMsg>()
-
-    let onUpdatedEvent = new Event<unit>()
-
+    
     let msgQueue = new MsgQueueAsync<'Msg>()
 
     do
-        msgQueue.OnUpdated.Add(onUpdatedEvent.Trigger)
-
         msgQueue.OnPopMsg.Add(fun msg ->
             let newModel, cmd = corePrograms.update msg lastModel
                         
@@ -51,7 +47,6 @@ type Messenger<'Msg, 'ViewMsg, 'Model, 'ViewModel>
 
     let viewMsgNotifier = new Notifier<'ViewMsg>(viewMsgQueue)
 
-    member __.OnUpdated with get() = onUpdatedEvent.Publish
 
     member private this.InitModel() =
         let model, cmd = corePrograms.init
@@ -63,17 +58,18 @@ type Messenger<'Msg, 'ViewMsg, 'Model, 'ViewModel>
         lastModel <- model
         lastModelExist <- true
     
+    member __.NotifyView() =
+        viewMsgNotifier.PullAll()
+        viewModelNotifier.Pull()
 
-    interface IMessenger<'Msg, 'ViewMsg, 'ViewModel> with
+    member __.ViewModel with get() = viewModelNotifier :> IObservable<_>
+
+    interface IMessenger<'Msg, 'ViewMsg> with
         member __.Enqueue(msg) = (msgQueue :> IEnqueue<_>).Enqueue(msg)
 
         member __.Msg with get() = msgEvent.Publish :> IObservable<_>
-        member __.ViewModel with get() = viewModelNotifier :> IObservable<_>
         member __.ViewMsg with get() = viewMsgNotifier :> IObservable<_>
 
-        member __.NotifyView() =
-            viewMsgNotifier.PullAll()
-            viewModelNotifier.Pull()
 
         member __.Dispose() =
             msgQueue.Stop()
@@ -95,10 +91,12 @@ type Messenger<'Msg, 'ViewMsg, 'Model, 'ViewModel>
                 msgQueue.StartAsync()
                 true
             else
-                (this :> IMessenger<_, _, _>).StartAsync()
+                (this :> IMessenger<_, _>).StartAsync()
                 false
 
         member __.Stop() = msgQueue.Stop()
+
+        member __.OnUpdated with get() = msgQueue.OnUpdated
 
         member __.OnError with get() = msgQueue.OnError
 
@@ -108,7 +106,7 @@ module Messenger =
     [<CompiledName "Create">]
     let create (environment : wraikny.Tart.Core.IEnvironment) (corePrograms) =
         (new Messenger<_, _, _, _>(environment, corePrograms))
-        :> IMessenger<_, _, _>
+        //:> IMessenger<_, _, _>
 
 
     [<CompiledName "Build">]
