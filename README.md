@@ -12,7 +12,8 @@ writtenknown@gmail.com
 * Tart.Sockets
 
 ## Dependencies
-see [paket.dependencies](paket.dependencies) file  
+[paket.dependencies](paket.dependencies) file  
+
 
 ## Caution
 This software includes the work that is distributed in the [Apache License 2.0](http://www.apache.org/licenses/LICENSE-2.0).  

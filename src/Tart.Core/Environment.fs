@@ -3,7 +3,7 @@
 open System
 
 [<Interface>]
-type internal IEnvironment =
+type IEnvironment =
     abstract Random : Random with get
 
 
@@ -16,7 +16,7 @@ type public Environment() =
         random <- random'
         this
 
-    static member Initialize<'ViewMsg>() = Environment()
+    //static member Initialize<'ViewMsg>() = Environment()
 
     interface IEnvironment with
         member this.Random

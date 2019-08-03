@@ -25,7 +25,6 @@ open System
 open System.Threading
 
 
-[<AbstractClass>]
 type MsgQueueAsync<'Msg>() =
     inherit MsgQueue<'Msg>()
 
@@ -33,8 +32,12 @@ type MsgQueueAsync<'Msg>() =
 
     let mutable _sleepTime = new LockObject<_>(5u, true)
 
+    let onUpdatedEvent = new Event<unit>()
+    let onPopMsgEvent = new Event<'Msg>()
     let onErrorEvent = new Event<exn>()
 
+    member __.OnUpdated with get() = onUpdatedEvent.Publish
+    member __.OnPopMsg with get() = onPopMsgEvent.Publish
     member __.OnError with get() = onErrorEvent.Publish
 
     member this.SleepTime
@@ -49,9 +52,6 @@ type MsgQueueAsync<'Msg>() =
         and inline private set(value) =
             isRunning.Value <- value
 
-
-    abstract OnPopMsg : 'Msg -> unit
-
     member this.StartAsync() =
         let running = this.IsRunning
         if running then
@@ -64,11 +64,13 @@ type MsgQueueAsync<'Msg>() =
                 while this.IsRunning do
                     (this :> IDequeue<_>).TryDequeue() |> function
                     | Some msg ->
-                        this.OnPopMsg(msg)
+                        onPopMsgEvent.Trigger(msg)
                     | None ->
                         let sleepTime, doSleep = _sleepTime.Value
                         if doSleep then
                             Thread.Sleep(int sleepTime)
+
+                    onUpdatedEvent.Trigger()
             with e ->
                 onErrorEvent.Trigger(e)
         } |> Async.Start
