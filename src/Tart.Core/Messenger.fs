@@ -1,7 +1,6 @@
 ﻿namespace wraikny.Tart.Core
 
 open System
-open System.Reactive
 open System.Threading
 open wraikny.Tart.Helper.Collections
 open wraikny.Tart.Helper.Utils
@@ -9,12 +8,13 @@ open wraikny.Tart.Helper.Utils
 open FSharpPlus
 
 
+
 [<Class>]
-type private Messenger<'Msg, 'ViewMsg, 'Model, 'ViewModel>
+type Messenger<'Msg, 'ViewMsg, 'Model, 'ViewModel>
     (environment : IEnvironment, corePrograms : CoreProgram<_, _, _, _>) =
     // inherit MsgQueueAsync<'Msg>()
 
-    let subject = new Subjects.Subject<'Msg>()
+    let msgEvent = new Event<'Msg>()
 
     let mutable lastModelExist = false
     let mutable lastModel = Unchecked.defaultof<'Model>
@@ -22,19 +22,24 @@ type private Messenger<'Msg, 'ViewMsg, 'Model, 'ViewModel>
     let modelQueue = new FixedSizeQueue<'Model>(1)
     let viewMsgQueue = new MsgQueue<'ViewMsg>()
 
-    let msgQueue =
-        { new MsgQueueAsync<'Msg>() with
-            override x.OnPopMsg(msg) =
-                subject.OnNext(msg)
-                
-                let newModel, cmd = corePrograms.update msg lastModel
+    let onUpdatedEvent = new Event<unit>()
+
+    let msgQueue = new MsgQueueAsync<'Msg>()
+
+    do
+        msgQueue.OnUpdated.Add(onUpdatedEvent.Trigger)
+
+        msgQueue.OnPopMsg.Add(fun msg ->
+            let newModel, cmd = corePrograms.update msg lastModel
                         
-                cmd |> Cmd.execute x viewMsgQueue environment
+            cmd |> Cmd.execute msgQueue viewMsgQueue environment
                         
-                (modelQueue :> IEnqueue<_>).Enqueue(newModel)
+            (modelQueue :> IEnqueue<_>).Enqueue(newModel)
                 
-                lastModel <- newModel
-        }
+            lastModel <- newModel
+
+            msgEvent.Trigger(msg)
+        )
 
     let viewModelNotifier =
         new Notifier<'ViewModel>(
@@ -46,8 +51,9 @@ type private Messenger<'Msg, 'ViewMsg, 'Model, 'ViewModel>
 
     let viewMsgNotifier = new Notifier<'ViewMsg>(viewMsgQueue)
 
+    member __.OnUpdated with get() = onUpdatedEvent.Publish
 
-    member this.InitModel() =
+    member private this.InitModel() =
         let model, cmd = corePrograms.init
         
         cmd |> Cmd.execute msgQueue viewMsgQueue environment
@@ -61,7 +67,7 @@ type private Messenger<'Msg, 'ViewMsg, 'Model, 'ViewModel>
     interface IMessenger<'Msg, 'ViewMsg, 'ViewModel> with
         member __.Enqueue(msg) = (msgQueue :> IEnqueue<_>).Enqueue(msg)
 
-        member __.Msg with get() = subject :> IObservable<_>
+        member __.Msg with get() = msgEvent.Publish :> IObservable<_>
         member __.ViewModel with get() = viewModelNotifier :> IObservable<_>
         member __.ViewMsg with get() = viewMsgNotifier :> IObservable<_>
 
@@ -71,7 +77,7 @@ type private Messenger<'Msg, 'ViewMsg, 'Model, 'ViewModel>
 
         member __.Dispose() =
             msgQueue.Stop()
-            subject.Dispose()
+            //subject.Dispose()
 
         member __.SleepTime
             with get() = msgQueue.SleepTime
@@ -99,13 +105,12 @@ type private Messenger<'Msg, 'ViewMsg, 'Model, 'ViewModel>
 
 [<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
 module Messenger =
-    [<CompiledName "CreateMessenger">]
-    let createMessenger (environment : wraikny.Tart.Core.Environment) (corePrograms) =
-        (new Messenger<_, _, _, _>(environment :> IEnvironment, corePrograms))
+    [<CompiledName "Create">]
+    let create (environment : wraikny.Tart.Core.IEnvironment) (corePrograms) =
+        (new Messenger<_, _, _, _>(environment, corePrograms))
         :> IMessenger<_, _, _>
 
 
-    [<CompiledName "BuildMessenger">]
-    let buildMessenger (envBuilder) (corePrograms) =
-        (new Messenger<_, _, _, _>(envBuilder |> EnvironmentBuilder.build, corePrograms))
-        :> IMessenger<_, _, _>
+    [<CompiledName "Build">]
+    let build (envBuilder) (corePrograms) =
+        create(envBuilder |> EnvironmentBuilder.build :> IEnvironment) corePrograms

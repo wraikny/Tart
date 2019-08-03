@@ -3,14 +3,11 @@
 open wraikny.Tart.Helper.Utils
 open System
 
-/// Telling msg and viewModel, between modelLoop(async) and view(mainThread).
-[<Interface>]
-type IMessenger<'Msg, 'ViewMsg, 'ViewModel> =
-    inherit IEnqueue<'Msg>
+type IMessenger<'Msg, 'ViewMsg> =
     inherit IDisposable
+    inherit IEnqueue<'Msg>
 
     abstract Msg : IObservable<'Msg> with get
-    abstract ViewModel : IObservable<'ViewModel> with get
     abstract ViewMsg : IObservable<'ViewMsg> with get
 
     /// Pull ViewModel and ViewMsgs to update view objects in main thread
@@ -32,3 +29,11 @@ type IMessenger<'Msg, 'ViewMsg, 'ViewModel> =
     abstract Stop : unit -> unit
 
     abstract OnError : IEvent<exn> with get
+
+
+/// Telling msg and viewModel, between modelLoop(async) and view(mainThread).
+[<Interface>]
+type IMessenger<'Msg, 'ViewMsg, 'ViewModel> =
+    inherit IMessenger<'Msg, 'ViewMsg>
+
+    abstract ViewModel : IObservable<'ViewModel> with get
