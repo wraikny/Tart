@@ -13,6 +13,10 @@ module Random =
                 ((x.F rand) |> f).F rand
             )
 
+        static member FromEnv(generator : 'a Generator, env : IEnvironment) : 'a =
+            generator.F env.Random
+
+
     // let inline private getFunc (g : _ Generator) = g.F
     
     [<CompiledName "Bind">]
@@ -65,6 +69,7 @@ module Random =
     [<CompiledName "Pair">]
     let inline pair (g1 : 'a Generator) (g2 : 'b Generator) : ('a * 'b) Generator =
         map2 (fun a b -> a, b) g1 g2
+
 
 
     [<CompiledName "Generate">]

@@ -1,36 +1,61 @@
 ﻿namespace wraikny.Tart.Core.Libraries
 
+open wraikny.Tart.Helper
 open wraikny.Tart.Core
 
-module Async =
-    let toMaybe (a : Async<'a>) : Async<'a option> =
-        async {
-            try
-                let! r = a
-                return Some r
-            with _ ->
-                return None
+
+type 'a TartTask =
+    internal {
+        x : IEnvironment -> Async<'a>
+    }
+
+
+module TartTask =
+    open System.ComponentModel
+    [<EditorBrowsable(EditorBrowsableState.Never)>]
+    [<CompiledName "__Init">]
+    /// Dont call for user
+    let __init x = { x = x }
+
+    [<CompiledName "Init">]
+    let init (a : Async<'a>) =
+        {
+            x = fun _ -> a
         }
 
-    let toResult (a : Async<'a>) : Async<Result<'a, exn>> =
-        async {
-            try
-                let! r = a
-                return Ok r
-            with e ->
-                return Error e
-        }
+    [<CompiledName "FromEnv">]
+    let inline fromEnv (f : 'a -> Async<'b>) (withEnv : ^x) : 'b TartTask  =
+        __init (fun env ->
+            f (^x : (static member FromEnv : ^x * IEnvironment -> 'a) (withEnv, env))
+        )
+
         
-        
-    [<CompiledName "Perform">]
-    let perform (msg : 'a -> 'Msg) (a : Async<'a>) : Cmd<'Msg, _> =
-        Cmd.initMsg (fun _ pushMsg ->
+    [<CompiledName "PerformUnwrap">]
+    let performUnwrap (msg : 'a -> 'Msg) (a : 'a TartTask) : Cmd<'Msg, _> =
+        Cmd.initMsg (fun env pushMsg ->
             async {
                 try
-                    let! r = a
+                    let! r = a.x(env)
                     pushMsg (msg r)
                 with e ->
                     System.Console.WriteLine(e)
+            }
+            |> Async.Start
+        )
+
+    [<CompiledName "Perform">]
+    let perform (errorMsg : exn -> 'Msg) (okMsg : 'a -> 'Msg) (a : 'a TartTask) : Cmd<'Msg, _> =
+        Cmd.initMsg (fun env pushMsg ->
+            async {
+                try
+                    let! r = a.x(env)
+                    pushMsg (okMsg r)
+                with e ->
+                    try
+                        pushMsg (errorMsg e)
+                    with e' ->
+                        System.Console.WriteLine(e)
+                        System.Console.WriteLine(e')
             }
             |> Async.Start
         )
