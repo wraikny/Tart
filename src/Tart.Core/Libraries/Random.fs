@@ -13,9 +13,6 @@ module Random =
                 ((x.F rand) |> f).F rand
             )
 
-        static member FromEnv(generator : 'a Generator, env : IEnvironment) : 'a =
-            generator.F env.Random
-
 
     // let inline private getFunc (g : _ Generator) = g.F
     

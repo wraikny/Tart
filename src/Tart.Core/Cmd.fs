@@ -53,7 +53,7 @@ module Cmd =
 
 
     [<CompiledName "Batch">]
-    let inline batch (cmds : Cmd<'Msg, 'ViewMsg> list) : Cmd<'Msg, 'ViewMsg> =
+    let batch (cmds : Cmd<'Msg, 'ViewMsg> list) : Cmd<'Msg, 'ViewMsg> =
         {
             commands = fun env ->
                 cmds
@@ -67,7 +67,7 @@ module Cmd =
 
 
     [<CompiledName "MapCommands">]
-    let inline mapMsgs (f : 'a -> 'Msg) (cmd : Cmd<'a, 'ViewMsg>) : Cmd<'Msg, 'ViewMsg> =
+    let mapMsgs (f : 'a -> 'Msg) (cmd : Cmd<'a, 'ViewMsg>) : Cmd<'Msg, 'ViewMsg> =
         {
             commands = fun env ->
                 cmd.commands(env)

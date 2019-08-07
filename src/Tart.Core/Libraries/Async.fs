@@ -9,25 +9,35 @@ type 'a TartTask =
         x : IEnvironment -> Async<'a>
     }
 
+type WithEnvBuiltin = WithEnvBuiltin with
+    static member WithEnvImpl(x : 'a Random.Generator, env : IEnvironment) : 'a =
+        x.F env.Random
+
 
 module TartTask =
     open System.ComponentModel
+
     [<EditorBrowsable(EditorBrowsableState.Never)>]
     [<CompiledName "__Init">]
     /// Dont call for user
     let __init x = { x = x }
 
+
     [<CompiledName "Init">]
-    let init (a : Async<'a>) =
-        {
-            x = fun _ -> a
-        }
+    let init (a : Async<'a>) = { x = fun _ -> a }
+
+
+    [<EditorBrowsable(EditorBrowsableState.Never)>]
+    [<CompiledName "__WithEnv">]
+    /// Dont call for user
+    let inline __withEnv (_ : ^Builtin) (f : 'a -> Async<'b>) (withEnv : ^x) : 'b TartTask  =
+        __init (fun env ->
+            f ( (^Builtin or ^x) : (static member WithEnvImpl : ^x * IEnvironment -> 'a) (withEnv, env))
+        )
 
     [<CompiledName "FromEnv">]
-    let inline fromEnv (f : 'a -> Async<'b>) (withEnv : ^x) : 'b TartTask  =
-        __init (fun env ->
-            f (^x : (static member FromEnv : ^x * IEnvironment -> 'a) (withEnv, env))
-        )
+    let inline withEnv (f : 'a -> Async<'b>) (withEnv : ^x) : 'b TartTask  =
+        __withEnv WithEnvBuiltin f withEnv
 
         
     [<CompiledName "PerformUnwrap">]
