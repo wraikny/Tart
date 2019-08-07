@@ -72,4 +72,4 @@ module Random =
         (fun (env : IEnvironment) pushMsg ->
             pushMsg( generator.F env.Random |> msg )
         )
-        |> Cmd.singleCommand
+        |> Cmd.initMsg
