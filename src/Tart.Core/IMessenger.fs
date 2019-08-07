@@ -10,9 +10,6 @@ type IMessenger<'Msg, 'ViewMsg> =
     abstract Msg : IObservable<'Msg> with get
     abstract ViewMsg : IObservable<'ViewMsg> with get
 
-    /// Pull ViewModel and ViewMsgs to update view objects in main thread
-    abstract NotifyView : unit -> unit
-
     /// Sleeping time in every updating
     abstract SleepTime : uint32 with get, set
 
@@ -28,6 +25,8 @@ type IMessenger<'Msg, 'ViewMsg> =
     /// Stop asynchronous main loop
     abstract Stop : unit -> unit
 
+    abstract OnUpdated : IEvent<unit> with get
+
     abstract OnError : IEvent<exn> with get
 
 
@@ -37,3 +36,6 @@ type IMessenger<'Msg, 'ViewMsg, 'ViewModel> =
     inherit IMessenger<'Msg, 'ViewMsg>
 
     abstract ViewModel : IObservable<'ViewModel> with get
+
+    /// Pull ViewModel and ViewMsgs to update view objects in main thread
+    abstract NotifyView : unit -> unit
