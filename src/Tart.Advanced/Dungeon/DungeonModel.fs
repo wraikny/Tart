@@ -43,6 +43,17 @@ module Space =
     [<CompiledName "Rect">]
     let inline rect s = s.rect
 
+    [<CompiledName "Cells">]
+    let inline cells space =
+        let lu = space.rect.position
+        let size = space.rect.size
+        seq {
+            for dx in 0..(size.x - 1) do
+            for dy in 0..(size.y - 1) do
+                yield ( lu + Vec2.init dx dy, space.id )
+        }
+        |> toList
+
 
 type DungeonModel = {
     /// IDと大部屋の対応
