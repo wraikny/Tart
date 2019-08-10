@@ -29,6 +29,16 @@ module Vector =
 
     let inline constraint' v = getImpl v |> ignore
 
+    [<CompiledName "Zero">]
+    let inline zero() : ^``Vec<'a>`` =
+        constraint' (Unchecked.defaultof<Vector< ^a, ^``Vec<'a>`` >>)
+        zero
+
+    [<CompiledName "One">]
+    let inline one() : ^``Vec<'a>`` =
+        constraint' (Unchecked.defaultof<Vector< ^a, ^``Vec<'a>`` >>)
+        one
+
     [<CompiledName "Axes">]
     let inline axes() : (^``Vec<'a>`` -> ^a) list =
         constraint' (Unchecked.defaultof<Vector< ^a, ^``Vec<'a>`` >>)

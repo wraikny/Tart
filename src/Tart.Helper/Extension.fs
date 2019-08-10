@@ -29,3 +29,12 @@ module Extension =
             i <- i + 1
             (i, x)
         )
+
+    [<CompiledName "IfThen">]
+    let inline ifThen cond f = if cond then f else id
+    
+    [<CompiledName "Increment">]
+    let inline increment x = x + one
+
+    [<CompiledName "Decrement">]
+    let inline decrement x = x - one
