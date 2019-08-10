@@ -41,3 +41,25 @@ type IQueue<'T> =
     inherit IEnqueue<'T>
     inherit IDequeue<'T>
     inherit IReadOnlyCollection<'T>
+
+
+module Async =
+    [<CompiledName "ToOption">]
+    let toOption (a : Async<'a>) : Async<'a option> =
+        async {
+            try
+                let! r = a
+                return Some r
+            with _ ->
+                return None
+        }
+
+    [<CompiledName "ToResult">]
+    let toResult (a : Async<'a>) : Async<Result<'a, exn>> =
+        async {
+            try
+                let! r = a
+                return Ok r
+            with e ->
+                return Error e
+        }

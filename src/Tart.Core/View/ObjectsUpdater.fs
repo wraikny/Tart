@@ -102,13 +102,11 @@ type ObjectsUpdater<'Object, 'ObjectViewModel
 
             existFlags.Add(id) |> ignore
 
-        let removedObjectIDs =
-            objects
-            |> Seq.map(fun x -> x.Key)
-            |> filter(existFlags.Contains >> not)
-            |> toList
 
-        for id in removedObjectIDs do
-            this.Remove(id)
+        objects
+        |> Seq.map(fun x -> x.Key)
+        |> filter(existFlags.Contains >> not)
+        |> toList // mutability
+        |> iter this.Remove
 
         existFlags.Clear()

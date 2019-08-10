@@ -4,83 +4,81 @@ open wraikny.Tart.Helper.Utils
 
 open FSharpPlus
 
-type internal PushMessage<'Msg> = 'Msg -> unit
-type internal Command<'Msg> = IEnvironment -> PushMessage<'Msg> -> unit
+type internal Command<'Msg> = ('Msg -> unit) -> unit
 
 type Cmd<'Msg, 'ViewMsg> =
     {
-        commands : Command<'Msg> list
-        viewMsgs : 'ViewMsg list
+        commands : IEnvironment -> Command<'Msg> list
+        ports : 'ViewMsg list
     }
 
 
 [<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
 module Cmd =
-    let inline internal commands (cmd : Cmd<_, _>) = cmd.commands
-    let inline internal viewMsgs (cmd : Cmd<_, _>) = cmd.viewMsgs
+    let inline internal getCommands (cmd : Cmd<_, _>) = cmd.commands
+    let inline internal getPorts (cmd : Cmd<_, _>) = cmd.ports
 
-    let inline internal init (commands) (viewCommands) : Cmd<'Msg, 'ViewMsg> =
+    let inline internal init (commands) (ports) : Cmd<'Msg, 'ViewMsg> =
         {
             commands = commands
-            viewMsgs = viewCommands
+            ports = ports
         }
 
-    let inline internal singleCommand ( command : Command<'Msg> ) : Cmd<'Msg, 'ViewMsg> =
-        init [command] []
+    let inline internal initMsg ( command : IEnvironment -> Command<'Msg> ) : Cmd<'Msg, 'ViewMsg> =
+        init (fun env -> [command env]) []
 
-    [<CompiledName "ViewMsg">]
-    let viewMsg (m) =
-        init [] m
+    [<CompiledName "Ports">]
+    let ports (m) =
+        init (fun _ -> []) m
+
+    [<CompiledName "Port">]
+    let inline port (m) = ports [m]
 
 
     let inline internal execute
         (msgQueue : #IEnqueue<'Msg>)
         (viewMsgQueue : #IEnqueue<'ViewMsg>)
-        (env : #IEnvironment)
+        (env : IEnvironment)
         (cmd : Cmd<'Msg, 'ViewMsg>) =
-        for c in cmd.commands do
-            c env <| fun msg -> msgQueue.Enqueue msg
 
-        
-        for msg in cmd.viewMsgs do
-            viewMsgQueue.Enqueue(msg)
+        for c in (cmd.commands env) do
+            c msgQueue.Enqueue
+
+        cmd.ports |> iter viewMsgQueue.Enqueue
 
 
     /// Empty command
     [<CompiledName "None">]
-    let none : Cmd<'Msg, 'ViewMsg> = { commands = []; viewMsgs = [] }
+    let none : Cmd<'Msg, 'ViewMsg> = { commands = (fun _ -> []); ports = [] }
 
 
     [<CompiledName "Batch">]
     let batch (cmds : Cmd<'Msg, 'ViewMsg> list) : Cmd<'Msg, 'ViewMsg> =
         {
-            commands =
+            commands = fun env ->
                 cmds
-                |>> commands
+                |>> (getCommands >> (|>) env)
                 |> join
-            viewMsgs =
+            ports =
                 cmds
-                |>> viewMsgs
+                |>> getPorts
                 |> join
         }
 
 
     [<CompiledName "MapCommands">]
-    let mapCommands (f : 'a -> 'Msg) (cmd : Cmd<'a, 'ViewMsg>) : Cmd<'Msg, 'ViewMsg> =
+    let mapMsgs (f : 'a -> 'Msg) (cmd : Cmd<'a, 'ViewMsg>) : Cmd<'Msg, 'ViewMsg> =
         {
-            commands =
-                cmd.commands
-                |>> fun c ->
-                    (fun env pushMsg ->
-                        c env (f >> pushMsg)
-                    )
+            commands = fun env ->
+                cmd.commands(env)
+                |>> fun c -> ( fun pushMsg -> c(f >> pushMsg) )
 
-            viewMsgs = cmd.viewMsgs
+            ports = cmd.ports
         }
 
     [<CompiledName "MapViewMsgs">]
-    let inline mapViewMsgs (f : 'a -> 'ViewMsg) (cmd : Cmd<'Msg, 'a>) : Cmd<'Msg, 'ViewMsg> =
+    let inline mapPorts (f : 'a -> 'ViewMsg) (cmd : Cmd<'Msg, 'a>) : Cmd<'Msg, 'ViewMsg> =
         {
             commands = cmd.commands
-            viewMsgs = f <!> cmd.viewMsgs
+            ports = f <!> cmd.ports
         }
