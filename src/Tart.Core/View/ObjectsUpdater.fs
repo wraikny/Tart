@@ -36,12 +36,12 @@ type ObjectsParent<'Object, 'ObjectViewModel
 type ObjectsUpdater<'Object, 'ObjectViewModel
     when 'Object :> IUpdatee<'ObjectViewModel>
     >(parent) =
-    let objects = new Dictionary<uint32, 'Object>()
-    let existFlags = new HashSet<uint32>()
+    let objects = Dictionary<uint32, 'Object>()
+    let existFlags = HashSet<uint32>()
 
     let parent : ObjectsParent<'Object, 'ObjectViewModel> = parent
 
-    let objectPooling = new Stack<'Object>()
+    let objectPooling = Stack<'Object>()
 
     let mutable updatingOption = UpdatingWithPooling
 

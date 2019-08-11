@@ -14,13 +14,13 @@ type Messenger<'Msg, 'ViewMsg, 'Model, 'ViewModel>
     (environment : IEnvironment, corePrograms : CoreProgram<_, _, _, _>) =
     // inherit MsgQueueAsync<'Msg>()
 
-    let msgEvent = new Event<'Msg>()
+    let msgEvent = Event<'Msg>()
 
     let mutable lastModelExist = false
     let mutable lastModel = Unchecked.defaultof<'Model>
 
-    let modelQueue = new FixedSizeQueue<'Model>(1)
-    let viewMsgQueue = new MsgQueue<'ViewMsg>()
+    let modelQueue = FixedSizeQueue<'Model>(1)
+    let viewMsgQueue = MsgQueue<'ViewMsg>()
     
     let msgQueue = new MsgQueueAsync<'Msg>()
 
@@ -38,14 +38,14 @@ type Messenger<'Msg, 'ViewMsg, 'Model, 'ViewModel>
         )
 
     let viewModelNotifier =
-        new Notifier<'ViewModel>(
+        Notifier<'ViewModel>(
             { new IDequeue<'ViewModel> with
                 member __.TryDequeue() =
                     (modelQueue :> IDequeue<_>).TryDequeue()
                     |>> corePrograms.view
             })
 
-    let viewMsgNotifier = new Notifier<'ViewMsg>(viewMsgQueue)
+    let viewMsgNotifier = Notifier<'ViewMsg>(viewMsgQueue)
 
 
     member private this.InitModel() =
@@ -73,7 +73,7 @@ type Messenger<'Msg, 'ViewMsg, 'Model, 'ViewModel>
 
 
         member __.Dispose() =
-            msgQueue.Stop()
+            (msgQueue :> IDisposable).Dispose()
             //subject.Dispose()
 
         member __.SleepTime
