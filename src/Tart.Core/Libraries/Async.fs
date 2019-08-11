@@ -47,7 +47,7 @@ module TartTask =
                 with e ->
                     System.Console.WriteLine(e)
             }
-            |> Async.Start
+            |> fun x -> Async.Start(x, env.CTS.Token)
         )
 
     [<CompiledName "Perform">]
@@ -64,5 +64,5 @@ module TartTask =
                         System.Console.WriteLine(e)
                         System.Console.WriteLine(e')
             }
-            |> Async.Start
+            |> fun x -> Async.Start(x, env.CTS.Token)
         )

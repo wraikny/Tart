@@ -1,26 +1,30 @@
 ﻿namespace wraikny.Tart.Core
 
 open System
+open System.Threading
 
 [<Interface>]
 type IEnvironment =
     abstract Random : Random with get
+    abstract CTS : CancellationTokenSource with get
 
 
 [<Class>]
-type public Environment() =
-    
+type public TartEnv() =
+    let mutable cts : CancellationTokenSource = null
+
     let mutable random : Random = Random()
 
     member this.SetRandom(random' : Random) =
         random <- random'
-        this
 
-    //static member Initialize<'ViewMsg>() = Environment()
+    member this.SetCTS(x) = cts <- x
 
     interface IEnvironment with
         member this.Random
             with get() = random
+
+        member __.CTS with get() = cts
 
 
 [<Struct>]
@@ -31,10 +35,10 @@ type EnvironmentBuilder =
 
 
 [<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
-module EnvironmentBuilder =
+module TartEnv =
     [<CompiledName "Build">]
     let build (builder) =
-        let env = Environment()
+        let env = TartEnv()
         env.SetRandom(Random(builder.seed)) |> ignore
 
         env

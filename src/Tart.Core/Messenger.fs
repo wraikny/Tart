@@ -11,7 +11,7 @@ open FSharpPlus
 
 [<Class>]
 type Messenger<'Msg, 'ViewMsg, 'Model, 'ViewModel>
-    (environment : IEnvironment, corePrograms : CoreProgram<_, _, _, _>) =
+    (env : TartEnv, corePrograms : CoreProgram<_, _, _, _>) =
     // inherit MsgQueueAsync<'Msg>()
 
     let msgEvent = Event<'Msg>()
@@ -24,11 +24,13 @@ type Messenger<'Msg, 'ViewMsg, 'Model, 'ViewModel>
     
     let msgQueue = new MsgQueueAsync<'Msg>()
 
+    let iEnv = env :> IEnvironment
+
     do
         msgQueue.OnPopMsg.Add(fun msg ->
             let newModel, cmd = corePrograms.update msg lastModel
                         
-            cmd |> Cmd.execute msgQueue viewMsgQueue environment
+            cmd |> Cmd.execute msgQueue viewMsgQueue iEnv
                         
             (modelQueue :> IEnqueue<_>).Enqueue(newModel)
                 
@@ -36,6 +38,8 @@ type Messenger<'Msg, 'ViewMsg, 'Model, 'ViewModel>
 
             msgEvent.Trigger(msg)
         )
+
+        msgQueue.OnError.Add(fun _ -> env.SetCTS(null))
 
     let viewModelNotifier =
         Notifier<'ViewModel>(
@@ -51,7 +55,7 @@ type Messenger<'Msg, 'ViewMsg, 'Model, 'ViewModel>
     member private this.InitModel() =
         let model, cmd = corePrograms.init
         
-        cmd |> Cmd.execute msgQueue viewMsgQueue environment
+        cmd |> Cmd.execute msgQueue viewMsgQueue iEnv
         
         (modelQueue :> IEnqueue<_>).Enqueue(model)
 
@@ -86,6 +90,7 @@ type Messenger<'Msg, 'ViewMsg, 'Model, 'ViewModel>
         member this.StartAsync() =
             this.InitModel()
             msgQueue.StartAsync()
+            env.SetCTS(msgQueue.CancellationTokenSource)
 
         member this.ResumeAsync() =
             if lastModelExist then
@@ -95,7 +100,9 @@ type Messenger<'Msg, 'ViewMsg, 'Model, 'ViewModel>
                 (this :> IMessenger<_, _>).StartAsync()
                 false
 
-        member __.Stop() = msgQueue.Stop()
+        member __.Stop() =
+            msgQueue.Stop()
+            env.SetCTS(null)
 
         member __.OnUpdated with get() = msgQueue.OnUpdated
 
@@ -105,11 +112,11 @@ type Messenger<'Msg, 'ViewMsg, 'Model, 'ViewModel>
 [<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
 module Messenger =
     [<CompiledName "Create">]
-    let create (environment : wraikny.Tart.Core.IEnvironment) (corePrograms) =
+    let create (environment : wraikny.Tart.Core.TartEnv) (corePrograms) =
         (new Messenger<_, _, _, _>(environment, corePrograms))
         :> IMessenger<_, _, _>
 
 
     [<CompiledName "Build">]
     let build (envBuilder) (corePrograms) =
-        create(envBuilder |> EnvironmentBuilder.build :> IEnvironment) corePrograms
+        create(envBuilder |> TartEnv.build) corePrograms

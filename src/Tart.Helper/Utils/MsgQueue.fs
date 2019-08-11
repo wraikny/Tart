@@ -48,6 +48,8 @@ type MsgQueueAsync<'Msg>() =
             _sleepTime.Value <- value, value <> 0u
 
 
+    member __.CancellationTokenSource = cts
+
     member __.IsRunning
         with get() : bool = cts <> null
 
