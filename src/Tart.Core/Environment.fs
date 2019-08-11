@@ -1,6 +1,7 @@
 ﻿namespace wraikny.Tart.Core
 
 open System
+open System.Threading
 
 [<Interface>]
 type IEnvironment =
@@ -8,15 +9,11 @@ type IEnvironment =
 
 
 [<Class>]
-type public Environment() =
-    
+type public TartEnv() =
     let mutable random : Random = Random()
 
     member this.SetRandom(random' : Random) =
         random <- random'
-        this
-
-    //static member Initialize<'ViewMsg>() = Environment()
 
     interface IEnvironment with
         member this.Random
@@ -31,10 +28,10 @@ type EnvironmentBuilder =
 
 
 [<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
-module EnvironmentBuilder =
+module TartEnv =
     [<CompiledName "Build">]
     let build (builder) =
-        let env = Environment()
+        let env = TartEnv()
         env.SetRandom(Random(builder.seed)) |> ignore
 
         env
