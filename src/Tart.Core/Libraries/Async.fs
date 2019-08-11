@@ -27,10 +27,7 @@ module TartTask =
     let init (a : Async<'a>) = { x = fun _ -> a }
 
 
-    [<EditorBrowsable(EditorBrowsableState.Never)>]
-    [<CompiledName "__WithEnv">]
-    /// Dont call for user
-    let inline __withEnv (_ : ^Builtin) (f : 'a -> Async<'b>) (withEnv : ^x) : 'b TartTask  =
+    let inline private __withEnv (_ : ^Builtin) (f : 'a -> Async<'b>) (withEnv : ^x) : 'b TartTask  =
         __init (fun env ->
             f ( (^Builtin or ^x) : (static member WithEnvImpl : ^x * IEnvironment -> 'a) (withEnv, env))
         )
