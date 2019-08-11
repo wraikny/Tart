@@ -24,7 +24,7 @@ type public Environment() =
 
 
 [<Struct>]
-type EnvironmentBuilder<'ViewMsg> =
+type EnvironmentBuilder =
     {
         seed : int
     }
