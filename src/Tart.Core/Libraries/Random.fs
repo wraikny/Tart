@@ -93,7 +93,6 @@ module Random =
 
     [<CompiledName "Generate">]
     let generate (msg : 'a -> 'Msg) (generator : 'a Generator) : Cmd<'Msg, _> =
-        (fun (env : IEnvironment) pushMsg ->
-            pushMsg( generator.F env.Random |> msg )
+        Cmd.initMsg(fun conf pushMsg ->
+            pushMsg( generator.F conf.env.Random |> msg )
         )
-        |> Cmd.initMsg

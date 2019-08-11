@@ -39,23 +39,23 @@ module TartTask =
         
     [<CompiledName "PerformUnwrap">]
     let performUnwrap (msg : 'a -> 'Msg) (a : 'a TartTask) : Cmd<'Msg, _> =
-        Cmd.initMsg (fun env pushMsg ->
+        Cmd.initMsg (fun conf pushMsg ->
             async {
                 try
-                    let! r = a.x(env)
+                    let! r = a.x(conf.env)
                     pushMsg (msg r)
                 with e ->
                     System.Console.WriteLine(e)
             }
-            |> fun x -> Async.Start(x, env.CTS.Token)
+            |> fun x -> Async.Start(x, conf.cts.Token)
         )
 
     [<CompiledName "Perform">]
     let perform (errorMsg : exn -> 'Msg) (okMsg : 'a -> 'Msg) (a : 'a TartTask) : Cmd<'Msg, _> =
-        Cmd.initMsg (fun env pushMsg ->
+        Cmd.initMsg (fun conf pushMsg ->
             async {
                 try
-                    let! r = a.x(env)
+                    let! r = a.x(conf.env)
                     pushMsg (okMsg r)
                 with e ->
                     try
@@ -64,5 +64,5 @@ module TartTask =
                         System.Console.WriteLine(e)
                         System.Console.WriteLine(e')
             }
-            |> fun x -> Async.Start(x, env.CTS.Token)
+            |> fun x -> Async.Start(x, conf.cts.Token)
         )

@@ -4,14 +4,20 @@ open wraikny.Tart.Helper.Utils
 
 open FSharpPlus
 
+type CmdConfig =
+    {
+        cts : System.Threading.CancellationTokenSource
+        env : IEnvironment
+    }
+
+
 type internal Command<'Msg> = ('Msg -> unit) -> unit
 
 type Cmd<'Msg, 'ViewMsg> =
     {
-        commands : IEnvironment -> Command<'Msg> list
+        commands : CmdConfig -> Command<'Msg> list
         ports : 'ViewMsg list
     }
-
 
 [<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
 module Cmd =
@@ -24,8 +30,8 @@ module Cmd =
             ports = ports
         }
 
-    let inline internal initMsg ( command : IEnvironment -> Command<'Msg> ) : Cmd<'Msg, 'ViewMsg> =
-        init (fun env -> [command env]) []
+    let inline internal initMsg ( command : _ -> Command<'Msg> ) : Cmd<'Msg, 'ViewMsg> =
+        init (fun x -> [command x]) []
 
     [<CompiledName "Ports">]
     let ports (m) =
@@ -38,10 +44,10 @@ module Cmd =
     let inline internal execute
         (msgQueue : #IEnqueue<'Msg>)
         (viewMsgQueue : #IEnqueue<'ViewMsg>)
-        (env : IEnvironment)
+        conf
         (cmd : Cmd<'Msg, 'ViewMsg>) =
 
-        for c in (cmd.commands env) do
+        for c in (cmd.commands conf) do
             c msgQueue.Enqueue
 
         cmd.ports |> iter viewMsgQueue.Enqueue

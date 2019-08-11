@@ -11,7 +11,7 @@ open FSharpPlus
 
 [<Class>]
 type Messenger<'Msg, 'ViewMsg, 'Model, 'ViewModel>
-    (env : TartEnv, corePrograms : CoreProgram<_, _, _, _>) =
+    (env : IEnvironment, corePrograms : CoreProgram<_, _, _, _>) =
     // inherit MsgQueueAsync<'Msg>()
 
     let msgEvent = Event<'Msg>()
@@ -24,13 +24,11 @@ type Messenger<'Msg, 'ViewMsg, 'Model, 'ViewModel>
     
     let msgQueue = new MsgQueueAsync<'Msg>()
 
-    let iEnv = env :> IEnvironment
-
     do
         msgQueue.OnPopMsg.Add(fun msg ->
             let newModel, cmd = corePrograms.update msg lastModel
                         
-            cmd |> Cmd.execute msgQueue viewMsgQueue iEnv
+            cmd |> Cmd.execute msgQueue viewMsgQueue { env = env; cts = msgQueue.CancellationTokenSource}
                         
             (modelQueue :> IEnqueue<_>).Enqueue(newModel)
                 
@@ -39,7 +37,7 @@ type Messenger<'Msg, 'ViewMsg, 'Model, 'ViewModel>
             msgEvent.Trigger(msg)
         )
 
-        msgQueue.OnError.Add(fun _ -> env.SetCTS(null))
+        //msgQueue.OnError.Add(fun _ -> env.SetCTS(null))
 
     let viewModelNotifier =
         Notifier<'ViewModel>(
@@ -55,7 +53,7 @@ type Messenger<'Msg, 'ViewMsg, 'Model, 'ViewModel>
     member private this.InitModel() =
         let model, cmd = corePrograms.init
         
-        cmd |> Cmd.execute msgQueue viewMsgQueue iEnv
+        cmd |> Cmd.execute msgQueue viewMsgQueue { env = env; cts = msgQueue.CancellationTokenSource}
         
         (modelQueue :> IEnqueue<_>).Enqueue(model)
 
@@ -88,9 +86,9 @@ type Messenger<'Msg, 'ViewMsg, 'Model, 'ViewModel>
             with get() = msgQueue.IsRunning
 
         member this.StartAsync() =
-            this.InitModel()
             msgQueue.StartAsync()
-            env.SetCTS(msgQueue.CancellationTokenSource)
+            this.InitModel()
+            //env.SetCTS(msgQueue.CancellationTokenSource)
 
         member this.ResumeAsync() =
             if lastModelExist then
@@ -102,7 +100,7 @@ type Messenger<'Msg, 'ViewMsg, 'Model, 'ViewModel>
 
         member __.Stop() =
             msgQueue.Stop()
-            env.SetCTS(null)
+            //env.SetCTS(null)
 
         member __.OnUpdated with get() = msgQueue.OnUpdated
 
