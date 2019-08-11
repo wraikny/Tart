@@ -5,7 +5,7 @@ open System.Collections.Concurrent
 
 
 type MsgQueue<'T>() =
-    let queue = new ConcurrentQueue<'T>()
+    let queue = ConcurrentQueue<'T>()
 
     interface IQueue<'T> with
         member __.TryDequeue() : 'T option =
@@ -28,13 +28,15 @@ open System.Threading
 type MsgQueueAsync<'Msg>() =
     inherit MsgQueue<'Msg>()
 
-    let isRunning = new LockObject<_>(false)
+    let mutable cts = null //new CancellationTokenSource()
+
+    //let isRunning = new LockObject<_>(false)
 
     let mutable _sleepTime = new LockObject<_>(5u, true)
 
-    let onUpdatedEvent = new Event<unit>()
-    let onPopMsgEvent = new Event<'Msg>()
-    let onErrorEvent = new Event<exn>()
+    let onUpdatedEvent = Event<unit>()
+    let onPopMsgEvent = Event<'Msg>()
+    let onErrorEvent = Event<exn>()
 
     member __.OnUpdated with get() = onUpdatedEvent.Publish
     member __.OnPopMsg with get() = onPopMsgEvent.Publish
@@ -47,33 +49,43 @@ type MsgQueueAsync<'Msg>() =
 
 
     member __.IsRunning
-        with get() : bool =
-            isRunning.Value
-        and inline private set(value) =
-            isRunning.Value <- value
+        with get() : bool = cts <> null
 
     member this.StartAsync() =
-        let running = this.IsRunning
-        if running then
-            raise <| InvalidOperationException()
+        if this.IsRunning then
+            raise <| InvalidOperationException("MsgQueue is running")
         
-        this.IsRunning <- true
+        //this.IsRunning <- true
 
-        async {
+        cts <- new CancellationTokenSource()
+
+        let rec loop() = async {
             try
-                while this.IsRunning do
-                    (this :> IDequeue<_>).TryDequeue() |> function
-                    | Some msg ->
-                        onPopMsgEvent.Trigger(msg)
-                    | None ->
-                        let sleepTime, doSleep = _sleepTime.Value
-                        if doSleep then
-                            Thread.Sleep(int sleepTime)
+                (this :> IDequeue<_>).TryDequeue() |> function
+                | Some msg ->
+                    onPopMsgEvent.Trigger(msg)
+                | None ->
+                    let sleepTime, doSleep = _sleepTime.Value
+                    if doSleep then
+                        Thread.Sleep(int sleepTime)
 
-                    onUpdatedEvent.Trigger()
+                onUpdatedEvent.Trigger()
+
+                return! loop()
             with e ->
                 onErrorEvent.Trigger(e)
-        } |> Async.Start
+        }
+        
+        Async.Start(loop(), cts.Token)
 
     member this.Stop() =
-        this.IsRunning <- false
+        if not this.IsRunning then
+            raise <| InvalidOperationException("MsgQueue is not running")
+
+        cts.Cancel()
+        cts <- null
+
+    interface System.IDisposable with
+        member this.Dispose() =
+            if this.IsRunning then
+                this.Stop()
