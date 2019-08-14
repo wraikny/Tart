@@ -21,7 +21,7 @@ type public TartEnv() =
 
 
 [<Struct>]
-type EnvironmentBuilder =
+type TartEnvBuilder =
     {
         seed : int
     }
