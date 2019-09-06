@@ -58,3 +58,7 @@ module Vec2 =
     [<CompiledName "Angle">]
     let inline angle(v : ^a Vec2) : ^a =
         atan2 v.y v.x
+
+    [<CompiledName "FromAngle">]
+    let inline fromAngle angle =
+        init (cos angle) (sin angle)

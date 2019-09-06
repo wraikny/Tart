@@ -70,6 +70,12 @@ module Vector =
 
         v ./ length v
 
+    //[<CompiledName "Reflect">]
+    //let inline reflect (v : ^``Vec<'a>``) (normal : ^``Vec<'a>``) : ^``Vec<'a>`` =
+    //    let v = normalize v
+    //    let normal = normalize normal
+    //    v + ( normal .* (dot -v normal) )
+
     // -----------------------------------------
 
     [<CompiledName "X">]

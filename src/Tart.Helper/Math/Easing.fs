@@ -53,9 +53,9 @@ module Easing =
             | Linear -> 
                 t
             | InSine ->
-                -cos(t * float32(Angle.degreeToRadian 90.0) )
+                -cos(t * float32(Angle.degreeToRadian 90.0f) )
             | OutSine ->
-                sin(t * float32(Angle.degreeToRadian 90.0) )
+                sin(t * float32(Angle.degreeToRadian 90.0f) )
             | InOutSine ->
                 -1.0f / 2.0f * (cos(t * Angle.pi) - 1.0f)
             | InQuad ->

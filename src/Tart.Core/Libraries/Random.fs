@@ -43,6 +43,10 @@ module Random =
             minValue + rand.NextDouble() * (maxValue - minValue)
         )
 
+    [<CompiledName "Double01">]
+    let double01 : float Generator =
+        Generator(fun rand -> rand.NextDouble())
+
 
     [<CompiledName "List">]
     let list (length : int) (generator : 'a Generator) : 'a list Generator =

@@ -60,3 +60,13 @@ module Vec3 =
 
     [<CompiledName "Z">]
     let inline z v = v.z
+
+    [<CompiledName "Cross">]
+    let inline cross
+        ({ x = x1; y = y1; z = z1 } : 'a Vec3)
+        ({ x = x2; y = y2; z = z2 } : 'a Vec3)
+        : 'a Vec3 =
+        init
+            (y1 * z2 - z1 * y2)
+            (z1 * x2 - x1 * z2)
+            (x1 * y2 - y1 * x2)
