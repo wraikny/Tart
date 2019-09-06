@@ -67,8 +67,11 @@ module Vector =
     [<CompiledName "Normalize">]
     let inline normalize (v : ^``Vec<'a>``) : ^``Vec<'a>`` =
         constraint' (Unchecked.defaultof<Vector< ^a, ^``Vec<'a>`` >>)
-
-        v ./ length v
+        let len = length v
+        if len = FSharpPlus.Operators.zero then
+            zero()
+        else
+            v ./ len
 
     //[<CompiledName "Reflect">]
     //let inline reflect (v : ^``Vec<'a>``) (normal : ^``Vec<'a>``) : ^``Vec<'a>`` =
