@@ -3,8 +3,8 @@
 open wraikny.Tart.Helper.Math
 
 open FSharpPlus
+open FSharpPlus.Math.Applicative
 
-[<Struct>]
 type 'Vec Rect =
     {
         position : 'Vec
@@ -60,26 +60,20 @@ module Rect =
 
     [<CompiledName "DiagonalPosition">]
     let inline diagonalPosition r : '``Vec<'a>`` =
-        Vector.constraint' (Unchecked.defaultof<Vector< 'a, '``Vec<'a>`` >>)
-
         r.position + r.size
 
     [<CompiledName "CenterPosition">]
     let inline centerPosition r : '``Vec<'a>`` =
-        Vector.constraint' (Unchecked.defaultof<Vector< 'a, '``Vec<'a>`` >>)
-
         let two = one + one
         r.position + r.size / two
 
     [<CompiledName "Get_LU_RD">]
     let inline get_LU_RD r : ('``Vec<'a>`` * '``Vec<'a>``) =
-        Vector.constraint' (Unchecked.defaultof<Vector< 'a, '``Vec<'a>`` >>)
         r.position, diagonalPosition r
 
 
     [<CompiledName "IsCollidedAxis">]
     let inline isCollidedAxis(axis : '``Vec<'a>`` -> 'a) (aLU, aRD) (bLU, bRD) : bool =
-        Vector.constraint' (Unchecked.defaultof<Vector< 'a, '``Vec<'a>`` >>)
         Utils.inCollision (axis aLU, axis aRD) (axis bLU, axis bRD)
 
     [<CompiledName "IsInside">]
@@ -94,15 +88,47 @@ module Rect =
             lu' <= p' && p' <= rd'
         |> fold (&&) true
 
+    //open System.Collections.Generic
+    //open System.Linq
+
+    // Too Heavy to use !!!!
+
+    //[<CompiledName "IsCollided">]
+    //let inline isCollided (a : '``Vec<'a>`` Rect) (b : '``Vec<'a>`` Rect) : bool =
+    //    Vector.constraint' (Unchecked.defaultof<Vector< 'a, '``Vec<'a>`` >>)
+    //    let aLURD = get_LU_RD a
+    //    let bLURD = get_LU_RD b
+
+    //    let axes = Stack<'``Vec<'a>`` -> 'a>( Vector.axes() |> toSeq )
+
+    //    //let isCollided =
+            
+    //    //    |>> fun axis -> isCollidedAxis axis aLURD bLURD
+    //    //    |> fold (&&) true
+
+    //    let rec isCollided() =
+    //        if axes.Count > 0 then
+    //            if ( isCollidedAxis (axes.Pop()) aLURD bLURD ) then
+    //                isCollided()
+    //            else
+    //                false
+    //        else
+    //            true
+            
+
+    //    isCollided()
+
+
+module Rect2 =
     [<CompiledName "IsCollided">]
-    let inline isCollided (a : '``Vec<'a>`` Rect) (b : '``Vec<'a>`` Rect) : bool =
-        Vector.constraint' (Unchecked.defaultof<Vector< 'a, '``Vec<'a>`` >>)
-        let aLURD = get_LU_RD a
-        let bLURD = get_LU_RD b
+    let inline isCollided (a : ^a Rect2) (b : ^a Rect2) : bool =
+        let aLU = a.position
+        let aRD = aLU .+. a.size
 
-        let isCollided =
-            Vector.axes()
-            |>> fun axis -> isCollidedAxis axis aLURD bLURD
-            |> fold (&&) true
+        let bLU = b.position
+        let bRD = bLU .+. b.size
 
-        isCollided
+        let inline f (axis : _ -> ^a) =
+             not(axis bRD < axis aLU || axis aRD < axis bLU)
+
+        (f Vec2.x) && (f Vec2.y)
