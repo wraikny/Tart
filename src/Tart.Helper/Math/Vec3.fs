@@ -46,6 +46,9 @@ type ^a Vec3 =
     static member inline ( ./ ) (a, b) = a ./ b
     static member inline ( /. ) (a, b) = a /. b
 
+    static member inline Dot (a : ^t Vec3, b : ^t Vec3) : ^t =
+        a.x * b.x + a.y * b.y + a.z * b.z
+
 
 [<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
 module Vec3 =

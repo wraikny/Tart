@@ -49,8 +49,8 @@ module Vector =
     [<CompiledName "Dot">]
     let inline dot (a : ^``Vec<'a>``) (b : ^``Vec<'a>``) : ^a =
         constraint' (Unchecked.defaultof<Vector< ^a, ^``Vec<'a>`` >>)
+        (^``Vec<'a>`` : (static member inline Dot :_*_->_) (a, b))
 
-        (a * b) |> sum
 
     [<CompiledName "SquaredLength">]
     let inline squaredLength (v : ^``Vec<'a>``) : ^a =
