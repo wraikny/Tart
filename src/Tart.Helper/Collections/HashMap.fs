@@ -8,6 +8,8 @@ type HashMap<'Key, 'T when 'Key : equality> private(dict : IReadOnlyDictionary<'
     
     member val internal Dict = dict with get
 
+    static member Empty = new HashMap<'Key, 'T>(new Dictionary<_, _>())
+
     static member Create(dict : #IDictionary<_, _>) =
         new HashMap<'Key, 'T>(new Dictionary<_, _>(dict :> IDictionary<_, _>))
 
@@ -35,6 +37,10 @@ module HashMap =
     open System.Linq
 
     open FSharpPlus
+
+    [<CompiledName "Empty">]
+    let empty<'Key, 'Value when 'Key : equality> =
+        HashMap<'Key, 'Value>.Empty
 
     [<CompiledName "ContainsKey">]
     let containsKey key (hashMap : HashMap<_, _>) =
@@ -66,6 +72,10 @@ module HashMap =
     let inline toSeq (hashMap : HashMap<'Key, 'T>) : seq<'Key * 'T> =
         hashMap.ToSeq()
 
+    [<CompiledName "toMap">]
+    let inline toMap (hashMap : HashMap<_, _>) =
+        hashMap |> toSeq |> Map.ofSeq
+
     [<CompiledName "ToList">]
     let inline toList (hashMap : HashMap<'Key, 'T>) =
         hashMap |> toSeq |> toList
@@ -73,6 +83,13 @@ module HashMap =
     [<CompiledName "ToArray">]
     let inline toArray (hashMap : HashMap<'Key, 'T>) =
         hashMap |> toSeq |> toArray
+
+    [<CompiledName "Map">]
+    let inline map f hashMap =
+        hashMap
+        |> toSeq
+        |> Seq.map(fun (key, v) -> (key, f key v) )
+        |> ofSeq
 
     [<CompiledName "TryFind">]
     let tryFind key (hashMap : HashMap<_, _>) =

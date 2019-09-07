@@ -43,6 +43,9 @@ type ^a Vec2 =
     static member inline ( ./ ) (a, b) = a ./ b
     static member inline ( /. ) (a, b) = a /. b
 
+    static member inline Dot (a : ^t Vec2, b : ^t Vec2) : ^t =
+        a.x * b.x + a.y * b.y
+
 
 [<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
 module Vec2 =
@@ -58,3 +61,7 @@ module Vec2 =
     [<CompiledName "Angle">]
     let inline angle(v : ^a Vec2) : ^a =
         atan2 v.y v.x
+
+    [<CompiledName "FromAngle">]
+    let inline fromAngle angle =
+        init (cos angle) (sin angle)

@@ -49,8 +49,8 @@ module Vector =
     [<CompiledName "Dot">]
     let inline dot (a : ^``Vec<'a>``) (b : ^``Vec<'a>``) : ^a =
         constraint' (Unchecked.defaultof<Vector< ^a, ^``Vec<'a>`` >>)
+        (^``Vec<'a>`` : (static member inline Dot :_*_->_) (a, b))
 
-        (a * b) |> sum
 
     [<CompiledName "SquaredLength">]
     let inline squaredLength (v : ^``Vec<'a>``) : ^a =
@@ -67,8 +67,17 @@ module Vector =
     [<CompiledName "Normalize">]
     let inline normalize (v : ^``Vec<'a>``) : ^``Vec<'a>`` =
         constraint' (Unchecked.defaultof<Vector< ^a, ^``Vec<'a>`` >>)
+        let len = length v
+        if len = FSharpPlus.Operators.zero then
+            zero()
+        else
+            v ./ len
 
-        v ./ length v
+    //[<CompiledName "Reflect">]
+    //let inline reflect (v : ^``Vec<'a>``) (normal : ^``Vec<'a>``) : ^``Vec<'a>`` =
+    //    let v = normalize v
+    //    let normal = normalize normal
+    //    v + ( normal .* (dot -v normal) )
 
     // -----------------------------------------
 

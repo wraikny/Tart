@@ -3,6 +3,8 @@
 open wraikny.Tart.Helper.Math
 open wraikny.Tart.Helper.Geometry
 
+open FSharpPlus
+
 
 [<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
 module Delaunay2 =

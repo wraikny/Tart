@@ -5,7 +5,7 @@
 open FSharpPlus
 
 module Utils =
-    let inCollision (aLeft : 'a, aRight : 'a) (bLeft, bRight) =
+    let inline inCollision (aLeft : 'a, aRight : 'a) (bLeft, bRight) =
         not (aRight < bLeft || bRight < aLeft)
 
 
@@ -15,7 +15,11 @@ module Angle =
 
     [<CompiledName "DegreeToRadian">]
     let inline degreeToRadian degree =
-        degree * System.Math.PI / 180.0
+        degree * pi / 180.0f
+
+    [<CompiledName "RadianToDegree">]
+    let inline radianToDegree radian =
+        radian * 180.0f / pi
 
 
 module BinarySearch =
