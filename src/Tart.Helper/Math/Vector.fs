@@ -54,19 +54,14 @@ module Vector =
 
     [<CompiledName "SquaredLength">]
     let inline squaredLength (v : ^``Vec<'a>``) : ^a =
-        constraint' (Unchecked.defaultof<Vector< ^a, ^``Vec<'a>`` >>)
-
         dot v v
 
     [<CompiledName "Length">]
     let inline length (v : ^``Vec<'a>``) : ^a =
-        constraint' (Unchecked.defaultof<Vector< ^a, ^``Vec<'a>`` >>)
-
         FSharp.Core.Operators.sqrt (squaredLength v)
 
     [<CompiledName "Normalize">]
     let inline normalize (v : ^``Vec<'a>``) : ^``Vec<'a>`` =
-        constraint' (Unchecked.defaultof<Vector< ^a, ^``Vec<'a>`` >>)
         let len = length v
         if len = FSharpPlus.Operators.zero then
             zero()
