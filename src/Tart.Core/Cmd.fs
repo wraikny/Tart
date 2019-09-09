@@ -59,16 +59,18 @@ module Cmd =
 
 
     [<CompiledName "Batch">]
-    let batch (cmds : Cmd<'Msg, 'ViewMsg> list) : Cmd<'Msg, 'ViewMsg> =
+    let batch (cmds : seq<Cmd<'Msg, 'ViewMsg>>) : Cmd<'Msg, 'ViewMsg> =
         {
             commands = fun env ->
                 cmds
                 |>> (getCommands >> (|>) env)
-                |> join
+                |> Seq.concat
+                |> Seq.toList
             ports =
                 cmds
                 |>> getPorts
-                |> join
+                |> Seq.concat
+                |> Seq.toList
         }
 
 
