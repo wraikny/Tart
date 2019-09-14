@@ -1,7 +1,7 @@
 ﻿namespace wraikny.Tart.Helper.Math
 
 // https://easings.net/
-
+[<Struct>]
 type Easing =
     | Linear
     | InSine
@@ -42,7 +42,7 @@ open System
 [<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
 module Easing =
     [<CompiledName "Calculate">]
-    let calculate easing (frame : int) (current : int) : float32 =
+    let inline calculate easing (frame : ^a) (current : ^a) : float32 =
         let t = (float32 current) / (float32 frame)
 
         if t < 0.0f then 0.0f
