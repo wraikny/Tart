@@ -20,6 +20,14 @@ type MsgQueue<'T>() =
         member this.GetEnumerator() =
             queue.GetEnumerator() :> System.Collections.IEnumerator
 
+        member __.Clear() =
+            let rec loop() =
+                queue.TryDequeue() |> function
+                | true, _ -> loop()
+                | _ -> ()
+
+            loop()
+
 
 open System
 open System.Threading

@@ -86,6 +86,9 @@ type Messenger<'Msg, 'ViewMsg, 'Model, 'ViewModel>
             with get() = msgQueue.IsRunning
 
         member this.StartAsync() =
+            if lastModelExist then
+                (msgQueue :> IQueue<_>).Clear()
+
             msgQueue.StartAsync()
             this.InitModel()
             //env.SetCTS(msgQueue.CancellationTokenSource)

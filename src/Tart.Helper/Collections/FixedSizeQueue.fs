@@ -69,3 +69,5 @@ type FixedSizeQueue<'T> private(queue, limit) =
         member this.GetEnumerator() =
             this.GetEnumerator()
             :> System.Collections.IEnumerator
+
+        member this.Clear() = this.Clear()

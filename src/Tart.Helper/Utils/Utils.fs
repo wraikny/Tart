@@ -42,6 +42,8 @@ type IQueue<'T> =
     inherit IDequeue<'T>
     inherit IReadOnlyCollection<'T>
 
+    abstract Clear : unit -> unit
+
 
 module Async =
     [<CompiledName "ToOption">]
