@@ -4,10 +4,6 @@
 
 open FSharpPlus
 
-module Utils =
-    let inline inCollision (aLeft : 'a, aRight : 'a) (bLeft, bRight) =
-        not (aRight < bLeft || bRight < aLeft)
-
 
 module Angle =
     [<CompiledName "Pi">]
@@ -20,6 +16,19 @@ module Angle =
     [<CompiledName "RadianToDegree">]
     let inline radianToDegree radian =
         radian * 180.0f / pi
+
+
+module Utils =
+    let inline inCollision (aLeft : 'a, aRight : 'a) (bLeft, bRight) =
+        not (aRight < bLeft || bRight < aLeft)
+
+    //let inline normalDistribution (mean : float32) (sd : float32) (x : float32) =
+    //    exp(-(x - mean) * (x - mean) / 2.0f / sd / sd ) / 2.50662827463f / sd
+
+    let inline boxMullersMethod u1 u2 =
+        let a = sqrt(-2.0f * log u1)
+        let x = 2.0f * Angle.pi * u2
+        a * cos x, a * sin x
 
 
 module BinarySearch =
