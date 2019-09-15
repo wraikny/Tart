@@ -1,7 +1,6 @@
 ﻿namespace wraikny.Tart.Helper.Math
 
 // https://easings.net/
-[<Struct>]
 type Easing =
     | Linear
     | InSine
@@ -34,6 +33,7 @@ type Easing =
     | InBounce
     | OutBounce
     | InOutBounce
+    | Lerp of Easing * Easing * float32
 
 
 open System
@@ -41,10 +41,7 @@ open System
 
 [<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
 module Easing =
-    [<CompiledName "Calculate">]
-    let inline calculate easing (frame : ^a) (current : ^a) : float32 =
-        let t = (float32 current) / (float32 frame)
-
+    let rec calculateF easing t : float32 =
         if t < 0.0f then 0.0f
         elif t > 1.0f then 1.0f
         else
@@ -155,6 +152,15 @@ module Easing =
                     8.0f * (pow(2.0f, 8.0f * (t - 1.0f))) * abs(sin(t * Angle.pi * 7.0f))
                 else
                     1.0f - 8.0f * (pow(2.0f, -8.0f * t)) * abs(sin(t * Angle.pi * 7.0f))
+
+            | Lerp(e0, e1, a) ->
+                (calculateF e0 t) * (1.0f - a) +  (calculateF e1 t) * a
+    
+    [<CompiledName "Calculate">]
+    let inline calculate easing (frame : ^a) (current : ^a) : float32 =
+        let t = (float32 current) / (float32 frame)
+
+        calculateF easing t
 
 
     [<CompiledName "InterpolateVector">]
