@@ -5,12 +5,11 @@ open wraikny.Tart.Helper.Math
 open FSharpPlus
 
 [<Struct>]
-type Triangle< 'a > =
-    {
-        p1 : 'a
-        p2 : 'a
-        p3 : 'a
-    }
+type Triangle< 'a > = {
+    p1 : 'a
+    p2 : 'a
+    p3 : 'a
+} with
 
     static member Init p1 p2 p3 = {
         p1 = p1

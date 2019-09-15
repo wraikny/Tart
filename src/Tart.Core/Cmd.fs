@@ -4,20 +4,18 @@ open wraikny.Tart.Helper.Utils
 
 open FSharpPlus
 
-type CmdConfig =
-    {
-        cts : System.Threading.CancellationTokenSource
-        env : IEnvironment
-    }
+type CmdConfig = {
+    cts : System.Threading.CancellationTokenSource
+    env : IEnvironment
+}
 
 
 type internal Command<'Msg> = ('Msg -> unit) -> unit
 
-type Cmd<'Msg, 'ViewMsg> =
-    {
-        commands : CmdConfig -> Command<'Msg> list
-        ports : 'ViewMsg list
-    }
+type Cmd<'Msg, 'ViewMsg> = {
+    commands : CmdConfig -> Command<'Msg> list
+    ports : 'ViewMsg list
+}
 
 [<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
 module Cmd =

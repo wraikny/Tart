@@ -4,11 +4,10 @@ open FSharpPlus
 open FSharpPlus.Math.Applicative
 
 [<Struct>]
-type ^a Vec2 =
-    {
-        x : ^a
-        y : ^a
-    }
+type ^a Vec2 = {
+    x : ^a
+    y : ^a
+} with
     static member inline Init x y = { x = x; y = y }
 
     static member inline Axes() : ('t Vec2 -> 't) list =

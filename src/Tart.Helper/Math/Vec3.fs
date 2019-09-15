@@ -4,12 +4,11 @@ open FSharpPlus
 open FSharpPlus.Math.Applicative
 
 [<Struct>]
-type ^a Vec3 =
-    {
-        x : ^a
-        y : ^a
-        z : ^a
-    }
+type ^a Vec3 = {
+    x : ^a
+    y : ^a
+    z : ^a
+} with
 
     static member inline Init x y z = { x = x; y = y; z = z }
     

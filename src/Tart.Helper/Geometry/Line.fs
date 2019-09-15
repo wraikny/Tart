@@ -5,11 +5,10 @@ open wraikny.Tart.Helper.Math
 open FSharpPlus
 
 [<Struct>]
-type 'Vec Line =
-    {
-        startPoint : 'Vec
-        endPoint : 'Vec
-    }
+type 'Vec Line = {
+    startPoint : 'Vec
+    endPoint : 'Vec
+} with
 
     static member inline Init startPoint endPoint = {
         startPoint = startPoint

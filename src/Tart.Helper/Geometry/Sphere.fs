@@ -6,11 +6,10 @@ open wraikny.Tart.Helper.Extension
 open FSharpPlus
 
 [<Struct>]
-type Sphere< 'a, 'Vec> =
-    {
-        radius : 'a
-        center : 'Vec
-    }
+type Sphere< 'a, 'Vec> = {
+    radius : 'a
+    center : 'Vec
+} with
 
     static member Init center radius = {
         radius = radius

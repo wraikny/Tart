@@ -8,18 +8,20 @@ type HashMap<'Key, 'T when 'Key : equality> private(dict : IReadOnlyDictionary<'
     
     member val internal Dict = dict with get
 
-    static member Empty = new HashMap<'Key, 'T>(new Dictionary<_, _>())
+    static member internal Empty = new HashMap<'Key, 'T>(new Dictionary<_, _>())
 
-    static member Create(dict : #IDictionary<_, _>) =
+    static member inline internal Create(dict : #IDictionary<_, _>) =
         new HashMap<'Key, 'T>(new Dictionary<_, _>(dict :> IDictionary<_, _>))
 
-    static member internal CreateWithoutNew(dict) =
+    static member inline internal CreateWithoutNew(dict) =
         new HashMap<'Key, 'T>(dict)
 
     member this.ToSeq() = seq { for x in this.Dict -> (x.Key, x.Value) }
 
-    member private this.GetEnumerator() =
+    member this.GetEnumerator() =
         this.ToSeq().GetEnumerator()
+
+    member __.Count with get() = count.Force()
 
     interface IReadOnlyCollection<'Key * 'T> with
         member this.GetEnumerator() =
@@ -28,8 +30,7 @@ type HashMap<'Key, 'T when 'Key : equality> private(dict : IReadOnlyDictionary<'
         member this.GetEnumerator() =
             this.GetEnumerator()
 
-        member this.Count
-            with get() = count.Force()
+        member this.Count with get() = this.Count
 
 
 [<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
@@ -70,7 +71,7 @@ module HashMap =
 
     [<CompiledName "ToSeq">]
     let inline toSeq (hashMap : HashMap<'Key, 'T>) : seq<'Key * 'T> =
-        hashMap.ToSeq()
+        toSeq hashMap
 
     [<CompiledName "toMap">]
     let inline toMap (hashMap : HashMap<_, _>) =

@@ -5,11 +5,10 @@ open wraikny.Tart.Helper.Math
 open FSharpPlus
 open FSharpPlus.Math.Applicative
 
-type 'Vec Rect =
-    {
-        position : 'Vec
-        size : 'Vec
-    }
+type 'Vec Rect = {
+    position : 'Vec
+    size : 'Vec
+} with
 
     static member Init position size = {
         position = position

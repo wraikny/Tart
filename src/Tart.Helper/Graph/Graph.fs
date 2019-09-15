@@ -3,11 +3,10 @@
 open FSharpPlus
 
 [<Struct>]
-type Node<'V> =
-    {
-        label : int
-        value : 'V
-    }
+type Node<'V> = {
+    label : int
+    value : 'V
+} with
 
     static member Map(node: _ Node, f : 'T -> 'U) =
         { label = node.label; value = f node.value }
@@ -23,14 +22,11 @@ module Node =
 
 
 [<Struct>]
-type Edge< 'V, 'W
-    when 'W : comparison
-    > =
-    {
-        node1 : Node<'V>
-        node2 : Node<'V>
-        weight : 'W
-    }
+type Edge< 'V, 'W when 'W : comparison > = {
+    node1 : Node<'V>
+    node2 : Node<'V>
+    weight : 'W
+} with
 
     static member Map(edge: Edge<_, _>, f : 'T -> 'U) =
         {
