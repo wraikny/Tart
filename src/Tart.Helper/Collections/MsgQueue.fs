@@ -61,6 +61,8 @@ type MsgQueueAsync<'Msg>() =
     let onPopMsgEvent = Event<'Msg>()
     let onErrorEvent = Event<exn>()
 
+    member __.TriggerOnError(e) = onErrorEvent.Trigger(e)
+
     member __.OnUpdated with get() = onUpdatedEvent.Publish
     member __.OnPopMsg with get() = onPopMsgEvent.Publish
     member __.OnError with get() = onErrorEvent.Publish
