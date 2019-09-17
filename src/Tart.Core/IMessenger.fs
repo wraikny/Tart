@@ -5,10 +5,11 @@ open System
 
 type IMessenger<'Msg, 'ViewMsg> =
     inherit IDisposable
-    inherit IEnqueue<'Msg>
 
     abstract Msg : IObservable<'Msg> with get
     abstract ViewMsg : IObservable<'ViewMsg> with get
+
+    abstract Enqueue : 'Msg -> unit
 
     /// Sleeping time in every updating
     abstract SleepTime : uint32 with get, set
@@ -31,7 +32,6 @@ type IMessenger<'Msg, 'ViewMsg> =
 
 
 /// Telling msg and viewModel, between modelLoop(async) and view(mainThread).
-[<Interface>]
 type IMessenger<'Msg, 'ViewMsg, 'ViewModel> =
     inherit IMessenger<'Msg, 'ViewMsg>
 
@@ -39,3 +39,10 @@ type IMessenger<'Msg, 'ViewMsg, 'ViewModel> =
 
     /// Pull ViewModel and ViewMsgs to update view objects in main thread
     abstract NotifyView : unit -> unit
+
+
+type Program<'Msg, 'ViewMsg, 'Model, 'ViewModel> = {
+    init : 'Model * Cmd<'Msg, 'ViewMsg>
+    update : 'Msg -> 'Model -> ('Model * Cmd<'Msg, 'ViewMsg>)
+    view : 'Model -> 'ViewModel
+}

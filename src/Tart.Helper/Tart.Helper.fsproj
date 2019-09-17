@@ -3,28 +3,22 @@
     <OutputType>Library</OutputType>
     <TargetFramework>netstandard2.0</TargetFramework>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <OtherFlags>--warnon:1182</OtherFlags>
+  </PropertyGroup>
   <ItemGroup>
     <Compile Include="Extension.fs" />
     <Compile Include="Coroutine.fs" />
-    <Compile Include="Math\Utils.fs" />
-    <Compile Include="Math\Dependent.fs" />
-    <Compile Include="Math\Vec2.fs" />
-    <Compile Include="Math\Vec3.fs" />
-    <Compile Include="Math\Vec4.fs" />
-    <Compile Include="Math\Vector.fs" />
-    <Compile Include="Math\Color.fs" />
-    <Compile Include="Math\Easing.fs" />
-    <Compile Include="Geometry\Line.fs" />
-    <Compile Include="Geometry\Rect.fs" />
-    <Compile Include="Geometry\Sphere.fs" />
-    <Compile Include="Geometry\Triangle.fs" />
-    <Compile Include="Graph\Graph.fs" />
-    <Compile Include="Graph\UnionFold.fs" />
-    <Compile Include="Graph\SpanningTree.fs" />
-    <Compile Include="Graph\Delaunay.fs" />
-    <Compile Include="Utils\Utils.fs" />
-    <Compile Include="Utils\MsgQueue.fs" />
+    <Compile Include="Math.fs" />
+    <Compile Include="Color.fs" />
+    <Compile Include="Easing.fs" />
+    <Compile Include="Graph.fs" />
+    <Compile Include="Algorithm\UnionFold.fs" />
+    <Compile Include="Algorithm\SpanningTree.fs" />
+    <Compile Include="Algorithm\Delaunay.fs" />
+    <Compile Include="Utils.fs" />
     <Compile Include="Collections\HashMap.fs" />
+    <Compile Include="Collections\MsgQueue.fs" />
     <Compile Include="Collections\FixedSizeQueue.fs" />
     <Compile Include="Collections\Queue.fs" />
 

@@ -7,7 +7,7 @@ open System.Net
 open System.Net.Sockets
 open System.Collections.Generic
 
-open wraikny.Tart.Helper.Utils
+open wraikny.Tart.Helper.Collections
 open wraikny.Tart.Socket
 open wraikny.Tart.Socket.Crypt
 
@@ -95,7 +95,7 @@ type ClientBase<'SendMsg, 'RecvMsg> internal (encoder, decoder, socket) =
     member internal this.Receive() =
         let rec loop() = async {
             try
-                match (recvQueue :> IDequeue<_>).TryDequeue() with
+                match recvQueue.TryDequeue() with
                 | Some(x) ->
                     onReceiveMsg.Trigger(x)
                     return! (loop ())
@@ -270,7 +270,7 @@ type ClientBase<'SendMsg, 'RecvMsg> internal (encoder, decoder, socket) =
 
     member private this.DispatchSend() =
         let rec loop() = async {
-            match (sendQueue :> IDequeue<_>).TryDequeue() with
+            match sendQueue.TryDequeue() with
             | Some msg ->
                 do! this.SendMsgAsync(msg)
 
@@ -353,6 +353,11 @@ type ClientBase<'SendMsg, 'RecvMsg> internal (encoder, decoder, socket) =
 
         disconnectable
 
+    member __.Enqueue(msg) =
+        sendQueue.Enqueue(msg)
+
+    //member __.TryDequeue() =
+    //    recvQueue.TryDequeue()
 
     interface IClientHandler<'SendMsg> with
         member this.IsConnected with get() = this.IsConnected
@@ -360,13 +365,12 @@ type ClientBase<'SendMsg, 'RecvMsg> internal (encoder, decoder, socket) =
         // member this.SendSync(msg) = this.Send(msg)
         member this.SendMsgAsync(msg) = this.SendMsgAsync(msg)
 
-    interface IEnqueue<'SendMsg> with
         member this.Enqueue(msg) =
-            sendQueue.Enqueue(msg)
+            this.Enqueue(msg)
+
+        //member this.TryDequeue() =
+        //    this.TryDequeue()
             
-    interface IDequeue<'RecvMsg> with
-        member __.TryDequeue() =
-            recvQueue.TryDequeue()
 
     interface IDisposable with
         member this.Dispose() =
@@ -464,3 +468,5 @@ type Client<'SendMsg, 'RecvMsg>(encoder, decoder) =
         // member this.Disconnect() = this.Disconnect()
 
         // member this.Send(msg) = this.Send(msg)
+
+        member this.Enqueue(msg) = this.Enqueue(msg)

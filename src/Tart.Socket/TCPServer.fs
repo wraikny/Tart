@@ -7,7 +7,7 @@ open System.Net
 open System.Net.Sockets
 open System.Collections.Generic
 
-open wraikny.Tart.Helper.Utils
+open wraikny.Tart.Helper.Collections
 open wraikny.Tart.Socket
 
 
@@ -113,11 +113,8 @@ type Server<'SendMsg, 'RecvMsg>(encoder, decoder, endpoint) =
     member this.SendTo(id, msg) =
         (lock _lockObj <| fun _ -> clients.TryGetValue(id))
         |> function
-        | true, client ->
-            (client :> IEnqueue<_>).Enqueue(msg)
-            true
-        | _ ->
-            false
+        | true, client -> client.Enqueue(msg); true
+        | _ -> false
 
     member this.SendToEveryone(msg) =
         for (_, client) in this.Clients do
@@ -343,9 +340,7 @@ type Server<'SendMsg, 'RecvMsg>(encoder, decoder, endpoint) =
         member __.OnReceiveMsg with get() = onReceiveMsgEvent.Publish
         member __.OnError with get() = onErrorEvent.Publish
 
-
-    interface IEnqueue<MsgTarget * 'SendMsg> with
-        member this.Enqueue(msg) = sendQueue.Enqueue(msg)
+        member this.Enqueue(a, b) = sendQueue.Enqueue(a, b)
 
     interface IDisposable with
         member this.Dispose() =

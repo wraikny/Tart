@@ -1,7 +1,7 @@
-﻿module wraikny.Tart.Helper.Math.Color
+﻿module wraikny.Tart.Helper.Color
 
-open wraikny.Tart.Helper.Math.Vec3
 open FSharpPlus
+open wraikny.Tart.Helper.Math
 
 /// 0.0f ~ 1.0f
 let HSV2RGB_float32 (hsv : float32 Vec3) : float32 Vec3 =

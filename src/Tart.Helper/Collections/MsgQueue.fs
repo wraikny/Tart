@@ -1,28 +1,51 @@
-﻿namespace wraikny.Tart.Helper.Utils
-    
+﻿namespace wraikny.Tart.Helper.Collections
+
+open wraikny.Tart.Helper.Utils
+   
+open System
+open System.Threading
 open System.Collections.Generic
 open System.Collections.Concurrent
+
+type IQueue<'T> =
+    inherit IReadOnlyCollection<'T>
+
+    abstract Enqueue : 'T -> unit
+    abstract TryDequeue : unit -> 'T option
+    abstract Clear : unit -> unit
 
 
 type MsgQueue<'T>() =
     let queue = ConcurrentQueue<'T>()
 
-    interface IQueue<'T> with
-        member __.TryDequeue() : 'T option =
+    member __.TryDequeue() : 'T option =
+        queue.TryDequeue() |> function
+        | true, result -> Some result
+        | false, _ -> None
+
+    member __.Enqueue(msg) = queue.Enqueue(msg)
+
+    member __.Count with get() = queue.Count
+    member __.GetEnumerator() = queue.GetEnumerator()
+
+    member __.Clear() =
+        let rec loop() =
             queue.TryDequeue() |> function
-            | true, result -> Some result
-            | false, _ -> None
+            | true, _ -> loop()
+            | _ -> ()
 
-        member __.Enqueue(msg) = queue.Enqueue(msg)
+        loop()
 
-        member __.Count with get() = queue.Count
-        member this.GetEnumerator() = queue.GetEnumerator()
-        member this.GetEnumerator() =
-            queue.GetEnumerator() :> System.Collections.IEnumerator
+    interface IQueue<'T> with
+        member x.TryDequeue() = x.TryDequeue()
 
+        member x.Enqueue(msg) = x.Enqueue(msg)
 
-open System
-open System.Threading
+        member x.Count with get() = x.Count
+        member x.GetEnumerator() = x.GetEnumerator()
+        member x.GetEnumerator() = x.GetEnumerator() :> System.Collections.IEnumerator
+
+        member x.Clear() = x.Clear()
 
 
 type MsgQueueAsync<'Msg>() =
@@ -37,6 +60,8 @@ type MsgQueueAsync<'Msg>() =
     let onUpdatedEvent = Event<unit>()
     let onPopMsgEvent = Event<'Msg>()
     let onErrorEvent = Event<exn>()
+
+    member __.TriggerOnError(e) = onErrorEvent.Trigger(e)
 
     member __.OnUpdated with get() = onUpdatedEvent.Publish
     member __.OnPopMsg with get() = onPopMsgEvent.Publish
@@ -63,7 +88,7 @@ type MsgQueueAsync<'Msg>() =
 
         let rec loop() = async {
             try
-                (this :> IDequeue<_>).TryDequeue() |> function
+                this.TryDequeue() |> function
                 | Some msg ->
                     onPopMsgEvent.Trigger(msg)
                 | None ->

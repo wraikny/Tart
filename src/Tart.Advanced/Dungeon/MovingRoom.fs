@@ -4,7 +4,6 @@ open System.Collections.Generic
 open System.Linq
 
 open wraikny.Tart.Helper.Math
-open wraikny.Tart.Helper.Geometry
 
 open FSharpPlus
 
@@ -77,7 +76,7 @@ type internal MovingRoom(rect : float32 Rect2, movingRate, rooms) =
 
             diff
 
-        let dx, dy = getDiff Vec2.x, getDiff Vec2.y
+        let dx, dy = getDiff Vector.x, getDiff Vector.y
 
         let diff =  uncurry Vec2.init <| if abs dx < abs dy then (dx, 0.0f) else (0.0f, dy)
         // let diff = Vec2.init(dx, dy)

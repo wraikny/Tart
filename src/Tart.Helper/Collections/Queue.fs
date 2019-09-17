@@ -54,7 +54,7 @@ type Queue<'T> (front : list<'T>, rBack : list<'T>) =
 
     member this.Tail =
         match front with
-        | hd::tl ->
+        | _::tl ->
             match tl, rBack with
             | [], r -> Queue((List.rev r), [])
             | f, r -> Queue(f, r)
@@ -62,7 +62,7 @@ type Queue<'T> (front : list<'T>, rBack : list<'T>) =
 
     member this.TryTail =
         match front with
-        | hd::tl ->
+        | _::tl ->
             match tl, rBack with
             | [], r -> Some(Queue((List.rev r), []))
             | f, r -> Some(Queue(f, r))

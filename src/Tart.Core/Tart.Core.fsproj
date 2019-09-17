@@ -3,6 +3,9 @@
     <OutputType>Library</OutputType>
     <TargetFramework>netstandard2.0</TargetFramework>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <OtherFlags>--warnon:1182</OtherFlags>
+  </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\Tart.Helper\Tart.Helper.fsproj">
       <Name>Tart.Helper.fsproj</Name>
@@ -11,13 +14,11 @@
   <ItemGroup>
     <Compile Include="Notifier.fs" />
     <Compile Include="Environment.fs" />
+    <Compile Include="Libraries/Random.fs" />
+    <Compile Include="Libraries\File.fs" />
     <Compile Include="Cmd.fs" />
-    <Compile Include="CoreProgram.fs" />
-    <Compile Include="Port.fs" />
     <Compile Include="IMessenger.fs" />
     <Compile Include="Messenger.fs" />
-    <Compile Include="Libraries/Random.fs" />
-    <Compile Include="Libraries/Async.fs" />
     <Compile Include="View/ObjectsUpdater.fs" />
   </ItemGroup>
   <Import Project="..\..\.paket\Paket.Restore.targets" />

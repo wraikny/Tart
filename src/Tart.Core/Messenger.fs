@@ -8,12 +8,8 @@ open wraikny.Tart.Helper.Utils
 open FSharpPlus
 
 
-
-[<Class>]
 type Messenger<'Msg, 'ViewMsg, 'Model, 'ViewModel>
-    (env : IEnvironment, corePrograms : CoreProgram<_, _, _, _>) =
-    // inherit MsgQueueAsync<'Msg>()
-
+    private (env : ITartEnv, corePrograms : Program<_, _, _, _>) =
     let msgEvent = Event<'Msg>()
 
     let mutable lastModelExist = false
@@ -24,13 +20,15 @@ type Messenger<'Msg, 'ViewMsg, 'Model, 'ViewModel>
     
     let msgQueue = new MsgQueueAsync<'Msg>()
 
+    let mutable tartConfig = { env = env; cts = null; onError = msgQueue.TriggerOnError }
+
     do
         msgQueue.OnPopMsg.Add(fun msg ->
             let newModel, cmd = corePrograms.update msg lastModel
                         
-            cmd |> Cmd.execute msgQueue viewMsgQueue { env = env; cts = msgQueue.CancellationTokenSource}
+            cmd |> Cmd.execute msgQueue.Enqueue viewMsgQueue.Enqueue { tartConfig with cts = msgQueue.CancellationTokenSource }
                         
-            (modelQueue :> IEnqueue<_>).Enqueue(newModel)
+            modelQueue.Enqueue(newModel)
                 
             lastModel <- newModel
 
@@ -40,22 +38,32 @@ type Messenger<'Msg, 'ViewMsg, 'Model, 'ViewModel>
         //msgQueue.OnError.Add(fun _ -> env.SetCTS(null))
 
     let viewModelNotifier =
-        Notifier<'ViewModel>(
-            { new IDequeue<'ViewModel> with
-                member __.TryDequeue() =
-                    (modelQueue :> IDequeue<_>).TryDequeue()
-                    |>> corePrograms.view
-            })
+        Notifier<'ViewModel>(fun () ->
+            modelQueue.TryDequeue()
+            |>> corePrograms.view
+        )
 
-    let viewMsgNotifier = Notifier<'ViewMsg>(viewMsgQueue)
+    let viewMsgNotifier = Notifier<'ViewMsg>(viewMsgQueue.TryDequeue)
+
+    static member Create(env, program) =
+        new Messenger<_, _, _, _>(env, program)
+        :> IMessenger<_, _, _>
+
+    static member Create(env, program) =
+        new Messenger<_, _, _, _>(env |> TartEnv.build, program)
+        :> IMessenger<_, _, _>
 
 
     member private this.InitModel() =
         let model, cmd = corePrograms.init
         
-        cmd |> Cmd.execute msgQueue viewMsgQueue { env = env; cts = msgQueue.CancellationTokenSource}
+        cmd |>
+            Cmd.execute
+                msgQueue.Enqueue
+                viewMsgQueue.Enqueue
+                { tartConfig with cts = msgQueue.CancellationTokenSource }
         
-        (modelQueue :> IEnqueue<_>).Enqueue(model)
+        modelQueue.Enqueue(model)
 
         lastModel <- model
         lastModelExist <- true
@@ -68,7 +76,7 @@ type Messenger<'Msg, 'ViewMsg, 'Model, 'ViewModel>
 
         member __.ViewModel with get() = viewModelNotifier :> IObservable<_>
 
-        member __.Enqueue(msg) = (msgQueue :> IEnqueue<_>).Enqueue(msg)
+        member __.Enqueue(msg) = msgQueue.Enqueue(msg)
 
         member __.Msg with get() = msgEvent.Publish :> IObservable<_>
         member __.ViewMsg with get() = viewMsgNotifier :> IObservable<_>
@@ -86,6 +94,9 @@ type Messenger<'Msg, 'ViewMsg, 'Model, 'ViewModel>
             with get() = msgQueue.IsRunning
 
         member this.StartAsync() =
+            if lastModelExist then
+                (msgQueue :> IQueue<_>).Clear()
+
             msgQueue.StartAsync()
             this.InitModel()
             //env.SetCTS(msgQueue.CancellationTokenSource)
@@ -107,14 +118,9 @@ type Messenger<'Msg, 'ViewMsg, 'Model, 'ViewModel>
         member __.OnError with get() = msgQueue.OnError
 
 
-[<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
-module Messenger =
-    [<CompiledName "Create">]
-    let create (environment : wraikny.Tart.Core.TartEnv) (corePrograms) =
-        (new Messenger<_, _, _, _>(environment, corePrograms))
-        :> IMessenger<_, _, _>
+type MessengerBuilder = MessengerBuilder with
+    static member inline Create(env : ITartEnv, program) =
+        Messenger.Create(env, program)
 
-
-    [<CompiledName "Build">]
-    let build (envBuilder) (corePrograms) =
-        create(envBuilder |> TartEnv.build) corePrograms
+    static member inline Create(env : TartEnvBuilder, program) =
+        Messenger.Create(env, program)

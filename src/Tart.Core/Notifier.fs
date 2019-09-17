@@ -6,16 +6,16 @@ open wraikny.Tart.Helper.Utils
 
 open FSharpPlus
 
-type Notifier<'T>(queue : IDequeue<'T>) =
+type Notifier<'T>(tryDequeue : unit -> 'T option) =
     let event = new Event<'T>()
 
     member __.Pull() =
-        queue.TryDequeue()
+        tryDequeue()
         |> iter event.Trigger
 
     member __.PullAll() =
         let rec loop () =
-            queue.TryDequeue() |> function
+            tryDequeue() |> function
             | Some x ->
                 event.Trigger x
                 loop()

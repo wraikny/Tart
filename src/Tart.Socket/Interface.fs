@@ -17,7 +17,9 @@ type MsgTarget =
 
 type IClientHandler<'Msg> = interface
     inherit IDisposable
-    inherit IEnqueue<'Msg>
+
+    abstract Enqueue : 'Msg -> unit
+    //abstract TryDequeue : unit -> 'Msg option
 
     abstract IsConnected : bool with get
 
@@ -28,7 +30,8 @@ end
 
 type IServer<'SendMsg, 'RecvMsg> = interface
     inherit IDisposable
-    inherit IEnqueue<MsgTarget * 'SendMsg>
+
+    abstract Enqueue : MsgTarget * 'SendMsg -> unit
 
     abstract IsAccepting : bool with get
     abstract IsMessaging : bool with get
@@ -48,7 +51,7 @@ end
 
 type IClient<'SendMsg, 'RecvMsg> = interface
     inherit IDisposable
-    inherit IEnqueue<'SendMsg>
+    abstract Enqueue : 'SendMsg -> unit
 
     abstract ClientId : ClientID with get
 

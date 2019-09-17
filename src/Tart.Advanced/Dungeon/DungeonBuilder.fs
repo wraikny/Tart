@@ -2,7 +2,6 @@
 
 open System
 open wraikny.Tart.Helper.Math
-open wraikny.Tart.Helper.Geometry
 open wraikny.Tart.Helper.Collections
 
 open FSharpPlus
@@ -58,7 +57,7 @@ module private WithRandom =
         let getRandomPointInCircle () : int Vec2 =
             let w, h = builder.parameter.roomGeneratedRange
 
-            let t = 2.0f * Angle.pi * getRandomValue(builder)
+            let t = 2.0f * Pi * getRandomValue(builder)
             let u = getRandomValue(builder) * getRandomValue(builder)
             let r = if u > 1.0f then 2.0f - u else u
 
@@ -91,6 +90,7 @@ module private WithRandom =
 
 
     open wraikny.Tart.Helper.Graph
+    open wraikny.Tart.Helper.Algorithm
         
         
     let getLargeRoomEdges (largeRooms : (int * int Rect2) list) (withRandom : WithRandom) : Edge<unit, float32> list =
@@ -140,7 +140,7 @@ module DungeonBuilder =
     let private distributeRooms (rooms : int Rect2 list) (rate : float32) =
         let threshold =
             let len = rooms |> length |> float32
-            let sum =
+            let sum : float32 Vec2 =
                 rooms
                 |>> ( Rect.size >> (map float32) )
                 |> sum
@@ -182,8 +182,8 @@ module DungeonBuilder =
         let lurd1 = rect1 |> Rect.get_LU_RD
         let lurd2 = rect2 |> Rect.get_LU_RD
 
-        let isCollidedX = Rect.isCollidedAxis Vec2.x lurd1 lurd2
-        let isCollidedY = Rect.isCollidedAxis Vec2.y lurd1 lurd2
+        let isCollidedX = Rect.isCollidedAxis Vector.x lurd1 lurd2
+        let isCollidedY = Rect.isCollidedAxis Vector.y lurd1 lurd2
 
         let manhattanDist = (center1 - center2) |>> abs
 

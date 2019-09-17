@@ -4,7 +4,7 @@ open System
 open System.Threading
 
 [<Interface>]
-type IEnvironment =
+type ITartEnv =
     abstract Random : Random with get
 
 
@@ -15,7 +15,7 @@ type public TartEnv() =
     member this.SetRandom(random' : Random) =
         random <- random'
 
-    interface IEnvironment with
+    interface ITartEnv with
         member this.Random
             with get() = random
 
