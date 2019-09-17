@@ -1,4 +1,5 @@
-﻿namespace wraikny.Tart.Helper.Math
+﻿namespace wraikny.Tart.Helper
+
 
 // https://easings.net/
 type Easing =
@@ -37,7 +38,7 @@ type Easing =
 
 
 open System
-
+open wraikny.Tart.Helper.Math
 
 [<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
 module Easing =
@@ -54,7 +55,7 @@ module Easing =
             | OutSine ->
                 sin(t * Angle.degreeToRadian 90.0f )
             | InOutSine ->
-                -1.0f / 2.0f * (cos(t * Angle.pi) - 1.0f)
+                -1.0f / 2.0f * (cos(t * Pi) - 1.0f)
             | InQuad ->
                 t * t
             | OutQuad ->
@@ -130,42 +131,39 @@ module Easing =
                     let t = t - 1.0f
                     1.0f + t * t * 2.0f * (7.0f * t + 2.5f)
             | InElastic ->
-                t * t * t * t * sin(t * Angle.pi * 4.5f)
+                t * t * t * t * sin(t * Pi * 4.5f)
             | OutElastic ->
                 let t2 = (t - 1.0f) * (t - 1.0f)
-                1.0f - t2 * t2 * cos(t * Angle.pi * 4.5f)
+                1.0f - t2 * t2 * cos(t * Pi * 4.5f)
             | InOutElastic ->
                 if t < 0.45f then
                     let t2 = t * t
-                    8.0f * t2 * t2 * sin(t * Angle.pi * 9.0f)
+                    8.0f * t2 * t2 * sin(t * Pi * 9.0f)
                 elif t < 0.55f then
-                    0.5f + 0.75f * sin(t * Angle.pi * 4.0f)
+                    0.5f + 0.75f * sin(t * Pi * 4.0f)
                 else
                     let t2 = (t - 1.0f) * (t - 1.0f)
-                    1.0f - 8.0f * t2 * t2 * sin(t * Angle.pi * 9.0f)
+                    1.0f - 8.0f * t2 * t2 * sin(t * Pi * 9.0f)
             | InBounce ->
-                pow(2.0f, 6.0f * (t - 1.0f)) * abs(sin(t * Angle.pi * 3.5f))
+                pow(2.0f, 6.0f * (t - 1.0f)) * abs(sin(t * Pi * 3.5f))
             | OutBounce ->
-                1.0f - pow(2.0f, -6.0f * t) * abs(cos(t * Angle.pi * 3.5f))
+                1.0f - pow(2.0f, -6.0f * t) * abs(cos(t * Pi * 3.5f))
             | InOutBounce ->
                 if t < 0.5f then
-                    8.0f * (pow(2.0f, 8.0f * (t - 1.0f))) * abs(sin(t * Angle.pi * 7.0f))
+                    8.0f * (pow(2.0f, 8.0f * (t - 1.0f))) * abs(sin(t * Pi * 7.0f))
                 else
-                    1.0f - 8.0f * (pow(2.0f, -8.0f * t)) * abs(sin(t * Angle.pi * 7.0f))
+                    1.0f - 8.0f * (pow(2.0f, -8.0f * t)) * abs(sin(t * Pi * 7.0f))
 
             | Lerp(e0, e1, a) ->
                 (calculateF e0 t) * (1.0f - a) +  (calculateF e1 t) * a
-    
-    [<CompiledName "Calculate">]
+
     let inline calculate easing (frame : ^a) (current : ^a) : float32 =
         let t = (float32 current) / (float32 frame)
 
         calculateF easing t
 
 
-    [<CompiledName "InterpolateVector">]
     let inline interpolateVector easing (frame) (current) (startPoint : 'Vec) (endPoint : 'Vec) : 'Vec =
         Vector.constraint' Unchecked.defaultof<Vector<'a, 'Vec>>
         let v = calculate easing frame current
         startPoint + (endPoint - startPoint) *. v
-

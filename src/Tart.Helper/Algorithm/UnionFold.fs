@@ -1,8 +1,9 @@
-﻿namespace wraikny.Tart.Helper.Graph
+﻿namespace wraikny.Tart.Helper.Algorithm
 
+open wraikny.Tart.Helper.Graph
 open System.Linq
 
-[<Class>]
+
 type UnionFold(num) =
     let par = (seq { for i in 0..num -> i }).ToList()
     let rank = (seq { for _ in 0..num -> 0 }).ToList()

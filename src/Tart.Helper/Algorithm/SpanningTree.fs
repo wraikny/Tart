@@ -1,6 +1,7 @@
-﻿namespace wraikny.Tart.Helper.Graph
+﻿namespace wraikny.Tart.Helper.Algorithm
 
 open wraikny.Tart.Helper.Math
+open wraikny.Tart.Helper.Graph
 
 open System.Collections.Generic
 
@@ -8,7 +9,6 @@ open FSharpPlus
 
 [<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
 module SpanningTree =
-    [<CompiledName "Kruskal">]
     let kruskal nodeCount (edges : Edge<_, _> list) =
         
         let uf = UnionFold(nodeCount)

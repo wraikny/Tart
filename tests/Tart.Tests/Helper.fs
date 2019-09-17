@@ -25,17 +25,17 @@ let vec2Tests =
 
 [<Tests>]
 let vectorTests =
-    let inline axes2 (v : _ Vec2) =
-        let s = Vector.axes() |> List.map((|>) v)
-        s.[0] = v.x && s.[1] = v.y
+    //let inline axes2 (v : _ Vec2) =
+    //    let s = Vector.axes() |> List.map((|>) v)
+    //    s.[0] = v.x && s.[1] = v.y
 
-    let inline axes3 (v : _ Vec3) =
-        let s = Vector.axes() |> List.map((|>) v)
-        s.[0] = v.x && s.[1] = v.y && s.[2] = v.z
+    //let inline axes3 (v : _ Vec3) =
+    //    let s = Vector.axes() |> List.map((|>) v)
+    //    s.[0] = v.x && s.[1] = v.y && s.[2] = v.z
 
-    let inline axes4 (v : _ Vec4) =
-        let s = Vector.axes() |> List.map((|>) v)
-        s.[0] = v.x && s.[1] = v.y && s.[2] = v.z && s.[3] = v.w
+    //let inline axes4 (v : _ Vec4) =
+    //    let s = Vector.axes() |> List.map((|>) v)
+    //    s.[0] = v.x && s.[1] = v.y && s.[2] = v.z && s.[3] = v.w
 
     testList "Vector" [
         testList "Applicative" [
@@ -52,9 +52,9 @@ let vectorTests =
                 (c.x = a.x + b.x) && (c.y = a.y - b.y) && (c.z = a.z * b.z) && (c.w = a.w * b.w)
         ]
 
-        testProperty "Axes int Vec2" <| fun (a : int Vec2) -> axes2 a
-        testProperty "Axes int Vec3" <| fun (a : int Vec3) -> axes3 a
-        testProperty "Axes int Vec4" <| fun (a : int Vec4) -> axes4 a
+        //testProperty "Axes int Vec2" <| fun (a : int Vec2) -> axes2 a
+        //testProperty "Axes int Vec3" <| fun (a : int Vec3) -> axes3 a
+        //testProperty "Axes int Vec4" <| fun (a : int Vec4) -> axes4 a
 
         testProperty "Dot int Vec2" <| fun (a : int Vec2) b ->
             (Vector.dot a b) = (a.x * b.x + a.y * b.y)

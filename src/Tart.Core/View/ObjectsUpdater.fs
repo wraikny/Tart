@@ -20,7 +20,10 @@ with
         | Adding -> false
 
 
-[<Struct>]
+type IUpdatee<'a> =
+    abstract Update : 'a -> unit
+
+
 type ObjectsParent<'Object, 'ObjectViewModel
     when 'Object :> IUpdatee<'ObjectViewModel>
     > = {
@@ -32,7 +35,6 @@ type ObjectsParent<'Object, 'ObjectViewModel
 
 
 /// Class of adding, removing and updating objects
-[<Class>]
 type ObjectsUpdater<'Object, 'ObjectViewModel
     when 'Object :> IUpdatee<'ObjectViewModel>
     >(parent) =

@@ -13,10 +13,8 @@ type Node<'V> = {
 
 [<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
 module Node =
-    [<CompiledName "Init">]
     let init label value = { label = label; value = value }
 
-    [<CompiledName "Equal">]
     let equal (n1 : Node<'a>) (n2 : Node<'a>) =
         n1.label = n2.label
 
@@ -38,31 +36,22 @@ type Edge< 'V, 'W when 'W : comparison > = {
 
 [<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
 module Edge =
-    [<CompiledName "Init">]
     let inline init n1 n2 w = { node1 = n1; node2 = n2; weight = w }
 
-    [<CompiledName "Node1">]
     let inline node1 e = e.node1
-
-    [<CompiledName "Node2">]
     let inline node2 e = e.node2
-
-    [<CompiledName "Weight">]
     let inline weight e = e.weight
 
-    [<CompiledName "Equal">]
     let equal (e1 : Edge<'a, 'b>) (e2 : Edge<'a, 'b>) =
         ( (Node.equal e1.node1 e2.node1) && (Node.equal e1.node2 e2.node2) )
         || ( (Node.equal e1.node1 e2.node2) && (Node.equal e1.node2 e2.node1) )
 
-    [<CompiledName "Values">]
     let inline values edge =
         edge.node1.value, edge.node2.value
 
 
 
 open wraikny.Tart.Helper.Math
-open wraikny.Tart.Helper.Geometry
 
 type NodeTriangle(node1, node2, node3) =
 

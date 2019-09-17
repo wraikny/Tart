@@ -7,7 +7,7 @@ open System.Net
 open System.Net.Sockets
 open System.Collections.Generic
 
-open wraikny.Tart.Helper.Utils
+open wraikny.Tart.Helper.Collections
 open wraikny.Tart.Socket
 open wraikny.Tart.Socket.Crypt
 

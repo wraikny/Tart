@@ -1,7 +1,7 @@
-﻿namespace wraikny.Tart.Helper.Graph
+﻿namespace wraikny.Tart.Helper.Algorithm
 
 open wraikny.Tart.Helper.Math
-open wraikny.Tart.Helper.Geometry
+open wraikny.Tart.Helper.Graph
 
 open FSharpPlus
 
@@ -9,7 +9,6 @@ open FSharpPlus
 [<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
 module Delaunay2 =
     /// 全体を包含する正三角形を求める
-    [<CompiledName "GetHugeTriangle">]
     let getHugeTriangle (range : float32 Rect2) : float32 Triangle2 =
 
         // 与えられた矩形を包含する円を求める  
@@ -35,7 +34,6 @@ module Delaunay2 =
     open System.Linq
 
 
-    [<CompiledName "GetTrianglesList">]
     let getTrianglesList (points : Node<float32 Vec2> list) : HashSet<NodeTriangle> =
         let minX, minY, maxX, maxY =
             let rec f (ps : Node<float32 Vec2> list) result =
@@ -128,7 +126,6 @@ module Delaunay2 =
         trianglesSet
 
 
-    [<CompiledName "GetNodesList">]
     let getNodesList points : Edge<float32 Vec2, float32> list =
         let triangles = getTrianglesList points
 

@@ -6,15 +6,10 @@ open System.Linq
 
 open FSharpPlus
 
-/// 指定したフレーム数待機するコルーチンを生成する。
-[<CompiledName "Sleep">]
 let inline sleep n =
     seq { for _ in 1..n -> () }
 
-
-/// 複数のコルーチンを同時に実行するコルーチンを生成する。
-[<CompiledName "AsParallel">]
-let asParallel (coroutines : seq<seq<unit>>) =
+let inline asParallel (coroutines : seq<seq<unit>>) =
     seq {
         let coroutines =
             (coroutines

@@ -1,7 +1,18 @@
-﻿namespace wraikny.Tart.Helper.Utils
-    
+﻿namespace wraikny.Tart.Helper.Collections
+
+open wraikny.Tart.Helper.Utils
+   
+open System
+open System.Threading
 open System.Collections.Generic
 open System.Collections.Concurrent
+
+type IQueue<'T> =
+    inherit IReadOnlyCollection<'T>
+
+    abstract Enqueue : 'T -> unit
+    abstract TryDequeue : unit -> 'T option
+    abstract Clear : unit -> unit
 
 
 type MsgQueue<'T>() =
@@ -35,10 +46,6 @@ type MsgQueue<'T>() =
         member x.GetEnumerator() = x.GetEnumerator() :> System.Collections.IEnumerator
 
         member x.Clear() = x.Clear()
-
-
-open System
-open System.Threading
 
 
 type MsgQueueAsync<'Msg>() =
