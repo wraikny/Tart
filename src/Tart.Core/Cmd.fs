@@ -1,67 +1,82 @@
 ﻿namespace wraikny.Tart.Core
 
 open wraikny.Tart.Helper.Utils
+open wraikny.Tart.Core.Libraries
 
 open FSharpPlus
 
-type CmdConfig = {
+type TartConfig = {
     cts : System.Threading.CancellationTokenSource
     env : IEnvironment
-}
+} with
+    static member SideEffect(a : Async<'Msg>, x : TartConfig) =
+        fun dispatch ->
+            Async.Start(async {
+                let! msg = a
+                dispatch msg
+            }, x.cts.Token)
+
+    static member SideEffect(generator : 'a Random.Generator, config : TartConfig) =
+        generator.F config.env.Random
 
 
-type internal Command<'Msg> = ('Msg -> unit) -> unit
 
-type Cmd<'Msg, 'ViewMsg> = {
-    commands : CmdConfig -> Command<'Msg> list
-    ports : 'ViewMsg list
-}
+type Command<'Msg> = ('Msg -> unit) -> unit
+
+
+type Cmd<'Msg, 'Port> = {
+    commands : TartConfig -> Command<'Msg> list
+    ports : 'Port list
+} with
+    static member Zero : Cmd<'Msg, 'Port> = {
+        commands = fun _ -> []
+        ports = []
+    }
+
 
 [<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
 module Cmd =
-    let inline internal getCommands (cmd : Cmd<_, _>) = cmd.commands
-    let inline internal getPorts (cmd : Cmd<_, _>) = cmd.ports
+    let inline private getCommands (cmd : Cmd<_, _>) = cmd.commands
+    let inline private getPorts (cmd : Cmd<_, _>) = cmd.ports
 
-    let inline internal init (commands) (ports) : Cmd<'Msg, 'ViewMsg> =
+    let inline private init (commands) (ports) : Cmd<'Msg, 'Port> =
         {
             commands = commands
             ports = ports
         }
 
-    let inline internal initMsg ( command : _ -> Command<'Msg> ) : Cmd<'Msg, 'ViewMsg> =
-        init (fun x -> [command x]) []
-
-    [<CompiledName "Ports">]
-    let ports (m) =
-        init (fun _ -> []) m
-
-    [<CompiledName "Port">]
-    let inline port (m) = ports [m]
-
+    let inline private initCommand c = init (fun x -> [c x]) []
 
     let inline internal execute
-        (msgQueue : #IEnqueue<'Msg>)
-        (viewMsgQueue : #IEnqueue<'ViewMsg>)
+        (msgDispatch : 'Msg -> unit)
+        (portDispatch : 'Port -> unit)
         conf
-        (cmd : Cmd<'Msg, 'ViewMsg>) =
+        (cmd : Cmd<'Msg, 'Port>) =
 
         for c in (cmd.commands conf) do
-            c msgQueue.Enqueue
+            c msgDispatch
 
-        cmd.ports |> iter viewMsgQueue.Enqueue
+        cmd.ports |> iter portDispatch
 
 
     /// Empty command
-    [<CompiledName "None">]
-    let none : Cmd<'Msg, 'ViewMsg> = { commands = (fun _ -> []); ports = [] }
+    let none : Cmd<'Msg, 'Port> = { commands = (fun _ -> []); ports = [] }
 
+    let inline ofMsgs (msgs : seq<'Msg>) : Cmd<'Msg, 'Port> =
+        init (fun _ -> Seq.map (|>) msgs |> toList) []
 
-    [<CompiledName "Batch">]
-    let batch (cmds : seq<Cmd<'Msg, 'ViewMsg>>) : Cmd<'Msg, 'ViewMsg> =
+    let inline ofMsg (msg : 'Msg) : Cmd<'Msg, 'Port> =
+        init (fun _ -> [(|>) msg]) []
+
+    let inline ofPorts (m) = init (fun _ -> []) m
+
+    let inline ofPort (m) = ofPorts [m]
+
+    let inline batch (cmds : seq<Cmd<'Msg, 'Port>>) : Cmd<'Msg, 'Port> =
         {
-            commands = fun env ->
+            commands = fun config ->
                 cmds
-                |>> (getCommands >> (|>) env)
+                |>> (getCommands >> (|>) config)
                 |> Seq.concat
                 |> Seq.toList
             ports =
@@ -71,20 +86,29 @@ module Cmd =
                 |> Seq.toList
         }
 
-
-    [<CompiledName "MapCommands">]
-    let mapMsgs (f : 'a -> 'Msg) (cmd : Cmd<'a, 'ViewMsg>) : Cmd<'Msg, 'ViewMsg> =
+    let inline mapMsgs (f : 'a -> 'Msg) (cmd : Cmd<'a, 'Port>) : Cmd<'Msg, 'Port> =
         {
-            commands = fun env ->
-                cmd.commands(env)
-                |>> fun c -> ( fun pushMsg -> c(f >> pushMsg) )
+            commands = fun config ->
+                cmd.commands(config)
+                |>> fun c dispatch -> c(f >> dispatch)
 
             ports = cmd.ports
         }
 
-    [<CompiledName "MapViewMsgs">]
-    let inline mapPorts (f : 'a -> 'ViewMsg) (cmd : Cmd<'Msg, 'a>) : Cmd<'Msg, 'ViewMsg> =
+    let inline mapPorts (f : 'a -> 'Port) (cmd : Cmd<'Msg, 'a>) : Cmd<'Msg, 'Port> =
         {
             commands = cmd.commands
             ports = f <!> cmd.ports
         }
+
+    let inline private performSideEffect (x : ^``SideEffect<'a>``) (config : ^TartConfig) =
+        ( (^``SideEffect<'a>`` or ^TartConfig) : (static member SideEffect : _*_->_) (x, config))
+
+    let inline sideEffect (x : ^``SideEffect<'a>``) =
+        initCommand(performSideEffect x)
+
+    let inline chain (f : 'a -> ^``SideEffect<'b>``) (x : ^``SideEffect<'a>``) : Cmd<'b, 'Port> =
+        initCommand(fun config  ->
+            performSideEffect x config
+            |> f |> flip performSideEffect config
+        )

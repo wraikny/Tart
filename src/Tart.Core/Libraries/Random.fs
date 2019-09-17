@@ -92,11 +92,3 @@ module Random =
     [<CompiledName "Pair">]
     let inline pair (g1 : 'a Generator) (g2 : 'b Generator) : ('a * 'b) Generator =
         map2 (fun a b -> a, b) g1 g2
-
-
-
-    [<CompiledName "Generate">]
-    let generate (msg : 'a -> 'Msg) (generator : 'a Generator) : Cmd<'Msg, _> =
-        Cmd.initMsg(fun conf pushMsg ->
-            pushMsg( generator.F conf.env.Random |> msg )
-        )

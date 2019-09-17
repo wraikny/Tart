@@ -14,12 +14,11 @@
   <ItemGroup>
     <Compile Include="Notifier.fs" />
     <Compile Include="Environment.fs" />
+    <Compile Include="Libraries/Random.fs" />
     <Compile Include="Cmd.fs" />
     <Compile Include="CoreProgram.fs" />
     <Compile Include="IMessenger.fs" />
     <Compile Include="Messenger.fs" />
-    <Compile Include="Libraries/Random.fs" />
-    <Compile Include="Libraries/Async.fs" />
     <Compile Include="View/ObjectsUpdater.fs" />
   </ItemGroup>
   <Import Project="..\..\.paket\Paket.Restore.targets" />
