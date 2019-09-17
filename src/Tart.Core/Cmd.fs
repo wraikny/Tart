@@ -19,13 +19,13 @@ and TartConfig = {
     cts : System.Threading.CancellationTokenSource
     env : ITartEnv
 } with
-    static member SideEffect(x : Async<Result<_,_>>, config : TartConfig, dispatch) =
+    static member inline SideEffect(x : Async<Result<_,_>>, config : TartConfig, dispatch) =
         Async.Start(async{
             let! s = x
             dispatch s
         }, config.cts.Token)
 
-    static member SideEffect(x : Async<_>, config : TartConfig, dispatch) =
+    static member inline SideEffect(x : Async<_>, config : TartConfig, dispatch) =
         Async.Start(async{
             try
                 let! s = x
