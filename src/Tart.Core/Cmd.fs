@@ -5,23 +5,42 @@ open wraikny.Tart.Core.Libraries
 
 open FSharpPlus
 
-type TartConfig = {
+type Command<'Msg> = ('Msg -> unit) -> unit
+
+module private SideEffectChain =
+    let inline perform (config : ^TartConfig) (dispatch : 'a -> 'b) (x : ^``SideEffect<'a>``) : 'b =
+        ( (^``SideEffect<'a>`` or ^TartConfig) : (static member SideEffect : _*_*_->_) (x, config, dispatch))
+
+
+type SideEffectChain<'a, 'b> = SideEffectChain of (TartConfig -> ('a -> 'b) -> 'b)
+
+
+and TartConfig = {
     cts : System.Threading.CancellationTokenSource
     env : ITartEnv
 } with
-    static member SideEffect(a : Async<'Msg>, config : TartConfig) =
-        fun dispatch ->
-            Async.Start(async {
-                let! msg = a
-                dispatch msg
-            }, config.cts.Token)
+    static member SideEffect(x : Async<Result<_,_>>, config : TartConfig, dispatch) =
+        Async.Start(async{
+            let! s = x
+            dispatch s
+        }, config.cts.Token)
 
-    static member SideEffect(generator : 'a Random.Generator, config : TartConfig) =
-        generator.F config.env.Random
+    static member SideEffect(x : Async<_>, config : TartConfig, dispatch) =
+        Async.Start(async{
+            try
+                let! s = x
+                dispatch (Ok s)
+            with
+            | e -> dispatch(Error e)
+                
+        }, config.cts.Token)
 
+    static member SideEffect(generator : 'a Random.Generator, config, dispatch : 'a -> 'b) =
+        (generator.F config.env.Random) |> dispatch
 
-
-type Command<'Msg> = ('Msg -> unit) -> unit
+    static member inline SideEffect(x : SideEffectChain<'a, 'b>, config, dispatch : 'a -> 'b) =
+        x |> function
+        | SideEffectChain f -> f config dispatch
 
 
 type Cmd<'Msg, 'Port> = {
@@ -101,8 +120,13 @@ module Cmd =
             ports = f <!> cmd.ports
         }
 
-    let inline private performSideEffect (x : ^``SideEffect<'a>``) (config : ^TartConfig) =
-        ( (^``SideEffect<'a>`` or ^TartConfig) : (static member SideEffect : _*_->_) (x, config))
+    let inline ofAsync (a : Async<'Msg>) : Cmd<'Msg, 'Port> =
+        initCommand(fun config dispatch ->
+            Async.Start(async {
+                let! msg = a
+                dispatch msg
+            }, config.cts.Token)
+        )
 
     let inline ofAsyncOption (a : Async<'a option>) =
         initCommand(fun config dispatch ->
@@ -113,11 +137,23 @@ module Cmd =
             }, config.cts.Token)
         )
 
-    let inline sideEffect (x : ^``SideEffect<'a>``) =
-        initCommand(performSideEffect x)
+module SideEffect =
+    let inline perform (x : ^``SideEffect<'Msg>``) : Cmd<'Msg, 'Port>= {
+        commands = fun config ->
+            [ fun dispatch -> SideEffectChain.perform config dispatch x ]
+        ports = []
+    }
 
-    let inline chain (f : 'a -> ^``SideEffect<'b>``) (x : ^``SideEffect<'a>``) : Cmd<'b, 'Port> =
-        initCommand(fun config  ->
-            performSideEffect x config
-            |> f |> flip performSideEffect config
+    let inline performWith (f : 'a -> 'Msg) (x : ^``SideEffect<'a>``) : Cmd<'Msg, 'Port> = {
+        commands = fun config ->
+            [ fun dispatch -> SideEffectChain.perform config (f >> dispatch) x ]
+        ports = []
+    }
+
+    let inline bind (f : 'a -> '``SideEffect<'b>``) (x : '``SideEffect<'a>``) : SideEffectChain<'b, 'c> =
+        SideEffectChain(fun config dispatch ->
+            x
+            |> SideEffectChain.perform config id
+            |> f
+            |> SideEffectChain.perform config dispatch
         )

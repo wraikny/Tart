@@ -1,4 +1,4 @@
-﻿namespace wraikny.Tart.Core.View
+﻿namespace wraikny.Tart.Core
 
 open wraikny.Tart.Helper.Utils
 open System.Collections.Generic

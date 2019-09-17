@@ -39,6 +39,7 @@ type Easing =
 
 open System
 open wraikny.Tart.Helper.Math
+open FSharpPlus
 
 [<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
 module Easing =
@@ -157,13 +158,13 @@ module Easing =
             | Lerp(e0, e1, a) ->
                 (calculateF e0 t) * (1.0f - a) +  (calculateF e1 t) * a
 
-    let inline calculate easing (frame : ^a) (current : ^a) : float32 =
+    let calculate easing (frame) (current) : float32 =
         let t = (float32 current) / (float32 frame)
 
         calculateF easing t
 
 
-    let inline interpolateVector easing (frame) (current) (startPoint : 'Vec) (endPoint : 'Vec) : 'Vec =
-        Vector.constraint' Unchecked.defaultof<Vector<'a, 'Vec>>
-        let v = calculate easing frame current
-        startPoint + (endPoint - startPoint) *. v
+    //let inline interpolateVector easing (frame) (current) (startPoint : 'Vec) (endPoint : 'Vec) : 'Vec =
+    //    Vector.constraint' Unchecked.defaultof<Vector<'a, 'Vec>>
+    //    let v = calculate easing frame current
+    //    startPoint + (endPoint - startPoint) *. v

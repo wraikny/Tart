@@ -41,7 +41,6 @@ type IMessenger<'Msg, 'ViewMsg, 'ViewModel> =
     abstract NotifyView : unit -> unit
 
 
-
 type Program<'Msg, 'ViewMsg, 'Model, 'ViewModel> = {
     init : 'Model * Cmd<'Msg, 'ViewMsg>
     update : 'Msg -> 'Model -> ('Model * Cmd<'Msg, 'ViewMsg>)

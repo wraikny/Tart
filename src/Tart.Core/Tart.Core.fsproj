@@ -15,6 +15,7 @@
     <Compile Include="Notifier.fs" />
     <Compile Include="Environment.fs" />
     <Compile Include="Libraries/Random.fs" />
+    <Compile Include="Libraries\File.fs" />
     <Compile Include="Cmd.fs" />
     <Compile Include="IMessenger.fs" />
     <Compile Include="Messenger.fs" />
