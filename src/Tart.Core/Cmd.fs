@@ -9,12 +9,12 @@ type TartConfig = {
     cts : System.Threading.CancellationTokenSource
     env : IEnvironment
 } with
-    static member SideEffect(a : Async<'Msg>, x : TartConfig) =
+    static member SideEffect(a : Async<'Msg>, config : TartConfig) =
         fun dispatch ->
             Async.Start(async {
                 let! msg = a
                 dispatch msg
-            }, x.cts.Token)
+            }, config.cts.Token)
 
     static member SideEffect(generator : 'a Random.Generator, config : TartConfig) =
         generator.F config.env.Random
@@ -103,6 +103,15 @@ module Cmd =
 
     let inline private performSideEffect (x : ^``SideEffect<'a>``) (config : ^TartConfig) =
         ( (^``SideEffect<'a>`` or ^TartConfig) : (static member SideEffect : _*_->_) (x, config))
+
+    let inline ofAsyncOption (a : Async<'a option>) =
+        initCommand(fun config dispatch ->
+            Async.Start(async {
+                match! a with
+                | Some x -> dispatch x
+                | None -> ()
+            }, config.cts.Token)
+        )
 
     let inline sideEffect (x : ^``SideEffect<'a>``) =
         initCommand(performSideEffect x)
