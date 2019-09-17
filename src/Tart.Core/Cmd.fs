@@ -7,7 +7,7 @@ open FSharpPlus
 
 type TartConfig = {
     cts : System.Threading.CancellationTokenSource
-    env : IEnvironment
+    env : ITartEnv
 } with
     static member SideEffect(a : Async<'Msg>, config : TartConfig) =
         fun dispatch ->

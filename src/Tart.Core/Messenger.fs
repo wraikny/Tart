@@ -8,12 +8,8 @@ open wraikny.Tart.Helper.Utils
 open FSharpPlus
 
 
-
-[<Class>]
 type Messenger<'Msg, 'ViewMsg, 'Model, 'ViewModel>
-    (env : IEnvironment, corePrograms : CoreProgram<_, _, _, _>) =
-    // inherit MsgQueueAsync<'Msg>()
-
+    private (env : ITartEnv, program : Program<_, _, _, _>) =
     let msgEvent = Event<'Msg>()
 
     let mutable lastModelExist = false
@@ -26,7 +22,7 @@ type Messenger<'Msg, 'ViewMsg, 'Model, 'ViewModel>
 
     do
         msgQueue.OnPopMsg.Add(fun msg ->
-            let newModel, cmd = corePrograms.update msg lastModel
+            let newModel, cmd = program.update msg lastModel
                         
             cmd |> Cmd.execute msgQueue.Enqueue viewMsgQueue.Enqueue { env = env; cts = msgQueue.CancellationTokenSource}
                         
@@ -42,14 +38,17 @@ type Messenger<'Msg, 'ViewMsg, 'Model, 'ViewModel>
     let viewModelNotifier =
         Notifier<'ViewModel>(fun () ->
             modelQueue.TryDequeue()
-            |>> corePrograms.view
+            |>> program.view
         )
 
     let viewMsgNotifier = Notifier<'ViewMsg>(viewMsgQueue.TryDequeue)
 
+    static member Create(env, program) = new Messenger<_, _, _, _>(env, program)
+    static member Create(env, program) = new Messenger<_, _, _, _>(env |> TartEnv.build, program)
+
 
     member private this.InitModel() =
-        let model, cmd = corePrograms.init
+        let model, cmd = program.init
         
         cmd |>
             Cmd.execute
@@ -114,12 +113,10 @@ type Messenger<'Msg, 'ViewMsg, 'Model, 'ViewModel>
 
 [<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
 module Messenger =
-    [<CompiledName "Create">]
-    let create (environment : wraikny.Tart.Core.TartEnv) (corePrograms) =
-        (new Messenger<_, _, _, _>(environment, corePrograms))
-        :> IMessenger<_, _, _>
+    let inline private create'< ^Messenger, 'Env, 'Msg, 'Port, 'Model, 'ViewModel
+            when ^Messenger : (static member Create : 'Env * Program<'Msg, 'Port, 'Model, 'ViewModel> -> ^Messenger)
+        > (env : 'Env) (program : Program<_, _, _, _>) =
+        (^Messenger : (static member Create : _*_->_) (env, program))
 
-
-    [<CompiledName "Build">]
-    let build (envBuilder) (corePrograms) =
-        create(envBuilder |> TartEnv.build) corePrograms
+    let inline create (env : 'Env) (program : Program<'Msg, 'Port, 'Model, 'ViewModel>) =
+        create' env program

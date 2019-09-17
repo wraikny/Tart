@@ -16,7 +16,6 @@
     <Compile Include="Environment.fs" />
     <Compile Include="Libraries/Random.fs" />
     <Compile Include="Cmd.fs" />
-    <Compile Include="CoreProgram.fs" />
     <Compile Include="IMessenger.fs" />
     <Compile Include="Messenger.fs" />
     <Compile Include="View/ObjectsUpdater.fs" />
