@@ -5,10 +5,11 @@ open System
 
 type IMessenger<'Msg, 'ViewMsg> =
     inherit IDisposable
-    inherit IEnqueue<'Msg>
 
     abstract Msg : IObservable<'Msg> with get
     abstract ViewMsg : IObservable<'ViewMsg> with get
+
+    abstract Enqueue : 'Msg -> unit
 
     /// Sleeping time in every updating
     abstract SleepTime : uint32 with get, set

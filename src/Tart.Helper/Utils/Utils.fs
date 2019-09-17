@@ -29,19 +29,11 @@ type IUpdatee<'a> =
 
 open System.Collections.Generic
 
-type IEnqueue<'T> =
-    abstract Enqueue : 'T -> unit
-
-
-type IDequeue<'T> =
-    abstract TryDequeue : unit -> 'T option
-
-
 type IQueue<'T> =
-    inherit IEnqueue<'T>
-    inherit IDequeue<'T>
     inherit IReadOnlyCollection<'T>
 
+    abstract Enqueue : 'T -> unit
+    abstract TryDequeue : unit -> 'T option
     abstract Clear : unit -> unit
 
 

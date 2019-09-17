@@ -28,9 +28,9 @@ type Messenger<'Msg, 'ViewMsg, 'Model, 'ViewModel>
         msgQueue.OnPopMsg.Add(fun msg ->
             let newModel, cmd = corePrograms.update msg lastModel
                         
-            cmd |> Cmd.execute msgQueue viewMsgQueue { env = env; cts = msgQueue.CancellationTokenSource}
+            cmd |> Cmd.execute msgQueue.Enqueue viewMsgQueue.Enqueue { env = env; cts = msgQueue.CancellationTokenSource}
                         
-            (modelQueue :> IEnqueue<_>).Enqueue(newModel)
+            modelQueue.Enqueue(newModel)
                 
             lastModel <- newModel
 
@@ -40,22 +40,24 @@ type Messenger<'Msg, 'ViewMsg, 'Model, 'ViewModel>
         //msgQueue.OnError.Add(fun _ -> env.SetCTS(null))
 
     let viewModelNotifier =
-        Notifier<'ViewModel>(
-            { new IDequeue<'ViewModel> with
-                member __.TryDequeue() =
-                    (modelQueue :> IDequeue<_>).TryDequeue()
-                    |>> corePrograms.view
-            })
+        Notifier<'ViewModel>(fun () ->
+            modelQueue.TryDequeue()
+            |>> corePrograms.view
+        )
 
-    let viewMsgNotifier = Notifier<'ViewMsg>(viewMsgQueue)
+    let viewMsgNotifier = Notifier<'ViewMsg>(viewMsgQueue.TryDequeue)
 
 
     member private this.InitModel() =
         let model, cmd = corePrograms.init
         
-        cmd |> Cmd.execute msgQueue viewMsgQueue { env = env; cts = msgQueue.CancellationTokenSource}
+        cmd |>
+            Cmd.execute
+                msgQueue.Enqueue
+                viewMsgQueue.Enqueue
+                { env = env; cts = msgQueue.CancellationTokenSource}
         
-        (modelQueue :> IEnqueue<_>).Enqueue(model)
+        modelQueue.Enqueue(model)
 
         lastModel <- model
         lastModelExist <- true
@@ -68,7 +70,7 @@ type Messenger<'Msg, 'ViewMsg, 'Model, 'ViewModel>
 
         member __.ViewModel with get() = viewModelNotifier :> IObservable<_>
 
-        member __.Enqueue(msg) = (msgQueue :> IEnqueue<_>).Enqueue(msg)
+        member __.Enqueue(msg) = msgQueue.Enqueue(msg)
 
         member __.Msg with get() = msgEvent.Publish :> IObservable<_>
         member __.ViewMsg with get() = viewMsgNotifier :> IObservable<_>
