@@ -138,17 +138,13 @@ module Cmd =
         )
 
 module SideEffect =
-    let inline perform (x : ^``SideEffect<'Msg>``) : Cmd<'Msg, 'Port>= {
-        commands = fun config ->
-            [ fun dispatch -> SideEffectChain.perform config dispatch x ]
-        ports = []
-    }
+    let inline private init c = { commands = (fun x -> [c x]); ports = [] }
 
-    let inline performWith (f : 'a -> 'Msg) (x : ^``SideEffect<'a>``) : Cmd<'Msg, 'Port> = {
-        commands = fun config ->
-            [ fun dispatch -> SideEffectChain.perform config (f >> dispatch) x ]
-        ports = []
-    }
+    let inline perform (x : ^``SideEffect<'Msg>``) : Cmd<'Msg, 'Port> =
+        init <| fun config dispatch -> SideEffectChain.perform config dispatch x
+
+    let inline performWith (f : 'a -> 'Msg) (x : ^``SideEffect<'a>``) : Cmd<'Msg, 'Port> =
+        init <| fun config dispatch -> SideEffectChain.perform config (f >> dispatch) x
 
     let inline bind (f : 'a -> '``SideEffect<'b>``) (x : '``SideEffect<'a>``) : SideEffectChain<'b, 'c> =
         SideEffectChain(fun config dispatch ->
