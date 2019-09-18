@@ -20,13 +20,13 @@ type Messenger<'Msg, 'ViewMsg, 'Model, 'ViewModel>
     
     let msgQueue = new MsgQueueAsync<'Msg>()
 
-    let mutable tartConfig = { env = env; cts = null; onError = msgQueue.TriggerOnError }
+    let mutable runtime = { env = env; cts = null; onError = msgQueue.TriggerOnError }
 
     do
         msgQueue.OnPopMsg.Add(fun msg ->
             let newModel, cmd = corePrograms.update msg lastModel
                         
-            cmd |> Cmd.execute msgQueue.Enqueue viewMsgQueue.Enqueue { tartConfig with cts = msgQueue.CancellationTokenSource }
+            cmd |> Cmd.execute msgQueue.Enqueue viewMsgQueue.Enqueue { runtime with cts = msgQueue.CancellationTokenSource }
                         
             modelQueue.Enqueue(newModel)
                 
@@ -61,7 +61,7 @@ type Messenger<'Msg, 'ViewMsg, 'Model, 'ViewModel>
             Cmd.execute
                 msgQueue.Enqueue
                 viewMsgQueue.Enqueue
-                { tartConfig with cts = msgQueue.CancellationTokenSource }
+                { runtime with cts = msgQueue.CancellationTokenSource }
         
         modelQueue.Enqueue(model)
 
