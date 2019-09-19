@@ -1,4 +1,4 @@
-﻿namespace wraikny.Tart.Helper.Collections
+﻿namespace wraikny.Tart.Math
 
 // The work of this file is distributed in Apache License 2.0 in bellow
 // https://github.com/fsprojects/FSharpx.Collections/blob/master/LICENSE.txt

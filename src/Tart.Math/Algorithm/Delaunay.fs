@@ -1,7 +1,6 @@
-﻿namespace wraikny.Tart.Helper.Algorithm
+﻿namespace wraikny.Tart.Math.Algorithm
 
-open wraikny.Tart.Helper.Math
-open wraikny.Tart.Helper.Graph
+open wraikny.Tart.Math
 
 open FSharpPlus
 

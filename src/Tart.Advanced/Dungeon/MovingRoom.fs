@@ -3,7 +3,7 @@
 open System.Collections.Generic
 open System.Linq
 
-open wraikny.Tart.Helper.Math
+open wraikny.Tart.Math
 
 open FSharpPlus
 

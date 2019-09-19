@@ -1,4 +1,4 @@
-﻿namespace wraikny.Tart.Helper.Graph
+﻿namespace wraikny.Tart.Math
 
 open FSharpPlus
 
@@ -51,7 +51,7 @@ module Edge =
 
 
 
-open wraikny.Tart.Helper.Math
+open wraikny.Tart.Math
 
 type NodeTriangle(node1, node2, node3) =
 

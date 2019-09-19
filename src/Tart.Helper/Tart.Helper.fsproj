@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>Library</OutputType>
     <TargetFramework>netstandard2.0</TargetFramework>
@@ -9,18 +9,9 @@
   <ItemGroup>
     <Compile Include="Extension.fs" />
     <Compile Include="Coroutine.fs" />
-    <Compile Include="Math.fs" />
-    <Compile Include="Color.fs" />
-    <Compile Include="Easing.fs" />
-    <Compile Include="Graph.fs" />
-    <Compile Include="Algorithm\UnionFold.fs" />
-    <Compile Include="Algorithm\SpanningTree.fs" />
-    <Compile Include="Algorithm\Delaunay.fs" />
     <Compile Include="Utils.fs" />
-    <Compile Include="Collections\HashMap.fs" />
     <Compile Include="Collections\MsgQueue.fs" />
     <Compile Include="Collections\FixedSizeQueue.fs" />
-    <Compile Include="Collections\Queue.fs" />
 
   </ItemGroup>
   <Import Project="..\..\.paket\Paket.Restore.targets" />

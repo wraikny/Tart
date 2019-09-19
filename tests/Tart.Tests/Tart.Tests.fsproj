@@ -4,13 +4,11 @@
     <TargetFramework>netcoreapp2.1</TargetFramework>
   </PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\src\Tart.Helper\Tart.Helper.fsproj">
-      <Name>Tart.Helper.fsproj</Name>
-    </ProjectReference>
+    <Compile Include="Math.fs" />
+    <Compile Include="Main.fs" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Helper.fs" />
-    <Compile Include="Main.fs" />
+    <ProjectReference Include="..\..\src\Tart.Math\Tart.Math.fsproj" />
   </ItemGroup>
   <Import Project="..\..\.paket\Paket.Restore.targets" />
 </Project>

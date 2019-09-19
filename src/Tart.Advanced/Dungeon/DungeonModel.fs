@@ -1,8 +1,6 @@
 ﻿namespace wraikny.Tart.Advanced.Dungeon
 
-open wraikny.Tart.Helper.Math
-open wraikny.Tart.Helper.Graph
-open wraikny.Tart.Helper.Collections
+open wraikny.Tart.Math
 
 open FSharpPlus
 

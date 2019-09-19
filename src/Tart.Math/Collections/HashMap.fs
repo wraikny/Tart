@@ -1,7 +1,9 @@
-﻿namespace wraikny.Tart.Helper.Collections
+﻿namespace wraikny.Tart.Math
 
 open System.Collections
 open System.Collections.Generic
+open System.Linq
+open FSharpPlus
 
 type HashMap<'Key, 'T when 'Key : equality> private(dict : IReadOnlyDictionary<'Key, 'T>) =
     let count = lazy(dict.Count)
@@ -42,23 +44,15 @@ type HashMap<'Key, 'T when 'Key : equality> private(dict : IReadOnlyDictionary<'
 
 [<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
 module HashMap =
-    open System.Linq
-
-    open FSharpPlus
-
-    [<CompiledName "Empty">]
     let empty<'Key, 'Value when 'Key : equality> =
         HashMap<'Key, 'Value>.Empty
 
-    [<CompiledName "ContainsKey">]
     let containsKey key (hashMap : HashMap<_, _>) =
         hashMap.Dict.ContainsKey(key)
 
-    [<CompiledName "Exists">]
     let exists predicate (hashMap : HashMap<_, _>) =
         hashMap.Dict.Any(fun item -> predicate item.Key item.Value )
 
-    [<CompiledName "OfSeq">]
     let ofSeq seq =
         let dict = new Dictionary<'Key, 'T>()
         for (key, value) in seq do
@@ -70,42 +64,32 @@ module HashMap =
 
         HashMap.CreateWithoutNew(dict)
 
-    [<CompiledName "OfList">]
     let inline ofList list = list |> toSeq |> ofSeq
 
-    [<CompiledName "OfArray">]
     let inline ofArray array = array |> toSeq |> ofSeq
 
-    [<CompiledName "ToSeq">]
     let inline toSeq (hashMap : HashMap<'Key, 'T>) : seq<'Key * 'T> =
         toSeq hashMap
 
-    [<CompiledName "toMap">]
     let inline toMap (hashMap : HashMap<_, _>) =
         hashMap |> toSeq |> Map.ofSeq
 
-    [<CompiledName "ToList">]
     let inline toList (hashMap : HashMap<'Key, 'T>) =
         hashMap |> toList
 
-    [<CompiledName "ToArray">]
     let inline toArray (hashMap : HashMap<'Key, 'T>) =
         hashMap |> toArray
 
-    [<CompiledName "Map">]
     let inline map f hashMap =
         hashMap
         |> FSharpPlus.Operators.map f
 
-    [<CompiledName "TryFind">]
     let tryFind key (hashMap : HashMap<_, _>) =
         hashMap.Dict.TryGetValue(key) |> function
         | true, result -> Some result
         | false, _ -> None
 
-    [<CompiledName "Find">]
     let find key (hashMap : HashMap<_, _>) =
         hashMap.Dict.[key]
 
-    [<CompiledName "Count">]
     let inline count (hashMap : HashMap<_, _>) = (hashMap :> IReadOnlyCollection<_>).Count

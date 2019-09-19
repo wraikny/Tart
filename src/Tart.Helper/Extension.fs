@@ -3,9 +3,6 @@ module wraikny.Tart.Helper.Extension
 
 open FSharpPlus
 
-let inline pure' (x : ^a) =
-    (^a : (static member Return : ^a -> '``M<'a>``) x)
-
 let inline map2
     (f : 'a -> 'b -> 'c)
     (a : '``Applicative<'a>``)
@@ -21,7 +18,7 @@ let inline indexed (source : '``Functor<'a>``) : '``Functor<int * 'a>`` =
     )
 
 let inline ifThen cond f = if cond then f else id
-    
+   
 let inline increment x = x + one
 
 let inline decrement x = x - one

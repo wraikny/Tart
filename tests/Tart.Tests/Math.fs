@@ -1,9 +1,8 @@
-module wraikny.Tart.Tests.Helper
+module wraikny.Tart.Tests.Math
 
 open Expecto
 
-open wraikny.Tart.Helper
-open wraikny.Tart.Helper.Math
+open wraikny.Tart.Math
 open FSharpPlus
 
 let isInvalie x =

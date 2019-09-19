@@ -1,4 +1,4 @@
-﻿namespace wraikny.Tart.Helper
+﻿namespace wraikny.Tart.Math
 
 
 // https://easings.net/
@@ -18,7 +18,6 @@ type Easing =
 
 
 open System
-open wraikny.Tart.Helper.Math
 open FSharpPlus
 
 [<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
@@ -36,7 +35,7 @@ module Easing =
             | OutSine ->
                 sin(t * Angle.degreeToRadian 90.0f )
             | InOutSine ->
-                -1.0f / 2.0f * (cos(t * Pi) - 1.0f)
+                -1.0f / 2.0f * (cos(t * pi) - 1.0f)
             | InQuad ->
                 t * t
             | OutQuad ->
@@ -112,28 +111,28 @@ module Easing =
                     let t = t - 1.0f
                     1.0f + t * t * 2.0f * (7.0f * t + 2.5f)
             | InElastic ->
-                t * t * t * t * sin(t * Pi * 4.5f)
+                t * t * t * t * sin(t * pi * 4.5f)
             | OutElastic ->
                 let t2 = (t - 1.0f) * (t - 1.0f)
-                1.0f - t2 * t2 * cos(t * Pi * 4.5f)
+                1.0f - t2 * t2 * cos(t * pi * 4.5f)
             | InOutElastic ->
                 if t < 0.45f then
                     let t2 = t * t
-                    8.0f * t2 * t2 * sin(t * Pi * 9.0f)
+                    8.0f * t2 * t2 * sin(t * pi * 9.0f)
                 elif t < 0.55f then
-                    0.5f + 0.75f * sin(t * Pi * 4.0f)
+                    0.5f + 0.75f * sin(t * pi * 4.0f)
                 else
                     let t2 = (t - 1.0f) * (t - 1.0f)
-                    1.0f - 8.0f * t2 * t2 * sin(t * Pi * 9.0f)
+                    1.0f - 8.0f * t2 * t2 * sin(t * pi * 9.0f)
             | InBounce ->
-                pow(2.0f, 6.0f * (t - 1.0f)) * abs(sin(t * Pi * 3.5f))
+                pow(2.0f, 6.0f * (t - 1.0f)) * abs(sin(t * pi * 3.5f))
             | OutBounce ->
-                1.0f - pow(2.0f, -6.0f * t) * abs(cos(t * Pi * 3.5f))
+                1.0f - pow(2.0f, -6.0f * t) * abs(cos(t * pi * 3.5f))
             | InOutBounce ->
                 if t < 0.5f then
-                    8.0f * (pow(2.0f, 8.0f * (t - 1.0f))) * abs(sin(t * Pi * 7.0f))
+                    8.0f * (pow(2.0f, 8.0f * (t - 1.0f))) * abs(sin(t * pi * 7.0f))
                 else
-                    1.0f - 8.0f * (pow(2.0f, -8.0f * t)) * abs(sin(t * Pi * 7.0f))
+                    1.0f - 8.0f * (pow(2.0f, -8.0f * t)) * abs(sin(t * pi * 7.0f))
 
             | Lerp(e0, e1, a) ->
                 (calculateF e0 t) * (1.0f - a) +  (calculateF e1 t) * a

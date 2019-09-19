@@ -1,6 +1,6 @@
-﻿namespace wraikny.Tart.Helper.Algorithm
+﻿namespace wraikny.Tart.Math.Algorithm
 
-open wraikny.Tart.Helper.Graph
+open wraikny.Tart.Math
 open System.Linq
 
 

@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>Library</OutputType>
     <TargetFramework>netstandard2.0</TargetFramework>
@@ -7,7 +7,7 @@
     <OtherFlags>--warnon:1182</OtherFlags>
   </PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Tart.Helper\Tart.Helper.fsproj">
+    <ProjectReference Include="..\Tart.Math\Tart.Math.fsproj">
       <Name>Tart.Helper.fsproj</Name>
     </ProjectReference>
   </ItemGroup>

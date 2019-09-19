@@ -1,8 +1,7 @@
 ﻿namespace wraikny.Tart.Advanced.Dungeon
 
 open System
-open wraikny.Tart.Helper.Math
-open wraikny.Tart.Helper.Collections
+open wraikny.Tart.Math
 
 open FSharpPlus
 
@@ -57,7 +56,7 @@ module private WithRandom =
         let getRandomPointInCircle () : int Vec2 =
             let w, h = builder.parameter.roomGeneratedRange
 
-            let t = 2.0f * Pi * getRandomValue(builder)
+            let t = 2.0f * pi * getRandomValue(builder)
             let u = getRandomValue(builder) * getRandomValue(builder)
             let r = if u > 1.0f then 2.0f - u else u
 
@@ -89,8 +88,7 @@ module private WithRandom =
         
 
 
-    open wraikny.Tart.Helper.Graph
-    open wraikny.Tart.Helper.Algorithm
+    open wraikny.Tart.Math.Algorithm
         
         
     let getLargeRoomEdges (largeRooms : (int * int Rect2) list) (withRandom : WithRandom) : Edge<unit, float32> list =

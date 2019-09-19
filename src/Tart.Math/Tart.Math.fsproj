@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Library</OutputType>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <DebugType>portable</DebugType>
+  </PropertyGroup>
+  <Import Project="..\..\.paket\Paket.Restore.targets" />
+  <ItemGroup>
+    <Compile Include="Utils.fs" />
+    <Compile Include="Vector.fs" />
+    <Compile Include="Geometry.fs" />
+    <Compile Include="Color.fs" />
+    <Compile Include="Easing.fs" />
+    <Compile Include="Graph.fs" />
+    <Compile Include="Algorithm\UnionFold.fs" />
+    <Compile Include="Algorithm\SpanningTree.fs" />
+    <Compile Include="Algorithm\Delaunay.fs" />
+    <Compile Include="Collections\HashMap.fs" />
+    <Compile Include="Collections\Queue.fs" />
+  </ItemGroup>
+</Project>
