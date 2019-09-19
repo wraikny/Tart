@@ -38,15 +38,17 @@ module Space =
 
     let inline rect s = s.rect
 
-    let inline cells space =
+    let inline cellsForCountOf (count : int Vec2) (space) =
         let lu = space.rect.position
         let size = space.rect.size
-        seq {
-            for dx in 0..(size.x - 1) do
-            for dy in 0..(size.y - 1) do
-                yield ( lu + Vec2.init dx dy, space.id )
-        }
-        |> toList
+        [|
+            for dx in 0..(size.x - count.x) do
+            for dy in 0..(size.y - count.y) do
+                yield ( Vec2.init (lu.x + dx) (lu.y + dy), space.id )
+        |]
+
+    let inline cells space =
+        cellsForCountOf one space
 
 
 type DungeonModel = {
