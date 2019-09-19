@@ -1,7 +1,7 @@
 ﻿namespace wraikny.Tart.Math
 
 open FSharpPlus
-open FSharpPlus.Math.Applicative
+//open FSharpPlus.Math.Applicative
 
 [<Struct>]
 type 'Vec Line = {
@@ -83,6 +83,8 @@ type ^a Rect4 = ^a Vec4 Rect
 
 [<RequireQualifiedAccess; CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
 module Rect =
+    open FSharpPlus.Math.Applicative
+
     let inline init position size = Rect<_>.Init position size
 
     let inline position r = r.position

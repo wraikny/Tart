@@ -9,35 +9,35 @@ let inline HSV2RGBFloat32 (hsv : float32 Vec3) : float32 Vec3 =
     let r, g, b = v, v, v
 
     let h = h * 6.0f
-    let i = uint16 h
+    let i = int h
     let f = h - float32 i
     let r, g, b =
         i |> function
-        | 1us ->
+        | 1 ->
             (
                 1.0f - s * f,
                 g,
                 1.0f - s
             )
-        | 2us ->
+        | 2 ->
             (
                 1.0f - s,
                 g,
                 1.0f - s * (1.0f - f)
             )
-        | 3us ->
+        | 3 ->
             (
                 1.0f - s,
                 1.0f - s * f,
                 b
             )
-        | 4us ->
+        | 4 ->
             (
                 1.0f - s * (1.0f - f),
                 1.0f - s,
                 b
             )
-        | 5us ->
+        | 5 ->
             (
                 r,
                 1.0f - s,
