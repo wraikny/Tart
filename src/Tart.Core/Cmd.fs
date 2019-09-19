@@ -121,12 +121,6 @@ module SideEffect =
     let inline private invoke (runtime : ^Runtime) (dispatch : 'a -> 'b) (x : ^``SideEffect<'a>``) : 'b =
         ((^``SideEffect<'a>`` or ^Runtime) : (static member SideEffect : _*_*_->_) (x, runtime, dispatch))
     
-    let inline performWith (f : 'a -> 'Msg) (x : ^``SideEffect<'a>``) : Cmd<'Msg, 'Port> =
-        init <| fun runtime dispatch -> invoke runtime (f >> dispatch) x
-
-    let inline perform (x : '``SideEffect<'a>``) : Cmd<'Msg, 'Port> =
-        performWith id x
-    
     let inline map (f : 'a -> 'b) (x : '``SideEffect<'a>``) : SideEffect<'b, 'c> =
         SideEffect <| fun runtime dispatch ->
             invoke runtime (f >> dispatch) x
@@ -145,6 +139,12 @@ module SideEffect =
                 with e ->
                     runtime.onError e
             }, runtime.cts.Token)
+
+    let inline perform (x : '``SideEffect<'a>``) : Cmd<'Msg, 'Port> =
+        init <| fun runtime dispatch -> invoke runtime dispatch x
+    
+    let inline performWith (f : 'a -> 'Msg) (x : ^``SideEffect<'a>``) : Cmd<'Msg, 'Port> =
+        x |> map f |> perform
 
 
 [<AutoOpen>]

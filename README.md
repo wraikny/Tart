@@ -11,6 +11,14 @@ writtenknown@gmail.com
 * Tart.Core
 * Tart.Sockets
 
+## Dependencies in Project
+* Tart.Math: None
+* Tart.Advanced -> Tart.Math
+* Tart.Helper: None
+* Tart.Core -> Tart.Helper
+* Tart.Socket -> Tart.Helper
+
+
 ## Dependencies
 [paket.dependencies](paket.dependencies) file  
 
