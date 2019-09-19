@@ -12,6 +12,7 @@
     <Compile Include="Utils.fs" />
     <Compile Include="Collections\MsgQueue.fs" />
     <Compile Include="Collections\FixedSizeQueue.fs" />
+    <Compile Include="ObjectsUpdater.fs" />
 
   </ItemGroup>
   <Import Project="..\..\.paket\Paket.Restore.targets" />

@@ -19,7 +19,6 @@
     <Compile Include="IMessenger.fs" />
     <Compile Include="Notifier.fs" />
     <Compile Include="Messenger.fs" />
-    <Compile Include="ObjectsUpdater.fs" />
   </ItemGroup>
   <Import Project="..\..\.paket\Paket.Restore.targets" />
 </Project>
