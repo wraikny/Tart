@@ -27,7 +27,7 @@ let inline increment x = x + one
 let inline decrement x = x - one
 
 module Async =
-    let toOption (a : Async<'a>) : Async<'a option> =
+    let inline toOption (a : Async<'a>) : Async<'a option> =
         async {
             try
                 let! r = a
@@ -36,7 +36,7 @@ module Async =
                 return None
         }
 
-    let toResult (a : Async<'a>) : Async<Result<'a, exn>> =
+    let inline toResult (a : Async<'a>) : Async<Result<'a, exn>> =
         async {
             try
                 let! r = a

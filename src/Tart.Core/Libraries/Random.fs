@@ -8,12 +8,10 @@ with
 
     static member Return(x : 'a) = Generator(fun _ -> x)
     static member (>>=) (x : 'a Generator, f : 'a -> 'b Generator) : 'b Generator =
-        Generator(fun rand ->
-            ((x.F rand) |> f).F rand
-        )
+        Generator <|fun rand -> ((x.F rand) |> f).F rand
 
     static member Map(x : 'a Generator, f : 'a -> 'b) =
-        Generator(fun rand -> x.F rand |> f)
+        Generator <| fun rand -> x.F rand |> f
 
 
 let inline bind(f : 'a -> 'b Generator) (x : 'a Generator) : 'b Generator =
@@ -21,30 +19,26 @@ let inline bind(f : 'a -> 'b Generator) (x : 'a Generator) : 'b Generator =
 
 
 let bool : bool Generator =
-    Generator(fun rand ->
+    Generator <| fun rand ->
         rand.Next() % 2 = 0
-    )
 
     
 let int (minValue : int) (maxValue : int) : int Generator =
-    Generator(fun rand ->
+    Generator <| fun rand ->
         rand.Next(minValue, maxValue)
-    )
 
 
 let float (minValue : float) (maxValue : float) : float Generator =
-    Generator(fun rand ->
+    Generator <| fun rand ->
         minValue + rand.NextDouble() * (maxValue - minValue)
-    )
 
 let double01 : float Generator =
-    Generator(fun rand -> rand.NextDouble())
+    Generator <| fun rand -> rand.NextDouble()
 
 
 let list (length : int) (generator : 'a Generator) : 'a list Generator =
-    Generator(fun rand ->
-        [ for _ in 1..length -> generator.F rand ]
-    )
+    Generator <|fun rand ->
+        [ for _i = 1 to length do yield generator.F rand ]
 
 let inline until f (generator : 'a Generator) : 'a Generator =
     monad {

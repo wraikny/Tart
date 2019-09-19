@@ -19,7 +19,7 @@
     <Compile Include="Cmd.fs" />
     <Compile Include="IMessenger.fs" />
     <Compile Include="Messenger.fs" />
-    <Compile Include="View/ObjectsUpdater.fs" />
+    <Compile Include="ObjectsUpdater.fs" />
   </ItemGroup>
   <Import Project="..\..\.paket\Paket.Restore.targets" />
 </Project>
