@@ -12,12 +12,12 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Notifier.fs" />
-    <Compile Include="Environment.fs" />
     <Compile Include="Libraries/Random.fs" />
     <Compile Include="Libraries\File.fs" />
+    <Compile Include="Environment.fs" />
     <Compile Include="Cmd.fs" />
     <Compile Include="IMessenger.fs" />
+    <Compile Include="Notifier.fs" />
     <Compile Include="Messenger.fs" />
     <Compile Include="ObjectsUpdater.fs" />
   </ItemGroup>

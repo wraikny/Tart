@@ -1,5 +1,4 @@
 module wraikny.Tart.Core.Libraries.Random
-open wraikny.Tart.Core
 open FSharpPlus
 
 type 'a Generator = private | Generator of (System.Random -> 'a)

@@ -2,8 +2,6 @@
 
 open System
 
-open wraikny.Tart.Helper.Utils
-
 open FSharpPlus
 
 type Notifier<'T>(tryDequeue : unit -> 'T option) =

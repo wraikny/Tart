@@ -1,9 +1,7 @@
 ﻿namespace wraikny.Tart.Core
 
 open System
-open System.Threading
 open wraikny.Tart.Helper.Collections
-open wraikny.Tart.Helper.Utils
 
 open FSharpPlus
 
@@ -21,7 +19,7 @@ type private Messenger'<'Msg, 'ViewMsg, 'Model, 'ViewModel>
     
     let msgQueue = new MsgQueueAsync<'Msg>()
 
-    let mutable runtime = { env = env; cts = null; onError = msgQueue.TriggerOnError }
+    let runtime = { env = env; cts = null; onError = msgQueue.TriggerOnError }
 
     do
         msgQueue.OnPopMsg.Add(fun msg ->
@@ -39,10 +37,10 @@ type private Messenger'<'Msg, 'ViewMsg, 'Model, 'ViewModel>
         //msgQueue.OnError.Add(fun _ -> env.SetCTS(null))
 
     let viewModelNotifier =
-        Notifier<'ViewModel>(fun () ->
+        Notifier<'ViewModel> <| fun () ->
             modelQueue.TryDequeue()
             |>> corePrograms.view
-        )
+    
 
     let viewMsgNotifier = Notifier<'ViewMsg>(viewMsgQueue.TryDequeue)
 
@@ -57,11 +55,11 @@ type private Messenger'<'Msg, 'ViewMsg, 'Model, 'ViewModel>
     member private this.InitModel() =
         let model, cmd = corePrograms.init
         
-        cmd |>
-            Cmd.execute
-                msgQueue.Enqueue
-                viewMsgQueue.Enqueue
-                { runtime with cts = msgQueue.CancellationTokenSource }
+        cmd
+        |> Cmd.execute
+            msgQueue.Enqueue
+            viewMsgQueue.Enqueue
+            { runtime with cts = msgQueue.CancellationTokenSource }
         
         modelQueue.Enqueue(model)
 
@@ -74,10 +72,8 @@ type private Messenger'<'Msg, 'ViewMsg, 'Model, 'ViewModel>
             viewMsgNotifier.PullAll()
             viewModelNotifier.Pull()
 
-        member __.ViewModel with get() = viewModelNotifier :> IObservable<_>
-
         member __.Enqueue(msg) = msgQueue.Enqueue(msg)
-
+        member __.ViewModel with get() = viewModelNotifier :> IObservable<_>
         member __.Msg with get() = msgEvent.Publish :> IObservable<_>
         member __.ViewMsg with get() = viewMsgNotifier :> IObservable<_>
 

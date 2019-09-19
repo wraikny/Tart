@@ -11,7 +11,7 @@ type Runtime = {
 
 type SideEffect<'a, 'b> = SideEffect of (Runtime -> ('a -> 'b) -> 'b)
 with
-    member inline x.Apply(a, d) = x |> function SideEffect f -> f a d
+    member inline internal x.Apply(a, d) = x |> function SideEffect f -> f a d
 
 
 type Runtime with
@@ -32,8 +32,7 @@ type Runtime with
     static member inline SideEffect(x : Async<Result<'a, exn>>, runtime : Runtime, dispatch : Result<'a, exn> -> unit) =
         Async.Start(async{
             try
-                let! s = x
-                dispatch s
+                let! s = x in dispatch s
             with e ->
                 dispatch(Error e)
                 
@@ -72,14 +71,10 @@ module Cmd =
         { commands = commands; ports = ports }
 
     let inline internal execute
-        (msgDispatch : 'Msg -> unit)
-        (portDispatch : 'Port -> unit)
-        conf
-        (cmd : Cmd<'Msg, 'Port>) =
+        (msgDispatch : 'Msg -> unit) (portDispatch : 'Port -> unit)
+        runtime (cmd : Cmd<'Msg, 'Port>) =
 
-        for c in (cmd.commands conf) do
-            c msgDispatch
-
+        for c in (cmd.commands runtime) do c msgDispatch
         cmd.ports |> iter portDispatch
 
 
@@ -124,12 +119,12 @@ module SideEffect =
     let inline private init c = { commands = (fun x -> [c x]); ports = [] }
 
     let inline private invoke (runtime : ^Runtime) (dispatch : 'a -> 'b) (x : ^``SideEffect<'a>``) : 'b =
-        ( (^``SideEffect<'a>`` or ^Runtime) : (static member SideEffect : _*_*_->_) (x, runtime, dispatch))
+        ((^``SideEffect<'a>`` or ^Runtime) : (static member SideEffect : _*_*_->_) (x, runtime, dispatch))
     
     let inline performWith (f : 'a -> 'Msg) (x : ^``SideEffect<'a>``) : Cmd<'Msg, 'Port> =
         init <| fun runtime dispatch -> invoke runtime (f >> dispatch) x
 
-    let inline perform (x : ^``SideEffect<'a>``) : Cmd<'Msg, 'Port> =
+    let inline perform (x : '``SideEffect<'a>``) : Cmd<'Msg, 'Port> =
         performWith id x
     
     let inline map (f : 'a -> 'b) (x : '``SideEffect<'a>``) : SideEffect<'b, 'c> =
