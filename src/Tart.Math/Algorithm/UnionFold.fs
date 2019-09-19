@@ -9,9 +9,6 @@ type UnionFold(num) =
     let rank = (seq { for _ in 0..num -> 0 }).ToList()
 
     member private this.Root (node : int) =
-        if node < 0 then
-            invalidArg "node" "node must not be less than"
-
         if par.[node] = node then
             node
         else
