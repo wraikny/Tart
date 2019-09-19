@@ -242,7 +242,13 @@ module Triangle =
         (f p1 p3 p2) || (f p2 p1 p3) || (f p3 p2 p1)
 
     let inline hasCommonPoint a b =
-        Seq.exists2(fun s t -> s a = t b) [p1; p2; p3] [p1; p2; p3]
+        seq {
+            let l = [p1; p2; p3]
+            for s in l do
+            for t in l do
+                yield (s, t)
+        }
+        |> Seq.exists(fun (s, t) -> s a = t b)
 
     let circumscribedCircle (t : float32 Triangle2) : float32 Sphere2 =
         let x1, y1 = t.p1.x, t.p1.y
