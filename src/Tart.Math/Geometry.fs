@@ -33,7 +33,7 @@ type ^a Line3 = ^a Vec3 Line
 type ^a Line4 = ^a Vec4 Line
 
 
-[<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
+[<RequireQualifiedAccess; CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
 module Line =
     let inline init s e = Line<_>.Init s e
 
@@ -81,7 +81,7 @@ type ^a Rect3 = ^a Vec3 Rect
 type ^a Rect4 = ^a Vec4 Rect
 
 
-[<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
+[<RequireQualifiedAccess; CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
 module Rect =
     let inline init position size = Rect<_>.Init position size
 
@@ -98,23 +98,23 @@ module Rect =
     let inline down r = r.position.y + r.size.y
 
     let inline diagonalPosition r : '``Vec<'a>`` =
-        Vector.constraint' (Unchecked.defaultof<Vector< 'a, '``Vec<'a>`` >>)
+        Vector.constraint' (Unchecked.defaultof< '``Vec<'a>`` >)
         r.position + r.size
 
     let inline centerPosition r : '``Vec<'a>`` =
-        Vector.constraint' (Unchecked.defaultof<Vector< 'a, '``Vec<'a>`` >>)
+        Vector.constraint' (Unchecked.defaultof< '``Vec<'a>`` >)
         let two = one + one
         r.position + r.size / two
 
     let inline get_LU_RD r : ('``Vec<'a>`` * '``Vec<'a>``) =
-        Vector.constraint' (Unchecked.defaultof<Vector< 'a, '``Vec<'a>`` >>)
+        Vector.constraint' (Unchecked.defaultof< '``Vec<'a>`` >)
         r.position, diagonalPosition r
 
     let inline isCollidedAxis(axis : '``Vec<'a>`` -> 'a) (aLU, aRD) (bLU, bRD) : bool =
         Utils.inCollision (axis aLU, axis aRD) (axis bLU, axis bRD)
 
     let inline isInside (p : '``Vec<'a>``) r : bool =
-        Vector.constraint' (Unchecked.defaultof<Vector< 'a, '``Vec<'a>`` >>)
+        Vector.constraint' (Unchecked.defaultof< '``Vec<'a>`` >)
 
         let lu, rd = get_LU_RD r
         
@@ -125,8 +125,7 @@ module Rect =
         |> fold (&&) true
 
 
-module Rect2 =
-    let inline isCollided (a : ^a Rect2) (b : ^a Rect2) : bool =
+    let inline isCollided2 (a : ^a Rect2) (b : ^a Rect2) : bool =
         let aLU = a.position
         let aRD = aLU .+. a.size
 
@@ -144,14 +143,14 @@ type Sphere< 'a, 'Vec> = {
     center : 'Vec
 } with
 
-    static member Init center radius = {
+    static member inline Init center radius = {
         radius = radius
         center = center
     }
 
     /// Applicative
     static member inline Return (k : 't) = Sphere<'t, _>.Init (pure' k) k
-    static member (<*>) (f, x : Sphere<_, _>) = {
+    static member inline (<*>) (f, x : Sphere<_, _>) = {
         radius = f.radius x.radius
         center = f.center x.center
     }
@@ -168,7 +167,7 @@ type ^a Sphere3 = Sphere< ^a, ^a Vec3 >
 type ^a Sphere4 = Sphere< ^a, ^a Vec4 >
 
 
-[<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
+[<RequireQualifiedAccess; CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
 module Sphere =
     let init (c : '``Vec<'a>``) (r : 'a) = Sphere< 'a, '``Vec<'a>`` >.Init c r
 
@@ -177,13 +176,13 @@ module Sphere =
     let inline radius c = c.radius
 
     let inline isInside (p : 'a) (c : Sphere<'a, '``Vec<'a>``>) : bool =
-        Vector.constraint' (Unchecked.defaultof<Vector< 'a, '``Vec<'a>`` >>)
+        Vector.constraint' (Unchecked.defaultof< '``Vec<'a>`` >)
 
         let distance = Vector.squaredLength(p - c.center)
         distance < (c.radius * c.radius)
 
     let inline isCollided (a : Sphere<'a, '``Vec<'a>``>) (b : Sphere<'a, '``Vec<'a>``>) : bool =
-        Vector.constraint' (Unchecked.defaultof<Vector< 'a, '``Vec<'a>`` >>)
+        Vector.constraint' (Unchecked.defaultof< '``Vec<'a>`` >)
 
         let distance = (a.center - b.center) |> Vector.squaredLength
         let radiusSum =
@@ -199,7 +198,7 @@ type Triangle< 'a > = {
     p3 : 'a
 } with
 
-    static member Init p1 p2 p3 = {
+    static member inline Init p1 p2 p3 = {
         p1 = p1
         p2 = p2
         p3 = p3
@@ -207,7 +206,7 @@ type Triangle< 'a > = {
 
     /// Applicative
     static member inline Return (k : 't) = Triangle< 't >.Init k k k
-    static member (<*>) (f, x : _ Triangle) = {
+    static member inline (<*>) (f, x : _ Triangle) = {
         p1 = f.p1 x.p1
         p2 = f.p2 x.p2
         p3 = f.p3 x.p3
@@ -225,7 +224,7 @@ type ^a Triangle3 = ^a Vec3 Triangle
 type ^a Triangle4 = ^a Vec4 Triangle
 
 
-[<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
+[<RequireQualifiedAccess; CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
 module Triangle =
     let inline init p1 p2 p3 = Triangle<_>.Init p1 p2 p3
 
@@ -233,23 +232,15 @@ module Triangle =
     let inline p2 t = t.p2
     let inline p3 t = t.p3
 
-    let equal a b =
-        let f q1 q2 q3 =
+    let inline equal a b =
+        let inline f q1 q2 q3 =
             (a.p1 = q1 b) && (a.p2 = q2 b) && (a.p3 = q3 b)
 
         (f p1 p2 p3) || (f p2 p3 p1) || (f p3 p1 p2) ||
         (f p1 p3 p2) || (f p2 p1 p3) || (f p3 p2 p1)
 
-    let hasCommonPoint a b =
-        seq {
-            let l = [p1; p2; p3]
-            for s in l do
-            for t in l do
-            yield (s, t)
-        }
-        |>> fun (s, t) ->
-            (s a = t b)
-        |> fold (||) false
+    let inline hasCommonPoint a b =
+        Seq.exists2(fun s t -> s a = t b) [p1; p2; p3] [p1; p2; p3]
 
     let circumscribedCircle (t : float32 Triangle2) : float32 Sphere2 =
         let x1, y1 = t.p1.x, t.p1.y
@@ -267,6 +258,6 @@ module Triangle =
 
         let center = Vec2.init x y
 
-        let r = Vector.length <| Vec2.init (center.x - x1) (center.y - y1)
-
-        Sphere.init center r
+        Vec2.init (center.x - x1) (center.y - y1)
+        |> Vector.length
+        |> Sphere.init center

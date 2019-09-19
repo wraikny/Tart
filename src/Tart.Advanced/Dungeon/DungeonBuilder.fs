@@ -275,7 +275,7 @@ module DungeonBuilder =
                  corridorRects
                  |> exists(fun cr ->
                      room.rect
-                     |> Rect2.isCollided cr
+                     |> Rect.isCollided2 cr
                  )
              )
 

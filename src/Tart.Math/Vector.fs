@@ -158,86 +158,72 @@ module Vec4 =
 
 #nowarn "0064"
 
-[<Struct>]
-type Vector< 'a, '``Vec<'a>``> = Vector of 'a * '``Vec<'a>``
 
-
-type VectorBuiltin = VectorBuiltin with
-    static member inline VectorImpl(v : 'a Vec2) = Vector(v.x, v)
-    static member inline VectorImpl(v : 'a Vec3) = Vector(v.x, v)
-    static member inline VectorImpl(v : 'a Vec4) = Vector(v.x, v)
+type Vector = Vector with
+    static member inline VectorImpl(_ : 'a Vec2) = ()
+    static member inline VectorImpl(_ : 'a Vec3) = ()
+    static member inline VectorImpl(_ : 'a Vec4) = ()
 
 
 [<RequireQualifiedAccess; CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
 module Vector =
-    let inline private getImpl v =
-        let inline getImpl' (_ : ^Builtin) (_ : Vector< ^a, ^Va > ) =
-            ((^Builtin or ^Va) : (static member VectorImpl : ^Va -> Vector< ^a, ^Va >)
+    let inline constraint' v =
+        let inline getImpl' (_ : ^V) (_ : ^Va ) =
+            ((^V or ^Va) : (static member VectorImpl : ^Va -> unit)
                 Unchecked.defaultof<_>
             )
-        getImpl' VectorBuiltin v
 
-    let inline constraint' v = getImpl v |> ignore
-
-
-    let inline zero() : ^``Vec<'a>`` =
-        constraint' (Unchecked.defaultof<Vector< ^a, ^``Vec<'a>`` >>)
-        zero
-
-
-    let inline one() : ^``Vec<'a>`` =
-        constraint' (Unchecked.defaultof<Vector< ^a, ^``Vec<'a>`` >>)
-        one
+        getImpl' Vector v |> ignore
 
 
     let inline axes() : (^``Vec<'a>`` -> ^a) list =
-        constraint' (Unchecked.defaultof<Vector< ^a, ^``Vec<'a>`` >>)
+        constraint' (Unchecked.defaultof< ^``Vec<'a>`` >)
 
         (^``Vec<'a>`` : (static member Axes : unit -> (^``Vec<'a>`` -> ^a) list) ())
         
 
-    let inline dot (a : ^``Vec<'a>``) (b : ^``Vec<'a>``) : ^a =
-        constraint' (Unchecked.defaultof<Vector< ^a, ^``Vec<'a>`` >>)
+    let inline dot (a : ^``Vec<'a>``) (b : ^``Vec<'a>``) =
+        constraint' (Unchecked.defaultof< ^``Vec<'a>`` >)
         (^``Vec<'a>`` : (static member inline Dot :_*_->_) (a, b))
 
 
-    let inline squaredLength (v : ^``Vec<'a>``) : ^a =
+    let inline squaredLength (v : ^``Vec<'a>``) =
         dot v v
 
 
-    let inline length (v : ^``Vec<'a>``) : ^a =
+    let inline length (v : ^``Vec<'a>``) =
         FSharp.Core.Operators.sqrt (squaredLength v)
 
 
     let inline normalize (v : ^``Vec<'a>``) : ^``Vec<'a>`` =
         let len = length v
         if len = FSharpPlus.Operators.zero then
-            zero()
+            zero
         else
             v ./ len
 
     // -----------------------------------------
 
     let inline x (a : ^``Vec<'a>``) : ^a =
-        constraint' (Unchecked.defaultof<Vector< ^a, ^``Vec<'a>`` >>)
+        constraint' (Unchecked.defaultof< ^``Vec<'a>`` >)
         (^``Vec<'a>`` : (member x : ^a) a)
 
     let inline y (a : ^``Vec<'a>``) : ^a =
-        constraint' (Unchecked.defaultof<Vector< ^a, ^``Vec<'a>`` >>)
+        constraint' (Unchecked.defaultof< ^``Vec<'a>`` >)
         (^``Vec<'a>`` : (member y : ^a) a)
 
     let inline z (a : ^``Vec<'a>``) : ^a =
-        constraint' (Unchecked.defaultof<Vector< ^a, ^``Vec<'a>`` >>)
+        constraint' (Unchecked.defaultof< ^``Vec<'a>`` >)
         (^``Vec<'a>`` : (member z : ^a) a)
 
     let inline w (a : ^``Vec<'a>``) : ^a =
-        constraint' (Unchecked.defaultof<Vector< ^a, ^``Vec<'a>`` >>)
+        constraint' (Unchecked.defaultof< ^``Vec<'a>`` >)
         (^``Vec<'a>`` : (member w : ^a) a)
 
     // -----------------------------------------
 
     let inline private kk (v : '``Vec<'a>``) k1 k2 : 'a Vec2 =
-        constraint' (Unchecked.defaultof<Vector< 'a, '``Vec<'a>`` >>)
+        constraint' (Unchecked.defaultof< ^``Vec<'a>`` >)
         Vec2.init (k1 v) (k2 v)
 
     let inline xx (v : '``Vec<'a>``) = kk v x x
@@ -263,7 +249,7 @@ module Vector =
     // -----------------------------------------
 
     let inline private kkk (v : '``Vec<'a>``) k1 k2 k3 : 'a Vec3 =
-        constraint' (Unchecked.defaultof<Vector< 'a, '``Vec<'a>`` >>)
+        constraint' (Unchecked.defaultof< ^``Vec<'a>`` >)
         Vec3.init (k1 v) (k2 v) (k3 v)
 
     
