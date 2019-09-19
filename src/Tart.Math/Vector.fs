@@ -40,7 +40,7 @@ type ^a Vec2 = {
         a.x * b.x + a.y * b.y
 
 
-[<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
+[<RequireQualifiedAccess; CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
 module Vec2 =
     let inline init x y : 'a Vec2 = Vec2<_>.Init x y
 
@@ -93,7 +93,7 @@ type ^a Vec3 = {
         a.x * b.x + a.y * b.y + a.z * b.z
 
 
-[<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
+[<RequireQualifiedAccess; CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
 module Vec3 =
     let inline init x y z : 'a Vec3 = Vec3<_>.Init x y z
 
@@ -152,6 +152,7 @@ type ^a Vec4 = {
         a.x * b.x + a.y * b.y + a.z * b.z + a.w * b.w
 
 
+[<RequireQualifiedAccess; CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
 module Vec4 =
     let inline init x y z w : 'a Vec4 = Vec4<_>.Init x y z w
 
@@ -167,7 +168,7 @@ type VectorBuiltin = VectorBuiltin with
     static member inline VectorImpl(v : 'a Vec4) = Vector(v.x, v)
 
 
-[<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
+[<RequireQualifiedAccess; CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
 module Vector =
     let inline private getImpl v =
         let inline getImpl' (_ : ^Builtin) (_ : Vector< ^a, ^Va > ) =
