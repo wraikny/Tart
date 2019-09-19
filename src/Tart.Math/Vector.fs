@@ -160,21 +160,29 @@ module Vec4 =
 
 
 type Vector = Vector with
-    static member inline VectorImpl(_ : 'a Vec2) = ()
-    static member inline VectorImpl(_ : 'a Vec3) = ()
-    static member inline VectorImpl(_ : 'a Vec4) = ()
+    static member inline VectorImpl(_ : 'a Vec2, _ : Vector) = ()
+    static member inline VectorImpl(_ : 'a Vec3, _ : Vector) = ()
+    static member inline VectorImpl(_ : 'a Vec4, _ : Vector) = ()
 
 
 [<RequireQualifiedAccess; CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
 module Vector =
     let inline constraint' v =
         let inline getImpl' (_ : ^V) (_ : ^Va ) =
-            ((^V or ^Va) : (static member VectorImpl : ^Va -> unit)
-                Unchecked.defaultof<_>
+            ((^V or ^Va) : (static member VectorImpl : ^Va * Vector -> unit)
+                (Unchecked.defaultof<_>, Vector)
             )
 
         getImpl' Vector v |> ignore
 
+
+    let inline zero() : ^``Vec<'a>`` =
+        constraint' (Unchecked.defaultof< ^``Vec<'a>`` >)
+        (^``Vec<'a>`` : (static member inline Return : 'a -> _) LanguagePrimitives.GenericZero)
+
+    let inline one() : ^``Vec<'a>`` =
+        constraint' (Unchecked.defaultof< ^``Vec<'a>`` >)
+        (^``Vec<'a>`` : (static member inline Return : 'a -> _) LanguagePrimitives.GenericOne)
 
     let inline axes() : (^``Vec<'a>`` -> ^a) list =
         constraint' (Unchecked.defaultof< ^``Vec<'a>`` >)
@@ -197,8 +205,8 @@ module Vector =
 
     let inline normalize (v : ^``Vec<'a>``) : ^``Vec<'a>`` =
         let len = length v
-        if len = FSharpPlus.Operators.zero then
-            zero
+        if len = LanguagePrimitives.GenericZero then
+            zero()
         else
             v ./ len
 
@@ -206,24 +214,23 @@ module Vector =
 
     let inline x (a : ^``Vec<'a>``) : ^a =
         constraint' (Unchecked.defaultof< ^``Vec<'a>`` >)
-        (^``Vec<'a>`` : (member x : ^a) a)
+        (^``Vec<'a>`` : (member x : _) a)
 
     let inline y (a : ^``Vec<'a>``) : ^a =
         constraint' (Unchecked.defaultof< ^``Vec<'a>`` >)
-        (^``Vec<'a>`` : (member y : ^a) a)
+        (^``Vec<'a>`` : (member y : _) a)
 
     let inline z (a : ^``Vec<'a>``) : ^a =
         constraint' (Unchecked.defaultof< ^``Vec<'a>`` >)
-        (^``Vec<'a>`` : (member z : ^a) a)
+        (^``Vec<'a>`` : (member z : _) a)
 
     let inline w (a : ^``Vec<'a>``) : ^a =
         constraint' (Unchecked.defaultof< ^``Vec<'a>`` >)
-        (^``Vec<'a>`` : (member w : ^a) a)
+        (^``Vec<'a>`` : (member w : _) a)
 
     // -----------------------------------------
 
     let inline private kk (v : '``Vec<'a>``) k1 k2 : 'a Vec2 =
-        constraint' (Unchecked.defaultof< ^``Vec<'a>`` >)
         Vec2.init (k1 v) (k2 v)
 
     let inline xx (v : '``Vec<'a>``) = kk v x x
@@ -249,7 +256,6 @@ module Vector =
     // -----------------------------------------
 
     let inline private kkk (v : '``Vec<'a>``) k1 k2 k3 : 'a Vec3 =
-        constraint' (Unchecked.defaultof< ^``Vec<'a>`` >)
         Vec3.init (k1 v) (k2 v) (k3 v)
 
     

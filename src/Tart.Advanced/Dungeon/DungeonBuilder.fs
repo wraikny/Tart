@@ -92,15 +92,14 @@ module private WithRandom =
         
         
     let getLargeRoomEdges (largeRooms : (int * int Rect2) list) (withRandom : WithRandom) : Edge<unit, float32> list =
-        let largeRoomsCount = largeRooms |> length
+        let largeRoomsCount = largeRooms |> List.length
         
         let largeRoomEdges =
             largeRooms
             |>> fun (id, rect) ->
                 let pos = rect.position |>> float32
                 let size = rect.size |>> float32
-                Node.init id (pos + size ./ 2.0f)
-            
+                Node.init id (pos + (size ./ 2.0f) )
             |> Delaunay2.getNodesList
         
         let largeRoomsSpanningTree =
@@ -227,7 +226,6 @@ module DungeonBuilder =
 
         let largeRoomRects, smallRoomRects =
             distributeRooms movedRooms builder.roomMeanThreshold
-
 
         let largeRoomRectsIndexed = largeRoomRects |> List.indexed
 
