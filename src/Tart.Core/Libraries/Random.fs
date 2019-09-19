@@ -2,17 +2,17 @@ module wraikny.Tart.Core.Libraries.Random
 open wraikny.Tart.Core
 open FSharpPlus
 
-type 'a Generator = Generator of (System.Random -> 'a)
+type 'a Generator = private | Generator of (System.Random -> 'a)
 with
-    member inline internal g.F = g |> function | Generator(f) -> f
+    member inline internal g.F = g |> function | Generator f -> f
 
-    static member inline Return(x : 'a) = Generator(fun _ -> x)
-    static member inline (>>=) (x : 'a Generator, f : 'a -> 'b Generator) : 'b Generator =
+    static member Return(x : 'a) = Generator(fun _ -> x)
+    static member (>>=) (x : 'a Generator, f : 'a -> 'b Generator) : 'b Generator =
         Generator(fun rand ->
             ((x.F rand) |> f).F rand
         )
 
-    static member inline Map(x : 'a Generator, f : 'a -> 'b) =
+    static member Map(x : 'a Generator, f : 'a -> 'b) =
         Generator(fun rand -> x.F rand |> f)
 
 
@@ -26,13 +26,13 @@ let bool : bool Generator =
     )
 
     
-let inline int (minValue : int) (maxValue : int) : int Generator =
+let int (minValue : int) (maxValue : int) : int Generator =
     Generator(fun rand ->
         rand.Next(minValue, maxValue)
     )
 
 
-let inline float (minValue : float) (maxValue : float) : float Generator =
+let float (minValue : float) (maxValue : float) : float Generator =
     Generator(fun rand ->
         minValue + rand.NextDouble() * (maxValue - minValue)
     )
@@ -41,7 +41,7 @@ let double01 : float Generator =
     Generator(fun rand -> rand.NextDouble())
 
 
-let inline list (length : int) (generator : 'a Generator) : 'a list Generator =
+let list (length : int) (generator : 'a Generator) : 'a list Generator =
     Generator(fun rand ->
         [ for _ in 1..length -> generator.F rand ]
     )

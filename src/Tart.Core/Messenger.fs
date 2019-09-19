@@ -8,8 +8,9 @@ open wraikny.Tart.Helper.Utils
 open FSharpPlus
 
 
-type Messenger<'Msg, 'ViewMsg, 'Model, 'ViewModel>
+type private Messenger'<'Msg, 'ViewMsg, 'Model, 'ViewModel>
     private (env : ITartEnv, corePrograms : Program<_, _, _, _>) =
+
     let msgEvent = Event<'Msg>()
 
     let mutable lastModelExist = false
@@ -46,12 +47,11 @@ type Messenger<'Msg, 'ViewMsg, 'Model, 'ViewModel>
     let viewMsgNotifier = Notifier<'ViewMsg>(viewMsgQueue.TryDequeue)
 
     static member Create(env, program) =
-        new Messenger<_, _, _, _>(env, program)
+        new Messenger'<'Msg, 'ViewMsg, 'Model, 'ViewModel>(env, program)
         :> IMessenger<_, _, _>
 
     static member Create(env, program) =
-        new Messenger<_, _, _, _>(env |> TartEnv.build, program)
-        :> IMessenger<_, _, _>
+        Messenger'<'Msg, 'ViewMsg, 'Model, 'ViewModel>.Create(env |> TartEnv.build, program)
 
 
     member private this.InitModel() =
@@ -118,9 +118,10 @@ type Messenger<'Msg, 'ViewMsg, 'Model, 'ViewModel>
         member __.OnError with get() = msgQueue.OnError
 
 
-type MessengerBuilder = MessengerBuilder with
-    static member inline Create(env : ITartEnv, program) =
-        Messenger.Create(env, program)
+[<AbstractClass; Sealed>]
+type Messenger =
+    static member Create(env : ITartEnv, program) =
+        Messenger'<_, _, _, _>.Create(env, program)
 
-    static member inline Create(env : TartEnvBuilder, program) =
-        Messenger.Create(env, program)
+    static member Create(env : TartEnvBuilder, program) =
+        Messenger'<_, _, _, _>.Create(env, program)

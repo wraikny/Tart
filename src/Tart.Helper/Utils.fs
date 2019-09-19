@@ -1,7 +1,5 @@
 ﻿namespace wraikny.Tart.Helper.Utils
 
-
-[<Class>]
 type LockObject<'T>(value : 'T) =
     let mutable value = value
     let _lock = System.Object()

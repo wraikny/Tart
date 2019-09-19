@@ -16,6 +16,13 @@ type HashMap<'Key, 'T when 'Key : equality> private(dict : IReadOnlyDictionary<'
     static member inline internal CreateWithoutNew(dict) =
         new HashMap<'Key, 'T>(dict)
 
+    static member Map(x : HashMap<'Key, 'T>, f) =
+        let d = Dictionary<_, _>()
+        for i in x.Dict do
+            d.Add(i.Key, f i.Key i.Value)
+        
+        HashMap(d)
+
     member this.ToSeq() = seq { for x in this.Dict -> (x.Key, x.Value) }
 
     member this.GetEnumerator() =
@@ -79,18 +86,16 @@ module HashMap =
 
     [<CompiledName "ToList">]
     let inline toList (hashMap : HashMap<'Key, 'T>) =
-        hashMap |> toSeq |> toList
+        hashMap |> toList
 
     [<CompiledName "ToArray">]
     let inline toArray (hashMap : HashMap<'Key, 'T>) =
-        hashMap |> toSeq |> toArray
+        hashMap |> toArray
 
     [<CompiledName "Map">]
     let inline map f hashMap =
         hashMap
-        |> toSeq
-        |> Seq.map(fun (key, v) -> (key, f key v) )
-        |> ofSeq
+        |> FSharpPlus.Operators.map f
 
     [<CompiledName "TryFind">]
     let tryFind key (hashMap : HashMap<_, _>) =

@@ -4,36 +4,16 @@
 // https://easings.net/
 type Easing =
     | Linear
-    | InSine
-    | OutSine
-    | InOutSine
-    | InQuad
-    | OutQuad
-    | InOutQuad
-    | InCubic
-    | OutCubic
-    | InOutCubic
-    | InQuart
-    | OutQuart
-    | InOutQuart
-    | InQuint
-    | OutQuint
-    | InOutQuint
-    | InExpo
-    | OutExpo
-    | InOutExpo
-    | InCirc
-    | OutCirc
-    | InOutCirc
-    | InBack
-    | OutBack
-    | InOutBack
-    | InElastic
-    | OutElastic
-    | InOutElastic
-    | InBounce
-    | OutBounce
-    | InOutBounce
+    | InSine | OutSine | InOutSine
+    | InQuad | OutQuad | InOutQuad
+    | InCubic | OutCubic | InOutCubic
+    | InQuart | OutQuart | InOutQuart
+    | InQuint | OutQuint | InOutQuint
+    | InExpo | OutExpo | InOutExpo
+    | InCirc | OutCirc | InOutCirc
+    | InBack | OutBack | InOutBack
+    | InElastic | OutElastic | InOutElastic
+    | InBounce | OutBounce | InOutBounce
     | Lerp of Easing * Easing * float32
 
 

@@ -36,13 +36,10 @@ module Space =
         rect = rect
     }
 
-    [<CompiledName "ID">]
     let inline id s = s.id
 
-    [<CompiledName "Rect">]
     let inline rect s = s.rect
 
-    [<CompiledName "Cells">]
     let inline cells space =
         let lu = space.rect.position
         let size = space.rect.size
@@ -72,7 +69,6 @@ type DungeonModel = {
 
 [<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
 module DungeonModel =
-    [<CompiledName "TryFindSpace">]
     let tryFindSpace id dungeon =
         let target, id = id |> function
             | Large id -> dungeon.largeRooms, id
@@ -82,21 +78,18 @@ module DungeonModel =
         target
         |> HashMap.tryFind id
 
-        
-    [<CompiledName "GetSpaceAt">]
+
     let getSpaceAt coordinate dungeon =
         dungeon.cells
         |> HashMap.tryFind coordinate
         >>= flip tryFindSpace dungeon
 
 
-    [<CompiledName "CellToCoordinate">]
     let inline cellToCoordinate (cellSize : float32 Vec2) (cell : int Vec2) : float32 Vec2 =
         let cellf = cell |>> float32
         cellf * cellSize
 
 
-    [<CompiledName "CoordinateToCell">]
     let inline coordinateToCell (cellSize : float32 Vec2) (coordinate : float32 Vec2) : int Vec2 =
         coordinate / cellSize
         |>> (floor >> int)
