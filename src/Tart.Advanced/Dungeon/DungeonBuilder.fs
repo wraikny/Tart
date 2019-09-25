@@ -176,8 +176,8 @@ module DungeonBuilder =
         let center1, center2 = Rect.centerPosition rect1, Rect.centerPosition rect2
         let middle = (center1 + center2) ./ 2
 
-        let lurd1 = rect1 |> Rect.get_LU_RD
-        let lurd2 = rect2 |> Rect.get_LU_RD
+        let lurd1 = rect1 |> Rect.lurd
+        let lurd2 = rect2 |> Rect.lurd
 
         let isCollidedX = Rect.isCollidedAxis Vector.x lurd1 lurd2
         let isCollidedY = Rect.isCollidedAxis Vector.y lurd1 lurd2

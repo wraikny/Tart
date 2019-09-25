@@ -23,6 +23,4 @@ module SpanningTree =
                 uf.Unite(edge)
                 resultEdges.Add(edge)
 
-        seq {
-            for edge in resultEdges -> edge
-        } |> toList
+        [ for edge in resultEdges -> edge ]

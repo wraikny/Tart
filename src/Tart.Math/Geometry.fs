@@ -105,10 +105,10 @@ module Rect =
 
     let inline centerPosition r : '``Vec<'a>`` =
         Vector.constraint' (Unchecked.defaultof< '``Vec<'a>`` >)
-        let two = one + one
+        let two: '``Vec<'a>`` = one + one
         r.position + r.size / two
 
-    let inline get_LU_RD r : ('``Vec<'a>`` * '``Vec<'a>``) =
+    let inline lurd r : ('``Vec<'a>`` * '``Vec<'a>``) =
         Vector.constraint' (Unchecked.defaultof< '``Vec<'a>`` >)
         r.position, diagonalPosition r
 
@@ -118,7 +118,7 @@ module Rect =
     let inline isInside (p : '``Vec<'a>``) r : bool =
         Vector.constraint' (Unchecked.defaultof< '``Vec<'a>`` >)
 
-        let lu, rd = get_LU_RD r
+        let lu, rd = lurd r
         
         zip (toSeq lu) (toSeq rd)
         |> zip (toSeq p)
@@ -128,11 +128,9 @@ module Rect =
 
 
     let inline isCollided2 (a : ^a Rect2) (b : ^a Rect2) : bool =
-        let aLU = a.position
-        let aRD = aLU .+. a.size
+        let aLU, aRD = lurd a
 
-        let bLU = b.position
-        let bRD = bLU .+. b.size
+        let bLU, bRD = lurd b
 
         let inline f (axis : _ -> ^a) =
              not(axis bRD < axis aLU || axis aRD < axis bLU)
