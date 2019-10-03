@@ -1,27 +1,11 @@
 ﻿[<AutoOpen>]
 module wraikny.Tart.Helper.Extension
 
-open FSharpPlus
-
-let inline map2
-    (f : 'a -> 'b -> 'c)
-    (a : '``Applicative<'a>``)
-    (b : '``Applicative<'b>``)
-    : '``Applicative<'c>`` = f <!> a <*> b
-
-let inline indexed (source : '``Functor<'a>``) : '``Functor<int * 'a>`` =
-    let mutable i = -1
-    source
-    |>> (fun x ->
-        i <- i + 1
-        (i, x)
-    )
-
 let inline ifThen cond f = if cond then f else id
    
-let inline increment x = x + one
+//let inline increment x = x + La
 
-let inline decrement x = x - one
+//let inline decrement x = x - one
 
 module Async =
     let inline toOption (a : Async<'a>) : Async<'a option> =

@@ -2,8 +2,6 @@
 
 open System.Collections.Generic
 
-open FSharpPlus
-
 /// ViewModel record to updatin objects
 type UpdaterViewModel<'ViewModel> = (uint32 * 'ViewModel) list
 
@@ -105,8 +103,8 @@ type ObjectsUpdater<'Object, 'ObjectViewModel
 
         objects
         |> Seq.map(fun x -> x.Key)
-        |> filter(existFlags.Contains >> not)
-        |> toList // mutability
-        |> iter this.Remove
+        |> Seq.filter(existFlags.Contains >> not)
+        |> Seq.toList // mutability
+        |> Seq.iter this.Remove
 
         existFlags.Clear()
