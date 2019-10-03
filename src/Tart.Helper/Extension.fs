@@ -1,6 +1,9 @@
 ﻿[<AutoOpen>]
 module wraikny.Tart.Helper.Extension
 
+let inline pure' (x: 'a): ^``M<'a>`` =
+    (^``M<'a>``: (static member Return: _->_) x)
+
 let inline ifThen cond f = if cond then f else id
    
 //let inline increment x = x + La

@@ -4,7 +4,6 @@ framework: auto-detect
 nuget Expecto
 nuget Expecto.FsCheck
 nuget FSharp.Core
-nuget FSharpPlus
 nuget System.Reactive
 
 group Build

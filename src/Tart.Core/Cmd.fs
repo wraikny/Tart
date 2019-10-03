@@ -1,7 +1,6 @@
 ﻿namespace wraikny.Tart.Core
 
 open wraikny.Tart.Core.Libraries
-open FSharpPlus
 
 type Runtime = {
     env : ITartEnv
@@ -75,7 +74,7 @@ module Cmd =
         runtime (cmd : Cmd<'Msg, 'Port>) =
 
         for c in (cmd.commands runtime) do c msgDispatch
-        cmd.ports |> iter portDispatch
+        cmd.ports |> Seq.iter portDispatch
 
 
     /// Empty command
@@ -103,7 +102,7 @@ module Cmd =
         {
             commands = fun runtime ->
                 cmd.commands runtime
-                |>> fun c dispatch -> f >> dispatch |> c
+                |> List.map (fun c dispatch -> f >> dispatch |> c)
 
             ports = cmd.ports
         }
@@ -111,7 +110,7 @@ module Cmd =
     let inline mapPorts (f : 'a -> 'Port) (cmd : Cmd<'Msg, 'a>) : Cmd<'Msg, 'Port> =
         {
             commands = cmd.commands
-            ports = f <!> cmd.ports
+            ports = List.map f cmd.ports
         }
 
 

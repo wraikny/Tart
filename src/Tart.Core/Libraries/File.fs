@@ -1,6 +1,5 @@
 ﻿module wraikny.Tart.Core.Libraries.File
 
-open FSharpPlus
 open System.IO
 open System.Text
 open System.Runtime.Serialization.Formatters.Binary

@@ -1,5 +1,6 @@
 module wraikny.Tart.Core.Libraries.Random
-open FSharpPlus
+
+open wraikny.Tart.Helper
 
 type 'a Generator = private | Generator of (System.Random -> 'a)
 with
@@ -40,17 +41,15 @@ let list (length : int) (generator : 'a Generator) : 'a list Generator =
         [ for _i = 1 to length do yield generator.F rand ]
 
 let inline until f (generator : 'a Generator) : 'a Generator =
-    monad {
-        let rec loop xs = monad {
-            if f xs then
-                return xs
-            else
-                let! nx = generator
-                return! loop nx
-        }
-        let! x = generator
-        return! loop x
-    }
+    let rec loop xs =
+        if f xs then
+            pure' xs
+        else
+            generator >>= fun nx ->
+            loop nx
+
+    generator >>= fun x ->
+        loop x
 
 
 let inline distinctList (length : int) (generator : 'a Generator) : 'a list Generator =
@@ -63,11 +62,9 @@ let inline map (f : 'a -> 'b) (x : 'a Generator) : 'b Generator =
 
 
 let inline map2 (f : 'a -> 'b -> 'c) (g1 : 'a Generator) (g2 : 'b Generator) : 'c Generator =
-    monad {
-        let! x1 = g1
-        let! x2 = g2
-        return (f x1 x2)
-    }
+    g1 >>= fun x1 ->
+    g2 >>= fun x2 ->
+        f x1 x2 |> pure'
 
 
 let inline pair (g1 : 'a Generator) (g2 : 'b Generator) : ('a * 'b) Generator =

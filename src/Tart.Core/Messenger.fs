@@ -3,8 +3,6 @@
 open System
 open wraikny.Tart.Helper.Collections
 
-open FSharpPlus
-
 
 type private Messenger'<'Msg, 'ViewMsg, 'Model, 'ViewModel>
     private (env : ITartEnv, corePrograms : Program<_, _, _, _>) =
@@ -39,7 +37,7 @@ type private Messenger'<'Msg, 'ViewMsg, 'Model, 'ViewModel>
     let viewModelNotifier =
         Notifier<'ViewModel> <| fun () ->
             modelQueue.TryDequeue()
-            |>> corePrograms.view
+            |> Option.map corePrograms.view
     
 
     let viewMsgNotifier = Notifier<'ViewMsg>(viewMsgQueue.TryDequeue)
