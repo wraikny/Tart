@@ -1,11 +1,6 @@
 ﻿namespace wraikny.Tart.Core
 
-open wraikny.Tart.Helper.Utils
 open wraikny.Tart.Core.Libraries
-
-open FSharpPlus
-
-type Command<'Msg> = ('Msg -> unit) -> unit
 
 type Runtime = {
     env : ITartEnv
@@ -15,54 +10,7 @@ type Runtime = {
 
 type SideEffect<'a, 'b> = SideEffect of (Runtime -> ('a -> 'b) -> 'b)
 with
-    member inline x.Apply(a, d) = x |> function SideEffect f -> f a d
-
-type Cmd<'Msg, 'Port> = {
-    commands : Runtime -> Command<'Msg> list
-    ports : 'Port list
-} with
-    static member Zero : Cmd<'Msg, 'Port> = {
-        commands = fun _ -> []
-        ports = []
-    }
-
-module private SideEffectChain =
-    let inline perform (runtime : ^Runtime) (dispatch : 'a -> 'b) (x : ^``SideEffect<'a>``) : 'b =
-        ( (^``SideEffect<'a>`` or ^Runtime) : (static member SideEffect : _*_*_->_) (x, runtime, dispatch))
-
-    let inline constraint'< ^Runtime, ^``SideEffect<'a>``, 'a, 'b
-                        when (^``SideEffect<'a>`` or ^Runtime) :
-                            (static member SideEffect : ^``SideEffect<'a>`` * ^Runtime * ('a -> 'b)->'a) > = ()
-
-
-module SideEffect =
-    let inline private init c = { commands = (fun x -> [c x]); ports = [] }
-    
-    let inline performWith (f : 'a -> 'Msg) (x : ^``SideEffect<'a>``) : Cmd<'Msg, 'Port> =
-        init <| fun runtime dispatch -> SideEffectChain.perform runtime (f >> dispatch) x
-    
-    let inline perform (x : ^``SideEffect<'Msg>``) : Cmd<'Msg, 'Port> = performWith id x
-    
-    let inline map (f : 'a -> 'b) (x : '``SideEffect<'a>``) : SideEffect<'b, 'c> =
-        SideEffect(fun runtime dispatch ->
-            SideEffectChain.perform runtime (f >> dispatch) x
-        )
-    
-    let inline bind (f : 'a -> '``SideEffect<'b>``) (x : '``SideEffect<'a>``) : SideEffect<'b, 'c> =
-        SideEffect(fun runtime dispatch ->
-            SideEffectChain.perform runtime f x
-            |> SideEffectChain.perform runtime dispatch
-        )
-    
-    let inline unwrapAsync (x : '``SideEffect<Async<'a>>``) =
-        init <| fun runtime dispatch ->
-            Async.Start(async {
-                try
-                    let! a = SideEffectChain.perform runtime id x
-                    dispatch(a)
-                with e ->
-                    runtime.onError e
-            }, runtime.cts.Token)
+    member inline internal x.Apply(a, d) = x |> function SideEffect f -> f a d
 
 
 type Runtime with
@@ -83,8 +31,7 @@ type Runtime with
     static member inline SideEffect(x : Async<Result<'a, exn>>, runtime : Runtime, dispatch : Result<'a, exn> -> unit) =
         Async.Start(async{
             try
-                let! s = x
-                dispatch s
+                let! s = x in dispatch s
             with e ->
                 dispatch(Error e)
                 
@@ -107,63 +54,55 @@ type Runtime with
         (storage.F()) |> dispatch
 
 
+type Cmd<'Msg, 'Port> = {
+    commands : Runtime -> (('Msg -> unit) -> unit) list
+    ports : 'Port list
+} with
+    static member Zero : Cmd<'Msg, 'Port> = {
+        commands = fun _ -> []
+        ports = []
+    }
+
+
 [<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
 module Cmd =
-    let inline private getCommands (cmd : Cmd<_, _>) = cmd.commands
-    let inline private getPorts (cmd : Cmd<_, _>) = cmd.ports
-
-    let inline private init (commands) (ports) : Cmd<'Msg, 'Port> =
-        {
-            commands = commands
-            ports = ports
-        }
-
-    let inline private initCommand c = init (fun x -> [c x]) []
+    let inline private init commands ports : Cmd<'Msg, 'Port> =
+        { commands = commands; ports = ports }
 
     let inline internal execute
-        (msgDispatch : 'Msg -> unit)
-        (portDispatch : 'Port -> unit)
-        conf
-        (cmd : Cmd<'Msg, 'Port>) =
+        (msgDispatch : 'Msg -> unit) (portDispatch : 'Port -> unit)
+        runtime (cmd : Cmd<'Msg, 'Port>) =
 
-        for c in (cmd.commands conf) do
-            c msgDispatch
-
-        cmd.ports |> iter portDispatch
+        for c in (cmd.commands runtime) do c msgDispatch
+        cmd.ports |> Seq.iter portDispatch
 
 
     /// Empty command
     let none : Cmd<'Msg, 'Port> = { commands = (fun _ -> []); ports = [] }
 
     let inline ofMsgs (msgs : seq<'Msg>) : Cmd<'Msg, 'Port> =
-        init (fun _ -> Seq.map (|>) msgs |> toList) []
+        init (fun _ -> [ for msg in msgs -> (|>) msg ]) []
 
     let inline ofMsg (msg : 'Msg) : Cmd<'Msg, 'Port> =
-        initCommand (fun _ -> (|>) msg)
+        init (fun _ -> [(|>) msg]) []
 
-    let inline ofPorts (m) = init (fun _ -> []) m
+    let inline ofPorts m : Cmd<'Msg, 'Port> = init (fun _ -> []) m
 
-    let inline ofPort (m) = ofPorts [m]
+    let inline ofPort m : Cmd<'Msg, 'Port> = ofPorts [m]
 
     let inline batch (cmds : seq<Cmd<'Msg, 'Port>>) : Cmd<'Msg, 'Port> =
         {
             commands = fun runtime ->
-                cmds
-                |>> (getCommands >> (|>) runtime)
-                |> Seq.concat
-                |> Seq.toList
-            ports =
-                cmds
-                |>> getPorts
-                |> Seq.concat
-                |> Seq.toList
+                [ for c in cmds do yield! (c.commands runtime)]
+
+            ports = [ for c in cmds do yield! c.ports ]
         }
 
     let inline mapMsgs (f : 'a -> 'Msg) (cmd : Cmd<'a, 'Port>) : Cmd<'Msg, 'Port> =
         {
             commands = fun runtime ->
-                cmd.commands(runtime)
-                |>> fun c dispatch -> c(f >> dispatch)
+                cmd.commands runtime
+                |> List.map (fun c dispatch -> f >> dispatch |> c)
 
             ports = cmd.ports
         }
@@ -171,32 +110,67 @@ module Cmd =
     let inline mapPorts (f : 'a -> 'Port) (cmd : Cmd<'Msg, 'a>) : Cmd<'Msg, 'Port> =
         {
             commands = cmd.commands
-            ports = f <!> cmd.ports
+            ports = List.map f cmd.ports
         }
 
+
+module SideEffect =
+    let inline private init c = { commands = (fun x -> [c x]); ports = [] }
+
+    let inline private invoke (runtime : ^Runtime) (dispatch : 'a -> 'b) (x : ^``SideEffect<'a>``) : 'b =
+        ((^``SideEffect<'a>`` or ^Runtime) : (static member SideEffect : _*_*_->_) (x, runtime, dispatch))
+    
+    let inline map (f : 'a -> 'b) (x : '``SideEffect<'a>``) : SideEffect<'b, 'c> =
+        SideEffect <| fun runtime dispatch ->
+            invoke runtime (f >> dispatch) x
+    
+    let inline bind (f : 'a -> '``SideEffect<'b>``) (x : '``SideEffect<'a>``) : SideEffect<'b, 'c> =
+        SideEffect <| fun runtime dispatch ->
+            invoke runtime f x
+            |> invoke runtime dispatch
+    
+    let inline unwrapAsync (x : '``SideEffect<Async<'a>>``) =
+        init <| fun runtime dispatch ->
+            Async.Start(async {
+                try
+                    let! a = invoke runtime id x
+                    dispatch(a)
+                with e ->
+                    runtime.onError e
+            }, runtime.cts.Token)
+
+    let inline perform (x : '``SideEffect<'a>``) : Cmd<'Msg, 'Port> =
+        init <| fun runtime dispatch -> invoke runtime dispatch x
+    
+    let inline performWith (f : 'a -> 'Msg) (x : ^``SideEffect<'a>``) : Cmd<'Msg, 'Port> =
+        x |> map f |> perform
+
+
+[<AutoOpen>]
+module SideEffectExt =
     type SideEffectBuilder() =
-        member __.Return x =  SideEffect(fun _ dispatch -> dispatch x)
-        member __.ReturnFrom(x) = x
+        member inline __.Return x =  SideEffect(fun _ dispatch -> dispatch x)
+
+        member inline __.ReturnFrom(x) = x
+
         member inline __.Bind(x, f) = SideEffect.bind f x
-        member __.For(inp,f) =
+        member inline __.Zero() = SideEffect(fun _ _ -> ())
+        member inline __.For(inp,f) =
             seq {for a in inp -> f a}
-        member __.Zero() = SideEffect(fun _ dispatch -> dispatch())
-        member __.Delay(f) = f()
+        member inline __.Delay(f) = f()
+
+        //member __.Combine(x, f) = g >> f
+
+        member inline __.Using(x: #System.IDisposable, f: _ -> _) =
+            try f x
+            finally
+                match box x with
+                | null -> () | _ -> x.Dispose()
+
+        member inline __.TryWith(f, h) = try f () with e -> h e
+        member inline __.TryFinally(f, g) = try f () finally g ()
+        //member this.While(guard, f) =
+        //    if not (guard ()) then this.Zero()
+        //    else let x = f () in this.Combine(x, this.While(guard, f))
 
     let sideEffect = SideEffectBuilder()
-
-    //let x() =
-    //    Random.bool
-    //    |> SideEffect.bind(fun x -> Random.bool)
-    //    |> SideEffect.bind(fun x -> Random.double01)
-
-    //let a() =
-    //    sideEffect {
-    //        let! x = Random.bool
-    //        let! f = Random.double01
-    //        let! f = Random.double01
-    //        let! f = Random.double01
-    //        let! f = Random.double01
-    //        let! x = File.IsolatedStorage.readTextAsync "aaa"
-    //        return! x
-    //    }

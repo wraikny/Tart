@@ -68,9 +68,6 @@ type IClient<'SendMsg, 'RecvMsg> = interface
     // abstract Send : 'Msg -> Async<unit>
 end
 
-open FSharpPlus
-
-
 [<Struct>]
 type internal SocketMsg<'Msg> =
     // 0
@@ -83,16 +80,15 @@ with
             | UserMsg msg ->
                 0uy, (encoder msg)
 
-        [|flag|] <|> bytes
+        Array.append [|flag|] bytes
 
     static member Decode(decoder, decrypted) =
         let flag, bytes = Array.splitAt 1 decrypted
-        monad {
-            let! head = flag |> tryHead
-            match head with
+        flag
+        |> Array.tryHead
+        |> Option.bind (function
             | 0uy ->
-                let! msg = decoder bytes
-                return UserMsg msg
+                decoder bytes |> Option.map UserMsg
             | _ ->
-                return! None
-        }
+                None
+        )

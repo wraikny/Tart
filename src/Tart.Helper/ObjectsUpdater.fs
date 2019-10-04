@@ -1,13 +1,9 @@
-﻿namespace wraikny.Tart.Core
+﻿namespace wraikny.Tart.Helper
 
-open wraikny.Tart.Helper.Utils
 open System.Collections.Generic
-open System
-
-open FSharpPlus
 
 /// ViewModel record to updatin objects
-type UpdaterViewModel<'ViewModel> = (uint32 * 'ViewModel) list
+type UpdaterViewModel<'Key, 'ViewModel> = ('Key * 'ViewModel) list
 
 [<Struct>]
 type UpdatingOption =
@@ -35,15 +31,16 @@ type ObjectsParent<'Object, 'ObjectViewModel
 
 
 /// Class of adding, removing and updating objects
-type ObjectsUpdater<'Object, 'ObjectViewModel
+type ObjectsUpdater<'Key, 'Object, 'ObjectViewModel
     when 'Object :> IUpdatee<'ObjectViewModel>
+    and  'Key : equality
     >(parent) =
-    let objects = Dictionary<uint32, 'Object>()
-    let existFlags = HashSet<uint32>()
+    let objects = Dictionary<'Key, 'Object>()
+    let existFlags = HashSet<'Key>()
 
     let parent : ObjectsParent<'Object, 'ObjectViewModel> = parent
 
-    let objectPooling = Stack<'Object>()
+    let objectPooling = ObjectsPool<'Object>(parent.create)
 
     let mutable updatingOption = UpdatingWithPooling
 
@@ -56,7 +53,7 @@ type ObjectsUpdater<'Object, 'ObjectViewModel
 
 
     /// Update objects on ViewModel
-    member this.Update(viewModel : UpdaterViewModel<_>) =
+    member this.Update(viewModel : UpdaterViewModel<'Key, _>) =
         if updatingOption.EnabledUpdating then
             this.UpdateObjects(viewModel)
         else
@@ -64,13 +61,13 @@ type ObjectsUpdater<'Object, 'ObjectViewModel
 
 
     member private this.Create() =
-        if (updatingOption = UpdatingWithPooling) && objectPooling.Count > 0 then
+        if (updatingOption = UpdatingWithPooling) then
             objectPooling.Pop()
         else
             parent.create()
 
 
-    member this.Remove(id : uint32) =
+    member this.Remove(id : 'Key) =
         let object = objects.Item(id)
         objects.Remove(id) |> ignore
         if (updatingOption = UpdatingWithPooling) then
@@ -107,8 +104,8 @@ type ObjectsUpdater<'Object, 'ObjectViewModel
 
         objects
         |> Seq.map(fun x -> x.Key)
-        |> filter(existFlags.Contains >> not)
-        |> toList // mutability
-        |> iter this.Remove
+        |> Seq.filter(existFlags.Contains >> not)
+        |> Seq.toList // mutability
+        |> Seq.iter this.Remove
 
         existFlags.Clear()

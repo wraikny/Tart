@@ -1,15 +1,12 @@
 ﻿namespace wraikny.Tart.Core
 
 open System
-open System.Threading
 open wraikny.Tart.Helper.Collections
-open wraikny.Tart.Helper.Utils
-
-open FSharpPlus
 
 
-type Messenger<'Msg, 'ViewMsg, 'Model, 'ViewModel>
+type private Messenger'<'Msg, 'ViewMsg, 'Model, 'ViewModel>
     private (env : ITartEnv, corePrograms : Program<_, _, _, _>) =
+
     let msgEvent = Event<'Msg>()
 
     let mutable lastModelExist = false
@@ -20,7 +17,7 @@ type Messenger<'Msg, 'ViewMsg, 'Model, 'ViewModel>
     
     let msgQueue = new MsgQueueAsync<'Msg>()
 
-    let mutable runtime = { env = env; cts = null; onError = msgQueue.TriggerOnError }
+    let runtime = { env = env; cts = null; onError = msgQueue.TriggerOnError }
 
     do
         msgQueue.OnPopMsg.Add(fun msg ->
@@ -38,30 +35,29 @@ type Messenger<'Msg, 'ViewMsg, 'Model, 'ViewModel>
         //msgQueue.OnError.Add(fun _ -> env.SetCTS(null))
 
     let viewModelNotifier =
-        Notifier<'ViewModel>(fun () ->
+        Notifier<'ViewModel> <| fun () ->
             modelQueue.TryDequeue()
-            |>> corePrograms.view
-        )
+            |> Option.map corePrograms.view
+    
 
     let viewMsgNotifier = Notifier<'ViewMsg>(viewMsgQueue.TryDequeue)
 
     static member Create(env, program) =
-        new Messenger<_, _, _, _>(env, program)
+        new Messenger'<'Msg, 'ViewMsg, 'Model, 'ViewModel>(env, program)
         :> IMessenger<_, _, _>
 
     static member Create(env, program) =
-        new Messenger<_, _, _, _>(env |> TartEnv.build, program)
-        :> IMessenger<_, _, _>
+        Messenger'<'Msg, 'ViewMsg, 'Model, 'ViewModel>.Create(env |> TartEnv.build, program)
 
 
     member private this.InitModel() =
         let model, cmd = corePrograms.init
         
-        cmd |>
-            Cmd.execute
-                msgQueue.Enqueue
-                viewMsgQueue.Enqueue
-                { runtime with cts = msgQueue.CancellationTokenSource }
+        cmd
+        |> Cmd.execute
+            msgQueue.Enqueue
+            viewMsgQueue.Enqueue
+            { runtime with cts = msgQueue.CancellationTokenSource }
         
         modelQueue.Enqueue(model)
 
@@ -74,10 +70,8 @@ type Messenger<'Msg, 'ViewMsg, 'Model, 'ViewModel>
             viewMsgNotifier.PullAll()
             viewModelNotifier.Pull()
 
-        member __.ViewModel with get() = viewModelNotifier :> IObservable<_>
-
         member __.Enqueue(msg) = msgQueue.Enqueue(msg)
-
+        member __.ViewModel with get() = viewModelNotifier :> IObservable<_>
         member __.Msg with get() = msgEvent.Publish :> IObservable<_>
         member __.ViewMsg with get() = viewMsgNotifier :> IObservable<_>
 
@@ -118,9 +112,10 @@ type Messenger<'Msg, 'ViewMsg, 'Model, 'ViewModel>
         member __.OnError with get() = msgQueue.OnError
 
 
-type MessengerBuilder = MessengerBuilder with
-    static member inline Create(env : ITartEnv, program) =
-        Messenger.Create(env, program)
+[<AbstractClass; Sealed>]
+type Messenger =
+    static member Create(env : ITartEnv, program) =
+        Messenger'<_, _, _, _>.Create(env, program)
 
-    static member inline Create(env : TartEnvBuilder, program) =
-        Messenger.Create(env, program)
+    static member Create(env : TartEnvBuilder, program) =
+        Messenger'<_, _, _, _>.Create(env, program)
