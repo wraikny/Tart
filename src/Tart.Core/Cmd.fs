@@ -37,6 +37,15 @@ type Runtime with
                 
         }, runtime.cts.Token)
 
+    static member inline SideEffect(x : Async<Choice<'a, exn>>, runtime : Runtime, dispatch : Choice<'a, exn> -> unit) =
+      Async.Start(async{
+          try
+              let! s = x in dispatch s
+          with e ->
+              dispatch(Choice2Of2 e)
+              
+      }, runtime.cts.Token)
+
     //static member inline SideEffect(x : Async<'a>, runtime : Runtime, dispatch : Result<'a, exn> -> unit) =
     //    Async.Start(async{
     //        try
@@ -64,7 +73,7 @@ type Cmd<'Msg, 'Port> = {
     }
 
 
-[<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
+[<RequireQualifiedAccess; CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
 module Cmd =
     let inline private init commands ports : Cmd<'Msg, 'Port> =
         { commands = commands; ports = ports }
@@ -113,7 +122,7 @@ module Cmd =
             ports = List.map f cmd.ports
         }
 
-
+[<RequireQualifiedAccess; CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
 module SideEffect =
     let inline private init c = { commands = (fun x -> [c x]); ports = [] }
 
@@ -128,6 +137,10 @@ module SideEffect =
         SideEffect <| fun runtime dispatch ->
             invoke runtime f x
             |> invoke runtime dispatch
+
+    let inline wrap (x: '``SideEffect<'a>``): SideEffect<'a, 'b> =
+        SideEffect <| fun runtime dispatch ->
+          invoke runtime dispatch x
     
     let inline unwrapAsync (x : '``SideEffect<Async<'a>>``) =
         init <| fun runtime dispatch ->
@@ -143,7 +156,7 @@ module SideEffect =
         init <| fun runtime dispatch -> invoke runtime dispatch x
     
     let inline performWith (f : 'a -> 'Msg) (x : ^``SideEffect<'a>``) : Cmd<'Msg, 'Port> =
-        x |> map f |> perform
+        x |> wrap |> map f |> perform
 
 
 [<AutoOpen>]
